@@ -1,11 +1,18 @@
 import tensorflow as tf
 import numpy as np
 
-LSTM_UNITS = 32
+LSTM_UNITS = 256
+ENTROPY_SCALE = 0.01
+VALUE_SCALE = 0.5
+LR = 0.001
+GRAD_CLIP = 1.0
 
 class Model:
-  def __init__(self, env):
+  def __init__(self, env, sess, writer):
     self.env = env
+    self.sess = sess
+    self.writer = writer
+    self.writer_step = 0
 
     self.input = tf.placeholder(tf.float32,
         shape=(None, env.observation_space), name='input')
@@ -23,10 +30,43 @@ class Model:
     self.initial_state = np.zeros(self.rnn_state.shape[1])
 
     # Outputs
-    self.action = tf.nn.softmax(
-        tf.layers.dense(x, env.action_space, name='action'))
+    self.action = tf.layers.dense(x, env.action_space, activation=tf.nn.softmax,
+        name='action')
     self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
+    self.mean_value = tf.reduce_mean(self.value, name='mean_value')
     self.new_state = tf.concat([ state.c, state.h ], axis=-1, name='new_state')
+
+    # Losses
+    self.true_value = tf.placeholder(tf.float32,
+        shape=(None,), name='true_value')
+    self.selected_action = tf.placeholder(tf.int32,
+        shape=(None,), name='selected_action')
+
+    self.entropy = -tf.reduce_mean(
+        tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
+        name='entropy')
+
+    advantage = self.true_value - self.value
+    self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss')
+
+    action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
+        labels=self.selected_action,
+        logits=self.action,
+        name='action_gain')
+    self.policy_loss = tf.reduce_mean(action_gain * advantage,
+        name='policy_loss')
+
+    optimizer = tf.train.AdamOptimizer(LR)
+
+    self.loss = self.policy_loss + self.value_loss * VALUE_SCALE + \
+        self.entropy * ENTROPY_SCALE
+
+    variables = tf.trainable_variables()
+    grads = tf.gradients(self.loss, variables)
+    grads, grad_norm = tf.clip_by_global_norm(grads, GRAD_CLIP)
+    grads = list(zip(grads, variables))
+    self.grad_norm = grad_norm
+    self.train = optimizer.apply_gradients(grads_and_vars=grads)
 
   def fill_feed_dict(self, out, obs, state=None):
     if state is None:
@@ -36,40 +76,91 @@ class Model:
     out[self.rnn_state] = state
     return out
 
+  def step(self, obs, state):
+    feed_dict = {}
+    self.fill_feed_dict(feed_dict, [ obs ], [ state ])
+    action_probs, next_state = self.sess.run([ self.action, self.new_state ],
+        feed_dict=feed_dict)
+    action = self.pick_action(action_probs[0])
+    return action, next_state[0]
+
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, sess, game_count=2000, step_count=200):
+  def explore(self, game_count=200000, step_count=256):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
-      states, actions, rewards, dones = [], [], [], []
+      states, model_states, actions, rewards, dones = [], [], [], [], []
 
       model_state = self.initial_state
       for i in range(step_count):
-        feed_dict = {}
-        self.fill_feed_dict(feed_dict, [ state ], [ model_state ])
-        action_probs, model_state = sess.run([ self.action, self.new_state ],
-            feed_dict=feed_dict)
-        action_probs = action_probs[0]
-        model_state = model_state[0]
+        action, next_model_state = self.step(state, model_state)
 
-        action = self.pick_action(action_probs)
         next_state, reward, done, _ = self.env.step(action)
 
         states.append(state)
         actions.append(action)
-        rewards.append(reward)
+        rewards.append(reward / self.env.total)
         dones.append(done)
+        model_states.append(model_state)
 
         if done:
           state = self.env.reset()
+          model_state = self.initial_state
           finished_games += 1
         else:
           state = next_state
+          model_state = next_model_state
 
-      self.reflect(states, actions, rewards, dones)
+      self.reflect(states, model_states, actions, rewards, dones)
 
-  def reflect(self, states, actions, rewards, dones):
-    print(np.mean(np.array(rewards)[dones]))
-    pass
+  def estimate_rewards(self, rewards, dones, gamma=0.99):
+    estimates = np.zeros(len(rewards), dtype='float32')
+    future = 0.0
+
+    for i, reward in reversed(list(enumerate(rewards))):
+      if dones[i]:
+        future = 0.0
+      future *= gamma
+      estimates[i] = reward + future
+      future += reward
+
+    return estimates
+
+  def reflect(self, states, model_states, actions, rewards, dones):
+    estimates = self.estimate_rewards(rewards, dones)
+
+    feed_dict = {
+      self.input: states,
+      self.rnn_state: model_states,
+      self.selected_action: actions,
+      self.true_value: estimates,
+    }
+
+    tensors = [
+        self.train, self.loss, self.entropy, self.value_loss, self.policy_loss,
+        self.mean_value, self.grad_norm,
+    ]
+    _, loss, entropy, value_loss, policy_loss, value, grad_norm = self.sess.run(
+        tensors, feed_dict=feed_dict)
+
+    metrics = {
+      'grad_norm': grad_norm,
+      'loss': loss,
+      'entropy': entropy,
+      'value_loss': value_loss,
+      'policy_loss': policy_loss,
+      'true_value': np.mean(estimates),
+      'value': value,
+    }
+    self.log_summary(metrics)
+
+  def log_summary(self, metrics):
+    summary = tf.Summary()
+    for key in metrics:
+      value = metrics[key]
+      summary.value.add(tag='train/{}'.format(key), simple_value=value)
+    self.writer.add_summary(summary, self.writer_step)
+    self.writer.flush()
+    self.writer_step += 1

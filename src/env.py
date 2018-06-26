@@ -155,8 +155,7 @@ class Environment:
     state = self._make_state()
 
     for i in range(0, self.max_steps):
-      action, _, opponent_state, _ = \
-        self.opponent.step(state, self.opponent_state, False)
+      action, opponent_state = self.opponent.step(state, self.opponent_state)
       self.opponent_state = opponent_state
 
       state, reward, done, _ = self.step(action)
