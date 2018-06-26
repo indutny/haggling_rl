@@ -28,6 +28,7 @@ class Environment:
 
     self.player = random.choice([ 'self', 'opponent' ])
     self.steps = 0
+    self.done = False
 
     objects = self.generator.get()
     self.values = {
@@ -54,6 +55,8 @@ class Environment:
 
   def step(self, action):
     player = self.player
+    if self.done:
+      raise Exception('Already done, can\'t go on')
 
     done = False
 
@@ -75,6 +78,7 @@ class Environment:
     else:
       raise Exception('Unknown action {}'.format(action))
 
+    self.done = done
     return state, reward, done, { 'player': player }
 
   def _make_state(self):

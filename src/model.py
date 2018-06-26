@@ -71,5 +71,5 @@ class Model:
       self.reflect(states, actions, rewards, dones)
 
   def reflect(self, states, actions, rewards, dones):
-    print(np.mean(rewards))
+    print(np.mean(np.array(rewards)[dones]))
     pass
