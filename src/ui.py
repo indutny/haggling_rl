@@ -27,6 +27,9 @@ class UI:
   def accept(self, player, reward):
     self._display('{}: I accept and get ${}'.format(player, reward))
 
+  def no_consensus(self):
+    self._display('No consensus!')
+
   def _enumerate(self, counts):
     items = []
     for i, count in enumerate(counts):

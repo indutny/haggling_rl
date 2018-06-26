@@ -61,7 +61,9 @@ class Environment:
     if action == 0:
       reward, state, done = self._submit()
       if not done and self.player is 'opponent':
-        reward, state, done = self._run_opponent()
+        _, state, done = self._run_opponent()
+        if done:
+          reward = np.sum(self.offer * self.values['self'], dtype='float32')
 
     # +1/-1
     elif action == 1 or action == 2:
@@ -101,7 +103,7 @@ class Environment:
   def _move(self, delta):
     pos = self.positions[self.player] + delta
     pos = max(pos, 0)
-    pos = min(pos, MAX_TYPES)
+    pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
     # TODO(indutny): negative reward on overflow/underflow?
@@ -110,6 +112,7 @@ class Environment:
   def _submit(self):
     # No state change here
     state = self._make_state()
+    counter_player = 'opponent' if self.player is 'self' else 'self'
 
     accepted = np.array_equal(self.offer, self.proposed_offer)
 
@@ -120,6 +123,10 @@ class Environment:
     if accepted:
       reward = np.sum(self.offer * self.values[self.player], dtype='float32')
       self.ui.accept(self.player, reward)
+      counter_reward = np.sum(
+          (self.counts - self.offer) * self.values[counter_player],
+          dtype='float32')
+      self.ui.accept(counter_player, counter_reward)
     elif done:
       reward = 0.0
       self.ui.no_consensus()
@@ -127,7 +134,7 @@ class Environment:
       self.ui.offer(self.offer, self.counts, self.player)
 
     # Switch player
-    self.player = 'opponent' if self.player is 'self' else 'self'
+    self.player = counter_player
     self.positions[self.player] = 0
     self._inverse_offer()
     self.proposed_offer = np.copy(self.offer)
