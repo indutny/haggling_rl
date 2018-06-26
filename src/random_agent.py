@@ -10,6 +10,9 @@ class RandomAgent:
 
   def step(self, obs, state, mask):
     obs = obs.astype('int32')
+    pos = obs[0]
+    obs = obs[1:]
+
     offer = obs[:MAX_TYPES]
     obs = obs[MAX_TYPES:]
 
@@ -38,10 +41,14 @@ class RandomAgent:
       if d == 0:
         continue
 
-      if d > 0:
-        action = i * 2 + 2
+      if i < pos:
+        action = 3
+      elif i > pos:
+        action = 4
+      elif d > 0:
+        action = 1
       else:
-        action = i * 2 + 1
+        action = 2
       break
 
     return action, None, state + 1, None

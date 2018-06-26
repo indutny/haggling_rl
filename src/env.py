@@ -1,13 +1,10 @@
 import numpy as np
 import random
 
-from gym import Env
-from gym.spaces import Box, Discrete
-
 from generator import Generator, MAX_TYPES
 from ui import UI
 
-class Environment(Env):
+class Environment:
   def __init__(self, opponent,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
                max_steps=50):
@@ -22,14 +19,9 @@ class Environment(Env):
 
     state = self.reset()
 
-    # +- on each type, submit button
-    self.action_space = Discrete(1 + MAX_TYPES * 2)
-    self.observation_space = Box(
-        low=np.zeros(state.shape[0], dtype='float32'),
-        high=np.array(
-          [ float(max_obj) ] * (self.counts.shape[0] + self.offer.shape[0]) +
-          [ self.total ] * self.values['self'].shape[0], dtype='float32'),
-        dtype='float32')
+    # +- on each type, left/right, submit button
+    self.action_space = 5
+    self.observation_space = state.shape[0]
 
   def reset(self):
     self.opponent_state = self.opponent.initial_state
@@ -41,6 +33,10 @@ class Environment(Env):
     self.values = {
       'self': objects['valuations'][0],
       'opponent': objects['valuations'][1],
+    }
+    self.positions = {
+      'self': 0,
+      'opponent': 0,
     }
     self.counts = objects['counts']
     self.offer = np.zeros(self.counts.shape, dtype='int32')
@@ -59,26 +55,36 @@ class Environment(Env):
   def step(self, action):
     player = self.player
 
+    done = False
+
+    # Submit
     if action == 0:
       reward, state, done = self._submit()
       if not done and self.player is 'opponent':
         reward, state, done = self._run_opponent()
+
+    # +1/-1
+    elif action == 1 or action == 2:
+      reward, state = self._make_change(1 if action == 1 else -1)
+
+    # left/right
+    elif action == 3 or action == 4:
+      reward, state = self._move(-1 if action == 3 else 1)
     else:
-      reward, state = self._make_change(action)
-      done = False
+      raise Exception('Unknown action {}'.format(action))
 
     return state, reward, done, { 'player': player }
 
   def _make_state(self):
     return np.concatenate([
+      [ self.positions[self.player] ],
       self.offer,
       self.values[self.player],
       self.counts,
     ]).astype('float32')
 
-  def _make_change(self, action):
-    index = int((action - 1) / 2)
-    delta = ((action - 1) % 2) * 2 - 1
+  def _make_change(self, delta):
+    index = self.positions[self.player]
 
     value = self.offer[index] + delta
     max_value = self.counts[index]
@@ -88,6 +94,15 @@ class Environment(Env):
     value = max(value, 0.0)
 
     self.offer[index] = value
+
+    # TODO(indutny): negative reward on overflow/underflow?
+    return 0.0, self._make_state()
+
+  def _move(self, delta):
+    pos = self.positions[self.player] + delta
+    pos = max(pos, 0)
+    pos = min(pos, MAX_TYPES)
+    self.positions[self.player] = pos
 
     # TODO(indutny): negative reward on overflow/underflow?
     return 0.0, self._make_state()
@@ -113,6 +128,7 @@ class Environment(Env):
 
     # Switch player
     self.player = 'opponent' if self.player is 'self' else 'self'
+    self.positions[self.player] = 0
     self._inverse_offer()
     self.proposed_offer = np.copy(self.offer)
 
