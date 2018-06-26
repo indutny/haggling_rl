@@ -1,9 +1,10 @@
 import tensorflow as tf
 import numpy as np
 
-LSTM_UNITS = 256
+LSTM_UNITS = 32
 ENTROPY_SCALE = 0.01
 VALUE_SCALE = 0.5
+MAX_STEPS = 50
 LR = 0.001
 GRAD_CLIP = 1.0
 
@@ -23,8 +24,8 @@ class Model:
     self.rnn_state = tf.placeholder(tf.float32,
         shape=(None, state_size.c + state_size.h), name='rnn_state')
 
-    state = tf.contrib.rnn.LSTMStateTuple(self.rnn_state[:, :state_size.c],
-                                          self.rnn_state[:, state_size.c:])
+    state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
+                                          h=self.rnn_state[:, state_size.c:])
     x, state = self.cell(self.input, state)
 
     self.initial_state = np.zeros(self.rnn_state.shape[1])
@@ -47,13 +48,13 @@ class Model:
         name='entropy')
 
     advantage = self.true_value - self.value
-    self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss')
+    self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss') / 2.0
 
     action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=self.selected_action,
         logits=self.action,
         name='action_gain')
-    self.policy_loss = tf.reduce_mean(action_gain * advantage,
+    self.policy_loss = tf.reduce_mean(action_gain * self.true_value,
         name='policy_loss')
 
     optimizer = tf.train.AdamOptimizer(LR)
@@ -91,9 +92,11 @@ class Model:
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
+      print('collecting...')
       states, model_states, actions, rewards, dones = [], [], [], [], []
 
       model_state = self.initial_state
+      steps = 0
       for i in range(step_count):
         action, next_model_state = self.step(state, model_state)
 
@@ -105,14 +108,20 @@ class Model:
         dones.append(done)
         model_states.append(model_state)
 
+        if not done and steps > MAX_STEPS:
+          done = True
+
         if done:
           state = self.env.reset()
+          steps = 0
           model_state = self.initial_state
           finished_games += 1
         else:
           state = next_state
+          steps += 1
           model_state = next_model_state
 
+      print('reflecting...')
       self.reflect(states, model_states, actions, rewards, dones)
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):

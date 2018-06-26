@@ -2,6 +2,9 @@ ITEM_NAMES = [ 'book', 'hat', 'ball', 'flower', 'bottle', 'cookie', 'hammer',
     'chair', 'spoon', 'pencil' ]
 
 class UI:
+  def __init__(self):
+    self.disabled = False
+
   def initial(self, counts, values):
     items = self._enumerate(counts)
     self._display('There are: ' + ', '.join(items))
@@ -47,4 +50,5 @@ class UI:
         for name, price in zip(ITEM_NAMES, values) if price > 0 ]
 
   def _display(self, message):
-    print(message)
+    if not self.disabled:
+      print(message)

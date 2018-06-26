@@ -66,7 +66,11 @@ class Environment:
       if not done and self.player is 'opponent':
         _, state, done = self._run_opponent()
         if done:
-          reward = np.sum(self.offer * self.values['self'], dtype='float32')
+          reward = reward if reward < 0.0 else \
+              np.sum(self.offer * self.values['self'], dtype='float32')
+        else:
+          # Opponent declined
+          reward = -0.002
 
     # +1/-1
     elif action == 1 or action == 2:
@@ -92,8 +96,10 @@ class Environment:
   def _make_change(self, delta):
     index = self.positions[self.player]
 
-    value = self.offer[index] + delta
+    initial_value = self.offer[index]
+    value = initial_value + delta
     max_value = self.counts[index]
+    cost = self.values[self.player][index]
 
     # Clamp
     value = min(value, max_value)
@@ -101,17 +107,19 @@ class Environment:
 
     self.offer[index] = value
 
-    # TODO(indutny): negative reward on overflow/underflow?
-    return 0.0, self._make_state()
+    reward = -0.001 if initial_value == value else \
+        0.1 * delta * cost / self.total
+    return reward, self._make_state()
 
   def _move(self, delta):
-    pos = self.positions[self.player] + delta
+    initial_pos = self.positions[self.player]
+    pos = initial_pos + delta
     pos = max(pos, 0)
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    # TODO(indutny): negative reward on overflow/underflow?
-    return 0.0, self._make_state()
+    reward = -0.001 if initial_pos == pos else 0.0
+    return reward, self._make_state()
 
   def _submit(self):
     # No state change here
@@ -132,7 +140,7 @@ class Environment:
           dtype='float32')
       self.ui.accept(counter_player, counter_reward)
     elif done:
-      reward = 0.0
+      reward = -0.01
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
