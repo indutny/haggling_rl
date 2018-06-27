@@ -68,7 +68,7 @@ class Model:
 
       optimizer = tf.train.AdamOptimizer(LR)
 
-      self.loss = self.policy_loss + self.value_loss * VALUE_SCALE + \
+      self.loss = self.policy_loss + self.value_loss * VALUE_SCALE - \
           self.entropy * ENTROPY_SCALE
 
       variables = tf.trainable_variables()
