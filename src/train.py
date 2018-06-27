@@ -2,7 +2,7 @@ import os
 import time
 import tensorflow as tf
 
-from random_agent import RandomAgent
+from policy_agent import PolicyAgent
 from env import Environment
 from model import Model
 
@@ -18,7 +18,7 @@ EPOCH = 0
 
 env = Environment()
 
-env.add_opponent(RandomAgent())
+env.add_opponent(PolicyAgent())
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
