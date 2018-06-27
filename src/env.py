@@ -142,7 +142,7 @@ class Environment:
       # Relative reward
       reward = (reward - counter_reward) / self.total
     elif done:
-      reward = -0.01
+      reward = 0.0
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
