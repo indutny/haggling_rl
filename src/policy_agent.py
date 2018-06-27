@@ -1,13 +1,15 @@
 import numpy as np
+import random
 
 from generator import MAX_TYPES
 
-class HalfOrEverythingPolicy:
+class BasePolicy:
   def __init__(self, values, counts):
     self.values = values
     self.counts = counts
     self.total = np.sum(counts * values)
 
+class HalfOrAllPolicy(BasePolicy):
   def on_offer(self, offer):
     offer_value = np.sum(offer * self.values)
 
@@ -18,10 +20,57 @@ class HalfOrEverythingPolicy:
     # Generate target
     return False, np.where(self.values > 0.0, self.counts, 0)
 
+class DownsizePolicy(BasePolicy):
+  def __init__(self, *args, **kwargs):
+    super(DownsizePolicy, self).__init__(*args, **kwargs)
+
+    self.round = 0
+
+  def on_offer(self, offer):
+    self.round += 1
+
+    alpha = 1 - min(5, self.round) / 5.0
+    half = self.total / 2.0
+    minimum = (self.total - half) * alpha + half
+
+    offer_value = np.sum(offer * self.values)
+
+    # Accept offer
+    if offer_value >= minimum:
+      return True, None
+
+    offers = []
+    self.find_offers(offers, np.zeros(self.counts.shape), minimum, 0, 0.0)
+
+    offer = random.choice(offers)
+
+    # Generate target
+    return False, offer
+
+  def find_offers(self, offers, offer, minimum, i, total):
+    if i == len(self.counts):
+      return
+
+    if self.values[i] == 0.0:
+      return self.find_offers(offers, offer, minimum, i + 1, total)
+
+    for j in range(0, self.counts[i] + 1):
+      offer[i] = j
+      offer_value = total + j * self.values[i]
+      if offer_value > minimum:
+        offers.append(np.copy(offer))
+      self.find_offers(offers, offer, minimum, i + 1, total + offer_value)
+
 class PolicyAgent:
-  def __init__(self, policy=HalfOrEverythingPolicy):
-    self.name = 'random'
-    self.policy = policy
+  def __init__(self, policy):
+    if policy is 'downsize':
+      self.policy = DownsizePolicy
+    elif policy is 'half_or_all':
+      self.policy = HalfOrAllPolicy
+    else:
+      self.policy = policy
+
+    self.name = 'agent_' + self.policy.__name__
 
     self.initial_state = (True, None,)
     self.target = None
@@ -47,7 +96,7 @@ class PolicyAgent:
       accept, target = policy.on_offer(offer)
 
       # Accept offer
-      if target:
+      if accept:
         return 0, self.initial_state
 
       self.target = target
