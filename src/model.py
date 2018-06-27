@@ -104,7 +104,7 @@ class Model:
 
         states.append(state)
         actions.append(action)
-        rewards.append(reward / self.env.total)
+        rewards.append(reward)
         dones.append(done)
         model_states.append(model_state)
 
