@@ -42,7 +42,14 @@ class DownsizePolicy(BasePolicy):
     offers = []
     self.find_offers(offers, np.zeros(self.counts.shape), minimum, 0, 0.0)
 
-    offer = random.choice(offers)
+    min_value = float('inf')
+    for offer_value, offer in offers:
+      if offer_value > min_value:
+        continue
+      min_value = offer_value
+
+    min_offers = [ offer for value, offer in offers if value == min_value ]
+    offer = random.choice(min_offers)
 
     # Generate target
     return False, offer
@@ -58,7 +65,7 @@ class DownsizePolicy(BasePolicy):
       offer[i] = j
       offer_value = total + j * self.values[i]
       if offer_value > minimum:
-        offers.append(np.copy(offer))
+        offers.append((offer_value, offer,))
       self.find_offers(offers, offer, minimum, i + 1, total + offer_value)
 
 class AltruistPolicy(BasePolicy):
