@@ -61,12 +61,46 @@ class DownsizePolicy(BasePolicy):
         offers.append(np.copy(offer))
       self.find_offers(offers, offer, minimum, i + 1, total + offer_value)
 
+class AltruistPolicy(BasePolicy):
+  def on_offer(self, offer):
+    offer_value = np.sum(offer * self.values)
+    if offer_value > 0:
+      return True, None
+
+    min_value_i = np.argmin(
+        np.where(self.values > 0, self.values, float('inf')))
+    counter_offer = np.zeros(self.counts.shape)
+    counter_offer[min_value_i] = 1
+
+    return False, counter_offer
+
+class GreedyPolicy(BasePolicy):
+  def on_offer(self, offer):
+    offer_value = np.sum(offer * self.values)
+    if offer_value == self.total:
+      return True, None
+
+    return False, np.zeros(self.counts.shape)
+
+class StubbornPolicy(BasePolicy):
+  def on_offer(self, offer):
+    counter_offer = np.zeros(self.counts.shape)
+    for i, max_count in enumerate(self.counts):
+      counter_offer[i] = random.randint(0, max_count)
+    return False, counter_offer
+
 class PolicyAgent:
   def __init__(self, policy):
     if policy is 'downsize':
       self.policy = DownsizePolicy
     elif policy is 'half_or_all':
       self.policy = HalfOrAllPolicy
+    elif policy is 'altruist':
+      self.policy = AltruistPolicy
+    elif policy is 'greedy':
+      self.policy = GreedyPolicy
+    elif policy is 'stubborn':
+      self.policy = StubbornPolicy
     else:
       self.policy = policy
 

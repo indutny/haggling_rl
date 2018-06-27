@@ -20,6 +20,9 @@ env = Environment()
 
 env.add_opponent(PolicyAgent(policy='half_or_all'))
 env.add_opponent(PolicyAgent(policy='downsize'))
+env.add_opponent(PolicyAgent(policy='altruist'))
+env.add_opponent(PolicyAgent(policy='greedy'))
+env.add_opponent(PolicyAgent(policy='stubborn'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
