@@ -80,7 +80,7 @@ class GreedyPolicy(BasePolicy):
     if offer_value == self.total:
       return True, None
 
-    return False, np.zeros(self.counts.shape)
+    return False, np.copy(self.counts)
 
 class StubbornPolicy(BasePolicy):
   def on_offer(self, offer):
