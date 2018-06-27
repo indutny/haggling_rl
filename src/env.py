@@ -132,7 +132,7 @@ class Environment:
     self.offer[index] = value
 
     reward = -0.001 if initial_value == value else \
-        0.01 * delta * cost / self.total
+        0.0 * delta * cost / self.total
     return reward, self._make_state()
 
   def _move(self, delta):
