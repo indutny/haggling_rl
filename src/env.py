@@ -4,6 +4,8 @@ import random
 from generator import Generator, MAX_TYPES
 from ui import UI
 
+REWARD_OFFSET = 0.0
+
 class Environment:
   def __init__(self,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
@@ -89,6 +91,7 @@ class Environment:
             reward = np.sum(self.offer * self.values[self.player],
                 dtype='float32')
             reward /= self.total
+            reward -= REWARD_OFFSET
         else:
           # Opponent declined
           reward = -0.002
@@ -129,7 +132,7 @@ class Environment:
     self.offer[index] = value
 
     reward = -0.001 if initial_value == value else \
-        0.1 * delta * cost / self.total
+        0.01 * delta * cost / self.total
     return reward, self._make_state()
 
   def _move(self, delta):
@@ -162,6 +165,7 @@ class Environment:
       self.ui.accept(counter_player, counter_reward)
 
       reward = reward / self.total
+      reward -= REWARD_OFFSET
     elif done:
       reward = 0.0
       self.ui.no_consensus()
