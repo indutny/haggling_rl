@@ -88,7 +88,7 @@ class Model:
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, game_count=200000, step_count=256):
+  def explore(self, game_count=20000000, step_count=256):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
