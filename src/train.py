@@ -12,7 +12,7 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-NUM_ANTAGONISTS = 8
+NUM_ANTAGONISTS = 4
 ANTAGONIST_INDEX = 0
 EPOCH = 0
 
