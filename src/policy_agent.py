@@ -64,8 +64,9 @@ class DownsizePolicy(BasePolicy):
     for j in range(0, self.counts[i] + 1):
       offer[i] = j
       offer_value = total + j * self.values[i]
-      if offer_value > minimum:
-        offers.append((offer_value, offer,))
+      if offer_value >= minimum:
+        offers.append((offer_value, np.copy(offer),))
+
       self.find_offers(offers, offer, minimum, i + 1, total + offer_value)
 
 class AltruistPolicy(BasePolicy):
@@ -144,7 +145,7 @@ class PolicyAgent:
 
     # Target reached
     if np.array_equal(offer, self.target):
-      return 0, self.initial_state
+      return 0, (True, policy,)
 
     delta = self.target - offer
     for i, d in enumerate(delta):
