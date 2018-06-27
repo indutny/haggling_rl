@@ -21,10 +21,10 @@ env = Environment()
 env.add_opponent(RandomAgent())
 
 writer = tf.summary.FileWriter(LOG_DIR)
-saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
 with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
+  saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   antagonists = []
   antagonists_copy_ops = []
