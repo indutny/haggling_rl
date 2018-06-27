@@ -6,7 +6,7 @@ ENTROPY_SCALE = 0.01
 VALUE_SCALE = 0.5
 MAX_STEPS = 100
 LR = 0.001
-GRAD_CLIP = 1.0
+GRAD_CLIP = 0.5
 
 class Model:
   def __init__(self, env, sess, writer, name='haggle'):
