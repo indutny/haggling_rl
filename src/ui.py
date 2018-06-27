@@ -5,8 +5,10 @@ class UI:
   def __init__(self):
     self.disabled = False
 
-  def initial(self, counts, values):
+  def initial(self, opponent, counts, values):
     items = self._enumerate(counts)
+    self._display('Opponent name is: {}'.format(
+      'unspecified ' if opponent is None else opponent.name))
     self._display('There are: ' + ', '.join(items))
     prices = self._prices(values)
     self._display(', '.join(prices))

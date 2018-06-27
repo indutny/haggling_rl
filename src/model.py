@@ -9,65 +9,87 @@ LR = 0.001
 GRAD_CLIP = 1.0
 
 class Model:
-  def __init__(self, env, sess, writer):
+  def __init__(self, env, sess, writer, name='haggle'):
+    self.original_name = name
+    self.version = 0
+
+    self.name = name
+
+    self.scope = tf.VariableScope(reuse=False, name=name)
     self.env = env
     self.sess = sess
     self.writer = writer
     self.writer_step = 0
 
-    self.input = tf.placeholder(tf.float32,
-        shape=(None, env.observation_space), name='input')
+    with tf.variable_scope(self.scope):
+      self.input = tf.placeholder(tf.float32,
+          shape=(None, env.observation_space), name='input')
 
-    self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', num_units=LSTM_UNITS)
-    state_size = self.cell.state_size
+      self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
+          num_units=LSTM_UNITS)
+      state_size = self.cell.state_size
 
-    self.rnn_state = tf.placeholder(tf.float32,
-        shape=(None, state_size.c + state_size.h), name='rnn_state')
+      self.rnn_state = tf.placeholder(tf.float32,
+          shape=(None, state_size.c + state_size.h), name='rnn_state')
 
-    state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
-                                          h=self.rnn_state[:, state_size.c:])
-    x, state = self.cell(self.input, state)
+      state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
+                                            h=self.rnn_state[:, state_size.c:])
+      x, state = self.cell(self.input, state)
 
-    self.initial_state = np.zeros(self.rnn_state.shape[1])
+      self.initial_state = np.zeros(self.rnn_state.shape[1])
 
-    # Outputs
-    raw_action = tf.layers.dense(x, env.action_space, name='action')
-    self.action = tf.nn.softmax(raw_action)
-    self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
-    self.mean_value = tf.reduce_mean(self.value, name='mean_value')
-    self.new_state = tf.concat([ state.c, state.h ], axis=-1, name='new_state')
+      # Outputs
+      raw_action = tf.layers.dense(x, env.action_space, name='action')
+      self.action = tf.nn.softmax(raw_action)
+      self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
+      self.mean_value = tf.reduce_mean(self.value, name='mean_value')
+      self.new_state = tf.concat([ state.c, state.h ], axis=-1, \
+          name='new_state')
 
-    # Losses
-    self.true_value = tf.placeholder(tf.float32,
-        shape=(None,), name='true_value')
-    self.selected_action = tf.placeholder(tf.int32,
-        shape=(None,), name='selected_action')
+      # Losses
+      self.true_value = tf.placeholder(tf.float32,
+          shape=(None,), name='true_value')
+      self.selected_action = tf.placeholder(tf.int32,
+          shape=(None,), name='selected_action')
 
-    self.entropy = -tf.reduce_mean(
-        tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
-        name='entropy')
+      self.entropy = -tf.reduce_mean(
+          tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
+          name='entropy')
 
-    advantage = self.true_value - self.value
-    self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss') / 2.0
+      advantage = self.true_value - self.value
+      self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss') / 2.0
 
-    action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
-        labels=self.selected_action,
-        logits=raw_action,
-        name='action_gain')
-    self.policy_loss = tf.reduce_mean(action_gain * self.true_value,
-        name='policy_loss')
+      action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
+          labels=self.selected_action,
+          logits=raw_action,
+          name='action_gain')
+      self.policy_loss = tf.reduce_mean(action_gain * self.true_value,
+          name='policy_loss')
 
-    optimizer = tf.train.AdamOptimizer(LR)
+      optimizer = tf.train.AdamOptimizer(LR)
 
-    self.loss = self.policy_loss + self.value_loss * VALUE_SCALE + \
-        self.entropy * ENTROPY_SCALE
+      self.loss = self.policy_loss + self.value_loss * VALUE_SCALE + \
+          self.entropy * ENTROPY_SCALE
 
-    variables = tf.trainable_variables()
-    grads = tf.gradients(self.loss, variables)
-    grads, grad_norm = tf.clip_by_global_norm(grads, GRAD_CLIP)
-    grads = list(zip(grads, variables))
-    self.grad_norm = grad_norm
-    self.train = optimizer.apply_gradients(grads_and_vars=grads)
+      variables = tf.trainable_variables()
+      grads = tf.gradients(self.loss, variables)
+      grads, grad_norm = tf.clip_by_global_norm(grads, GRAD_CLIP)
+      grads = list(zip(grads, variables))
+      self.grad_norm = grad_norm
+      self.train = optimizer.apply_gradients(grads_and_vars=grads)
+
+  def copy_from(self, other):
+    self_vars = self.scope.trainable_variables()
+    other_vars = other.scope.trainable_variables()
+
+    ops = []
+    for self_var, other_var in zip(self_vars, other_vars):
+      ops.append(self_var.assign(other_var))
+    return ops
+
+  def increment_version(self):
+    self.version += 1
+    self.name = '{}_v{}'.format(self.original_name, self.version)
 
   def fill_feed_dict(self, out, obs, state=None):
     if state is None:
@@ -88,7 +110,7 @@ class Model:
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, game_count=20000000, step_count=256):
+  def explore(self, game_count=20000, step_count=256):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:

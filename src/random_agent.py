@@ -4,6 +4,8 @@ from generator import MAX_TYPES
 
 class RandomAgent:
   def __init__(self):
+    self.name = 'random'
+
     self.initial_state = 0
     self.total = 0
     self.target = None

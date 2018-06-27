@@ -24,9 +24,10 @@ class Environment:
     self.action_space = 5
     self.observation_space = state.shape[0]
 
-  def reset(self):
+  def reset(self, force_self=False):
     if len(self.opponent_list) > 0:
-      self.player = random.choice([ 'self', 'opponent' ])
+      self.player = 'self' if force_self else \
+          random.choice([ 'self', 'opponent' ])
       self.opponent = random.choice(self.opponent_list)
       self.opponent_state = self.opponent.initial_state
     else:
@@ -50,10 +51,14 @@ class Environment:
     self.offer = np.zeros(self.counts.shape, dtype='int32')
     self.proposed_offer = np.copy(self.offer)
 
-    self.ui.initial(self.counts, self.values['self'])
+    self.ui.initial(self.opponent, self.counts, self.values['self'])
 
     if self.player is 'opponent':
       self._run_opponent()
+
+      # Opponent accepted zero-offer, can't do nothing!
+      if self.done:
+        return self.reset()
 
     if not self.player is 'self':
       raise Exception('Unexpected!')
@@ -62,6 +67,9 @@ class Environment:
 
   def add_opponent(self, opponent):
     self.opponent_list.append(opponent)
+
+  def clear_opponents(self):
+    self.opponent_list = []
 
   def step(self, action):
     player = self.player
