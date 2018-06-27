@@ -5,10 +5,11 @@ from generator import Generator, MAX_TYPES
 from ui import UI
 
 class Environment:
-  def __init__(self, opponent,
+  def __init__(self,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
                max_steps=50):
-    self.opponent = opponent
+    self.opponent_list = []
+
     self.generator = Generator(types, min_obj, max_obj, total)
     self.ui = UI()
 
@@ -24,9 +25,15 @@ class Environment:
     self.observation_space = state.shape[0]
 
   def reset(self):
-    self.opponent_state = self.opponent.initial_state
+    if len(self.opponent_list) > 0:
+      self.player = random.choice([ 'self', 'opponent' ])
+      self.opponent = random.choice(self.opponent_list)
+      self.opponent_state = self.opponent.initial_state
+    else:
+      self.player = 'self'
+      self.opponent = None
+      self.opponent_state = None
 
-    self.player = random.choice([ 'self', 'opponent' ])
     self.steps = 0
     self.done = False
 
@@ -52,6 +59,9 @@ class Environment:
       raise Exception('Unexpected!')
 
     return self._make_state()
+
+  def add_opponent(self, opponent):
+    self.opponent_list.append(opponent)
 
   def step(self, action):
     player = self.player
