@@ -4,7 +4,7 @@ import numpy as np
 LSTM_UNITS = 32
 ENTROPY_SCALE = 0.01
 VALUE_SCALE = 0.5
-MAX_STEPS = 50
+MAX_STEPS = 100
 LR = 0.001
 GRAD_CLIP = 1.0
 
@@ -109,6 +109,7 @@ class Model:
         model_states.append(model_state)
 
         if not done and steps > MAX_STEPS:
+          reward = -1.0
           done = True
 
         if done:
