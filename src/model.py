@@ -110,7 +110,7 @@ class Model:
 
         if not done and steps > MAX_STEPS:
           print('timed out...')
-          reward = -1.0
+          reward = -10.0
           done = True
 
         if done:
