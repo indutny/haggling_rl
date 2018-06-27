@@ -31,8 +31,8 @@ class Model:
     self.initial_state = np.zeros(self.rnn_state.shape[1])
 
     # Outputs
-    self.action = tf.layers.dense(x, env.action_space, activation=tf.nn.softmax,
-        name='action')
+    raw_action = tf.layers.dense(x, env.action_space, name='action')
+    self.action = tf.nn.softmax(raw_action)
     self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
     self.mean_value = tf.reduce_mean(self.value, name='mean_value')
     self.new_state = tf.concat([ state.c, state.h ], axis=-1, name='new_state')
@@ -52,7 +52,7 @@ class Model:
 
     action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=self.selected_action,
-        logits=self.action,
+        logits=raw_action,
         name='action_gain')
     self.policy_loss = tf.reduce_mean(action_gain * self.true_value,
         name='policy_loss')
