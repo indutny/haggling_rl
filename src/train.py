@@ -11,14 +11,12 @@ if RUN_NAME is None:
   RUN_NAME = time.asctime()
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 
+e = Environment(RandomAgent())
+
 writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
-  e = Environment()
-
   model = Model(e, sess, writer)
-
-  with tf.variable_scope('model_copy'):
 
   sess.run(tf.global_variables_initializer())
 
