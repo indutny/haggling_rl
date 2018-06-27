@@ -87,8 +87,8 @@ class Model:
       ops.append(self_var.assign(other_var))
     return ops
 
-  def increment_version(self):
-    self.version += 1
+  def set_version(self, version):
+    self.version = version
     self.name = '{}_v{}'.format(self.original_name, self.version)
 
   def fill_feed_dict(self, out, obs, state=None):
