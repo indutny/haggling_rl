@@ -109,6 +109,7 @@ class Model:
         model_states.append(model_state)
 
         if not done and steps > MAX_STEPS:
+          print('timed out...')
           reward = -1.0
           done = True
 
