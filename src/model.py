@@ -102,16 +102,16 @@ class Model:
 
         next_state, reward, done, _ = self.env.step(action)
 
+        if not done and steps > MAX_STEPS:
+          print('timed out...')
+          reward = -1.0
+          done = True
+
         states.append(state)
         actions.append(action)
         rewards.append(reward)
         dones.append(done)
         model_states.append(model_state)
-
-        if not done and steps > MAX_STEPS:
-          print('timed out...')
-          reward = -10.0
-          done = True
 
         if done:
           state = self.env.reset()
