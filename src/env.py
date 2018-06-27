@@ -66,7 +66,11 @@ class Environment:
       if not done and self.player is 'opponent':
         _, state, done = self._run_opponent()
         if done:
-          reward = -reward
+          # Recompute reward
+          if reward >= 0.0:
+            reward = np.sum(self.offer * self.values[self.player],
+                dtype='float32')
+            reward /= self.total
         else:
           # Opponent declined
           reward = -0.002
@@ -139,8 +143,7 @@ class Environment:
           dtype='float32')
       self.ui.accept(counter_player, counter_reward)
 
-      # Relative reward
-      reward = (reward - counter_reward) / self.total
+      reward = reward / self.total
     elif done:
       reward = 0.0
       self.ui.no_consensus()
