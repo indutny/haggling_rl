@@ -156,6 +156,8 @@ class Environment:
       reward -= counter_reward
       reward = reward / self.total
     elif done:
+      # Slightly discourage absence of consensus
+      reward = -0.1 if self.player is 'self' else 0.0
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
