@@ -63,7 +63,7 @@ class Model:
           labels=self.selected_action,
           logits=raw_action,
           name='action_gain')
-      self.policy_loss = tf.reduce_mean(action_gain * self.true_value,
+      self.policy_loss = tf.reduce_mean(action_gain * advantage,
           name='policy_loss')
 
       optimizer = tf.train.AdamOptimizer(LR)

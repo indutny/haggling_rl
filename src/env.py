@@ -168,7 +168,7 @@ class Environment:
       reward -= REWARD_OFFSET
     elif done:
       # Positive reward, because other side won't get money either
-      reward = 0.3
+      reward = 0.4
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
