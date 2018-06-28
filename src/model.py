@@ -49,6 +49,8 @@ class Model:
       # Losses
       self.true_value = tf.placeholder(tf.float32,
           shape=(None,), name='true_value')
+      self.past_value = tf.placeholder(tf.float32,
+          shape=(None,), name='past_value')
       self.selected_action = tf.placeholder(tf.int32,
           shape=(None,), name='selected_action')
 
@@ -56,14 +58,16 @@ class Model:
           tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
           name='entropy')
 
-      advantage = self.true_value - self.value
-      self.value_loss = tf.reduce_mean(advantage ** 2, name='value_loss') / 2.0
+      online_advantage = self.true_value - self.value
+      self.value_loss = tf.reduce_mean(online_advantage ** 2,
+          name='value_loss') / 2.0
 
       action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
           labels=self.selected_action,
           logits=raw_action,
           name='action_gain')
-      self.policy_loss = tf.reduce_mean(action_gain * advantage,
+      offline_advantage = self.true_value - self.past_value
+      self.policy_loss = tf.reduce_mean(action_gain * offline_advantage,
           name='policy_loss')
 
       optimizer = tf.train.AdamOptimizer(LR)
@@ -99,13 +103,24 @@ class Model:
     out[self.rnn_state] = state
     return out
 
-  def step(self, obs, state):
+  def step(self, obs, state, a2c=False):
     feed_dict = {}
     self.fill_feed_dict(feed_dict, [ obs ], [ state ])
-    action_probs, next_state = self.sess.run([ self.action, self.new_state ],
-        feed_dict=feed_dict)
+    tensors = [ self.action, self.new_state ]
+    if a2c:
+      tensors.append(self.value)
+
+    out = self.sess.run(tensors, feed_dict=feed_dict)
+    if not a2c:
+      out.append(None)
+
+    action_probs, next_state, value = out
     action = self.pick_action(action_probs[0])
-    return action, next_state[0]
+
+    if a2c:
+      return action, next_state[0], value
+    else:
+      return action, next_state[0]
 
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
@@ -115,12 +130,14 @@ class Model:
     finished_games = 0
     while finished_games < game_count:
       print('collecting...')
-      states, model_states, actions, rewards, dones = [], [], [], [], []
+      states, model_states, actions, values, rewards, dones = \
+          [], [], [], [], [], []
 
       model_state = self.initial_state
       steps = 0
       for i in range(step_count):
-        action, next_model_state = self.step(state, model_state)
+        action, next_model_state, value = self.step(state, model_state, \
+            a2c=True)
 
         next_state, reward, done, _ = self.env.step(action)
 
@@ -131,6 +148,7 @@ class Model:
 
         states.append(state)
         actions.append(action)
+        values.append(value)
         rewards.append(reward)
         dones.append(done)
         model_states.append(model_state)
@@ -146,7 +164,7 @@ class Model:
           model_state = next_model_state
 
       print('reflecting...')
-      self.reflect(states, model_states, actions, rewards, dones)
+      self.reflect(states, model_states, actions, values, rewards, dones)
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros(len(rewards), dtype='float32')
@@ -161,7 +179,7 @@ class Model:
 
     return estimates
 
-  def reflect(self, states, model_states, actions, rewards, dones):
+  def reflect(self, states, model_states, actions, values, rewards, dones):
     estimates = self.estimate_rewards(rewards, dones)
 
     feed_dict = {
@@ -169,6 +187,7 @@ class Model:
       self.rnn_state: model_states,
       self.selected_action: actions,
       self.true_value: estimates,
+      self.past_value: values,
     }
 
     tensors = [
