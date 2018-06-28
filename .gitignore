@@ -2,3 +2,4 @@
 logs/
 saves/*
 !saves/.gitkeep
+export/*.json
