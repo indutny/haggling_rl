@@ -209,34 +209,29 @@ module.exports = class Agent {
   }
 
   offer(o) {
-    try {
-      if (o) {
-        this.env.setOffer(o);
-      }
-
-      let offer = undefined;
-      for (let i = 0; i < MAX_STEPS; i++) {
-        const { action, probs, newState } = m.call(this.env.buildObservation(),
-          this.state);
-        this.state = newState;
-
-        // this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
-        offer = this.env.step(action);
-        if (offer) {
-          break;
-        }
-      }
-
-      // Timed out
-      if (!offer) {
-        return undefined;
-      }
-
-      // Success
-      return offer;
-    } catch (e) {
-      this.log(e.stack);
-      throw e;
+    if (o) {
+      this.env.setOffer(o);
     }
+
+    let offer = undefined;
+    for (let i = 0; i < MAX_STEPS; i++) {
+      const { action, probs, newState } = m.call(this.env.buildObservation(),
+        this.state);
+      this.state = newState;
+
+      // this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
+      offer = this.env.step(action);
+      if (offer) {
+        break;
+      }
+    }
+
+    // Timed out
+    if (!offer) {
+      return undefined;
+    }
+
+    // Success
+    return offer;
   }
 };
