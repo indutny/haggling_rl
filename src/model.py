@@ -7,6 +7,7 @@ VALUE_SCALE = 0.5
 MAX_STEPS = 100
 LR = 0.001
 GRAD_CLIP = 0.5
+PPO_EPSILON = 0.1
 
 class Model:
   def __init__(self, env, sess, writer, name='haggle'):
@@ -40,7 +41,7 @@ class Model:
 
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
-      self.action = tf.nn.softmax(raw_action)
+      self.action = tf.nn.softmax(raw_action, name='action_probs')
       self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
       self.mean_value = tf.reduce_mean(self.value, name='mean_value')
       self.new_state = tf.concat([ state.c, state.h ], axis=-1, \
@@ -51,6 +52,8 @@ class Model:
           shape=(None,), name='true_value')
       self.past_value = tf.placeholder(tf.float32,
           shape=(None,), name='past_value')
+      self.past_prob = tf.placeholder(tf.float32,
+          shape=(None,), name='past_prob')
       self.selected_action = tf.placeholder(tf.int32,
           shape=(None,), name='selected_action')
 
@@ -62,13 +65,26 @@ class Model:
       self.value_loss = tf.reduce_mean(online_advantage ** 2,
           name='value_loss') / 2.0
 
-      action_gain = tf.nn.sparse_softmax_cross_entropy_with_logits(
-          labels=self.selected_action,
-          logits=raw_action,
-          name='action_gain')
+      action_one_hot = tf.one_hot(self.selected_action,
+          depth=self.action.shape[-1],
+          dtype='float32',
+          name='action_one_hot')
+      current_prob = tf.reduce_sum(
+          action_one_hot * self.action,
+          axis=-1,
+          name='current_prob')
+
+      prob_ratio = current_prob / self.past_prob
+      clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - PPO_EPSILON,
+          1.0 + PPO_EPSILON, name='clipped_ratio')
+
       offline_advantage = self.true_value - self.past_value
-      self.policy_loss = tf.reduce_mean(action_gain * offline_advantage,
+      policy_loss = tf.minimum(
+          prob_ratio * offline_advantage,
+          clipped_ratio * offline_advantage)
+      policy_loss = -tf.reduce_mean(policy_loss,
           name='policy_loss')
+      self.policy_loss = policy_loss
 
       optimizer = tf.train.AdamOptimizer(LR)
 
@@ -118,7 +134,7 @@ class Model:
     action = self.pick_action(action_probs[0])
 
     if a2c:
-      return action, next_state[0], value
+      return action, next_state[0], value, action_probs[0][action]
     else:
       return action, next_state[0]
 
@@ -130,14 +146,14 @@ class Model:
     finished_games = 0
     while finished_games < game_count:
       print('collecting...')
-      states, model_states, actions, values, rewards, dones = \
-          [], [], [], [], [], []
+      states, model_states, actions, probs, values, rewards, dones = \
+          [], [], [], [], [], [], []
 
       model_state = self.initial_state
       steps = 0
       for i in range(step_count):
-        action, next_model_state, value = self.step(state, model_state, \
-            a2c=True)
+        action, next_model_state, value, action_prob = \
+            self.step(state, model_state, a2c=True)
 
         next_state, reward, done, _ = self.env.step(action)
 
@@ -148,6 +164,7 @@ class Model:
 
         states.append(state)
         actions.append(action)
+        probs.append(action_prob)
         values.append(value)
         rewards.append(reward)
         dones.append(done)
@@ -164,7 +181,7 @@ class Model:
           model_state = next_model_state
 
       print('reflecting...')
-      self.reflect(states, model_states, actions, values, rewards, dones)
+      self.reflect(states, model_states, actions, probs, values, rewards, dones)
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros(len(rewards), dtype='float32')
@@ -179,7 +196,8 @@ class Model:
 
     return estimates
 
-  def reflect(self, states, model_states, actions, values, rewards, dones):
+  def reflect(self, states, model_states, actions, probs, values, rewards, \
+      dones):
     estimates = self.estimate_rewards(rewards, dones)
 
     feed_dict = {
@@ -188,6 +206,7 @@ class Model:
       self.selected_action: actions,
       self.true_value: estimates,
       self.past_value: values,
+      self.past_prob: probs,
     }
 
     tensors = [
