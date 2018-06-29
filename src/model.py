@@ -36,8 +36,8 @@ class Model:
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
-      available_actions = self.input[:, :self.env.action_space]
-      x = self.input[:, self.env.action_space:]
+      available_actions, x = tf.split(self.input, [
+        env.action_space, env.observation_space - env.action_space ], axis=1)
 
       x = tf.layers.dense(x, PRE_WIDTH, name='preprocess',
                           activation=tf.nn.relu)

@@ -13,6 +13,7 @@ assert.strictEqual = (a, b) => {
 
 const MAX_COUNT = 10;
 const MAX_STEPS = 1000;
+const ACTION_SPACE = 5;
 
 function matmul(vec, mat) {
   assert.strictEqual(vec.length, mat.length);
@@ -143,9 +144,15 @@ class Model {
   }
 
   call(input, state) {
+    const available = input.slice(0, ACTION_SPACE);
+    input = input.slice(ACTION_SPACE);
+
     const pre = relu(this.pre.call(input));
     let { result: x, state: newState } = this.lstm.call(pre, state);
     x = this.action.call(x);
+
+    // Mask
+    x = mul(x, available);
     const probs = softmax(x);
 
     let roll = Math.random();
@@ -181,7 +188,28 @@ class Environment {
   }
 
   buildObservation() {
-    return [].concat(this.position, this.offer, this.values, this.counts);
+    const available = [ 1, 0, 0, 0, 0 ];
+
+    // Cell
+    const pos = this.position;
+    const maxValue = this.counts[pos];
+    const currentValue = this.offer[pos];
+    if (currentValue !== maxValue) {
+      available[1] = 1;
+    }
+    if (currentValue !== 0) {
+      available[2] = 1;
+    }
+
+    // Movement
+    if (pos !== 0) {
+      available[3] = 1;
+    }
+    if (pos !== this.types) {
+      available[4] = 1;
+    }
+    return [].concat(available, this.position, this.offer, this.values,
+        this.counts);
   }
 
   setOffer(offer) {
