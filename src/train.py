@@ -19,7 +19,6 @@ EPOCH = 0
 
 env = Environment()
 
-env.add_opponent(PolicyAgent(policy='half_or_all'))
 env.add_opponent(PolicyAgent(policy='downsize'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
