@@ -229,7 +229,7 @@ class Environment {
     if (pos !== 0) {
       available[3] = 1;
     }
-    if (pos !== this.types) {
+    if (pos !== this.types - 1) {
       available[4] = 1;
     }
     return [].concat(available, this.position, this.offer, this.values,

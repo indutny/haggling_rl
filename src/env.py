@@ -118,7 +118,7 @@ class Environment:
     # Movement
     if pos != 0:
       available_actions[3] = 1.0
-    if pos != self.types:
+    if pos != self.types - 1:
       available_actions[4] = 1.0
 
     return np.concatenate([
