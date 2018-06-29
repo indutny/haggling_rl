@@ -3,3 +3,4 @@ logs/
 saves/*
 !saves/.gitkeep
 export/*.json
+node_modules/
