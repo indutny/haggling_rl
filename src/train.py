@@ -16,7 +16,7 @@ NUM_ANTAGONISTS = 1
 ANTAGONIST_UPDATE_FREQ = 1
 
 # Not really constants, but meh...
-ANTAGONIST_INDEX = 1
+ANTAGONIST_INDEX = 0
 EPOCH = 0
 
 env = Environment()
