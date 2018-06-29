@@ -111,3 +111,17 @@ Trained against just downsize.
       "agreements": 691,
       "score": 5757
     },
+
+## downsize with single adv and flat reward
+
+### 10 epochs
+
+    75.53% acceptance
+    7.91 per accepted
+    5.97 per deal
+
+    "all": {
+      "sessions": 887,
+      "agreements": 670,
+      "score": 5303
+    },

@@ -152,6 +152,13 @@ class Environment:
           dtype='float32')
       self.ui.accept(counter_player, counter_reward)
 
+      # Stimulate bigger absolute score
+      if self.player is 'self':
+        reward *= 1.25
+      else:
+        reward *= 1.25
+
+      # ...and bigger relative score
       reward -= counter_reward
       reward = reward / self.total
     elif done:
