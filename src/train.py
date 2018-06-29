@@ -13,7 +13,9 @@ LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
 NUM_ANTAGONISTS = 0
-ANTAGONIST_UPDATE_FREQ = 4
+ANTAGONIST_UPDATE_FREQ = 1
+
+# Not really constants, but meh...
 ANTAGONIST_INDEX = 0
 EPOCH = 0
 
