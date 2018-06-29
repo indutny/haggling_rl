@@ -147,7 +147,7 @@ class Environment:
     reward = 0.0
     if accepted:
       self_offer = self.offer
-      opponent_offer = self.counts - offer
+      opponent_offer = self.counts - self_offer
       if not self.player is 'self':
         self_offer, opponent_offer = opponent_offer, self_offer
 

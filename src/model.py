@@ -2,12 +2,14 @@ import tensorflow as tf
 import numpy as np
 
 LSTM_UNITS = 32
-ENTROPY_SCALE = 0.01
 VALUE_SCALE = 0.5
 MAX_STEPS = 100
 LR = 0.001
 GRAD_CLIP = 0.5
 PPO_EPSILON = 0.1
+
+def default_entropy_scale(game_count):
+  return 0.01
 
 class Model:
   def __init__(self, env, sess, writer, name='haggle'):
@@ -56,6 +58,8 @@ class Model:
           shape=(None,), name='past_prob')
       self.selected_action = tf.placeholder(tf.int32,
           shape=(None,), name='selected_action')
+      self.entropy_scale = tf.placeholder(tf.float32, shape=(),
+          name='entropy_scale')
 
       self.entropy = -tf.reduce_mean(
           tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
@@ -89,7 +93,7 @@ class Model:
       optimizer = tf.train.AdamOptimizer(LR)
 
       self.loss = self.policy_loss + self.value_loss * VALUE_SCALE - \
-          self.entropy * ENTROPY_SCALE
+          self.entropy * self.entropy_scale
 
       variables = tf.trainable_variables()
       grads = tf.gradients(self.loss, variables)
@@ -141,7 +145,8 @@ class Model:
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, game_count=20000, reflect_every=25):
+  def explore(self, game_count=20000, reflect_every=25, game_off=0, \
+              entropy_scale=default_entropy_scale):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
@@ -184,7 +189,8 @@ class Model:
           model_state = next_model_state
 
       print('reflecting...')
-      self.reflect(states, model_states, actions, probs, values, rewards, dones)
+      self.reflect(states, model_states, actions, probs, values, rewards, dones,
+          entropy_scale=entropy_scale(game_off + finished_games))
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros(len(rewards), dtype='float32')
@@ -200,7 +206,7 @@ class Model:
     return estimates
 
   def reflect(self, states, model_states, actions, probs, values, rewards, \
-      dones):
+      dones, entropy_scale):
     estimates = self.estimate_rewards(rewards, dones)
 
     feed_dict = {
@@ -210,6 +216,7 @@ class Model:
       self.true_value: estimates,
       self.past_value: values,
       self.past_prob: probs,
+      self.entropy_scale: entropy_scale,
     }
 
     tensors = [
@@ -223,6 +230,7 @@ class Model:
       'grad_norm': grad_norm,
       'loss': loss,
       'entropy': entropy,
+      'entropy_scale': entropy_scale,
       'value_loss': value_loss,
       'policy_loss': policy_loss,
       'true_value': np.mean(estimates),

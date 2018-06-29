@@ -23,6 +23,14 @@ env.add_opponent(PolicyAgent(policy='downsize'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
+def entropy(game_count):
+  if game_count < 100000:
+    return 0.01
+  elif game_count < 200000:
+    return 0.01 * (0.5 ** ((game_count - 100000) / 10000))
+  else:
+    return 0.0
+
 with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
@@ -40,7 +48,9 @@ with tf.Session() as sess:
 
   # Run preliminary games to get antogonist started
   print('Preliminary games...')
-  model.explore(game_count=20000)
+  game_off = 0
+  model.explore(game_count=20000, game_off=game_off, entropy_scale=entropy)
+  game_off += 20000
 
   print('Serious games...')
   for antagonist in antagonists:
@@ -53,7 +63,8 @@ with tf.Session() as sess:
 
   while True:
     print('Running...')
-    model.explore(game_count=20000)
+    model.explore(game_count=20000, game_off=game_off, entropy_scale=entropy)
+    game_off += 20000
     EPOCH += 1
 
     print('Saving...')
