@@ -83,7 +83,8 @@ class Environment:
       reward, state, done = self._submit()
       if not done and self.player is 'opponent':
         reward, state, done = self._run_opponent()
-        reward = -reward
+
+        # NOTE: `reward` is always for `self`
 
     # +1/-1
     elif action == 1 or action == 2:
@@ -145,27 +146,29 @@ class Environment:
     done = accepted or self.steps == 2 * self.max_rounds
     reward = 0.0
     if accepted:
-      reward = np.sum(self.offer * self.values[self.player], dtype='float32')
-      self.ui.accept(self.player, reward)
-      counter_reward = np.sum(
-          (self.counts - self.offer) * self.values[counter_player],
+      self_offer = self.offer
+      opponent_offer = self.counts - offer
+      if not self.player is 'self':
+        self_offer, opponent_offer = opponent_offer, self_offer
+
+      self_reward = np.sum(self_offer * self.values['self'], dtype='float32')
+      self.ui.accept('self', self_reward)
+      opponent_reward = np.sum(opponent_offer * self.values['opponent'],
           dtype='float32')
-      self.ui.accept(counter_player, counter_reward)
+      self.ui.accept('opponent', opponent_reward)
 
       # Stimulate bigger absolute score
-      if self.player is 'self':
-        if reward > counter_reward:
-          reward *= 1.25
-      else:
-        if counter_reward > reward:
-          counter_reward *= 1.25
+      if self_reward > opponent_reward:
+        self_reward *= 1.25
 
       # ...and bigger relative score
-      reward -= counter_reward
+      reward = self_reward - opponent_reward
+
+      # Normalze reward
       reward = reward / self.total
     elif done:
       # Slightly discourage absence of consensus
-      reward = -0.15 if self.player is 'self' else 0.15
+      reward = -0.15
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
@@ -176,6 +179,7 @@ class Environment:
     self._inverse_offer()
     self.proposed_offer = np.copy(self.offer)
 
+    # NOTE: reward is actually for `self`, not `opponent`
     return reward, state, done
 
   def _inverse_offer(self):
