@@ -95,16 +95,16 @@ class LSTM {
     this.bias = bias;
 
     this.units = (this.kernel[0].length / 4) | 0;
-    this.forget_bias = new Array(this.units).fill(1);
+    this.forgetBias = new Array(this.units).fill(1);
     this.activation = tanh;
 
-    this.initial_state = {
+    this.initialState = {
       c: new Array(this.units).fill(0),
       h: new Array(this.units).fill(0),
     };
   }
 
-  call(input, state=this.initial_state) {
+  call(input, state=this.initialState) {
     const x = input.concat(state.h);
 
     const gateInputs = add(matmul(x, this.kernel), this.bias);
@@ -114,7 +114,7 @@ class LSTM {
     const f = gateInputs.slice(2 * this.units, 3 * this.units);
     const o = gateInputs.slice(3 * this.units);
 
-    const newC = add(mul(state.c, sigmoid(add(f, this.forget_bias))),
+    const newC = add(mul(state.c, sigmoid(add(f, this.forgetBias))),
         mul(sigmoid(i), this.activation(j)));
     const newH = mul(this.activation(newC), sigmoid(o));
 
@@ -143,6 +143,31 @@ class Model {
                             weights['haggle/action/bias:0']);
   }
 
+  random(probs) {
+    let roll = Math.random();
+    let action = 0;
+    for (;;) {
+      roll -= probs[action];
+      if (roll <= 0) {
+        break;
+      }
+      action++;
+    }
+    return action;
+  }
+
+  max(probs) {
+    let max = 0;
+    let maxI = 0;
+    for (let i = 0; i < probs.length; i++) {
+      if (probs[i] > max) {
+        maxI = i;
+        max = probs[i];
+      }
+    }
+    return maxI;
+  }
+
   call(input, state) {
     const available = input.slice(0, ACTION_SPACE);
     input = input.slice(ACTION_SPACE);
@@ -161,15 +186,8 @@ class Model {
     }
     const probs = softmax(x);
 
-    let roll = Math.random();
-    let action = 0;
-    for (;;) {
-      roll -= probs[action];
-      if (roll <= 0) {
-        break;
-      }
-      action++;
-    }
+    const action = this.random(probs);
+    // const action = this.max(probs);
 
     return { probs, action, state: newState };
   }
@@ -254,13 +272,13 @@ class Environment {
   }
 }
 
-const m = new Model(weights);
-
 module.exports = class Agent {
   constructor(me, counts, values, max_rounds, log) {
+    this.m = new Model(weights);
+
     this.env = new Environment(values, counts);
     this.log = log;
-    this.state = undefined;
+    this.state = this.m.initialState;
   }
 
   offer(o) {
@@ -279,8 +297,9 @@ module.exports = class Agent {
 
     let offer = undefined;
     for (let i = 0; i < MAX_STEPS; i++) {
-      const { action, probs, newState } = m.call(this.env.buildObservation(),
-        this.state);
+      const { action, probs, state: newState } = this.m.call(
+          this.env.buildObservation(),
+          this.state);
       this.state = newState;
 
       this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
