@@ -136,3 +136,13 @@ Trained against just downsize.
       "score": 4161
     },
 
+
+## masked
+
+### 3 epochs
+
+    "all": {
+      "sessions": 1509,
+      "agreements": 1062,
+      "score": 8068
+    },
