@@ -89,3 +89,13 @@ Trained on half-or-all policy.
 Trained against just downsize.
 
 ### 3 epochs
+
+    71.22% acceptance
+    7.70 per accepted
+    5.48 per deal
+
+    "all": {
+      "sessions": 476,
+      "agreements": 339,
+      "score": 2609
+    },
