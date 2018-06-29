@@ -60,7 +60,7 @@ Trained on half-or-all policy.
       "score": 6087
     },
 
-### 22 epoch
+### 22 epochs
 
     83.09% acceptance
     8.13 per accepted
@@ -71,3 +71,21 @@ Trained on half-or-all policy.
       "agreements": 737,
       "score": 5994
     },
+
+### 25 epochs
+
+    82.19% acceptance
+    8.52 per accepted
+    7.00 per deal
+
+    "all": {
+      "sessions": 887,
+      "agreements": 729,
+      "score": 6214
+    },
+
+## downsize-ppo
+
+Trained against just downsize.
+
+### 3 epochs

@@ -41,7 +41,7 @@ with tf.Session() as sess:
 
   # Run preliminary games to get antogonist started
   print('Preliminary games...')
-  model.explore(game_count=20000)
+  model.explore(game_count=200000)
 
   print('Serious games...')
   for antagonist in antagonists:
