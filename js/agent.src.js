@@ -134,8 +134,8 @@ class Dense {
 
 class Model {
   constructor(weights) {
-    this.pre = new Dense(weights['haggle/pre/kernel:0'],
-                         weights['haggle/pre/bias:0']);
+    this.pre = new Dense(weights['haggle/preprocess/kernel:0'],
+                         weights['haggle/preprocess/bias:0']);
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
       weights['haggle/lstm/bias:0']);
     this.action = new Dense(weights['haggle/action/kernel:0'],
