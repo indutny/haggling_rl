@@ -168,6 +168,7 @@ class Model:
 
       model_state = self.initial_state
       steps = 0
+      steps_per_game = []
       while finished_games < reflect_target:
         action, next_model_state, value, action_prob = \
             self.step(state, model_state, a2c=True)
@@ -189,6 +190,7 @@ class Model:
 
         if done:
           state = self.env.reset()
+          steps_per_game.append(steps)
           steps = 0
           model_state = self.initial_state
           finished_games += 1
@@ -199,6 +201,7 @@ class Model:
 
       print('reflecting...')
       self.reflect(states, model_states, actions, probs, values, rewards, dones,
+          steps_per_game=np.mean(steps_per_game),
           entropy_scale=entropy_scale(game_off + finished_games))
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
@@ -215,7 +218,7 @@ class Model:
     return estimates
 
   def reflect(self, states, model_states, actions, probs, values, rewards, \
-      dones, entropy_scale):
+      dones, steps_per_game, entropy_scale):
     estimates = self.estimate_rewards(rewards, dones)
 
     feed_dict = {
@@ -242,6 +245,7 @@ class Model:
       'entropy_scale': entropy_scale,
       'value_loss': value_loss,
       'policy_loss': policy_loss,
+      'steps_per_game': steps_per_game,
       'true_value': np.mean(estimates),
       'value': value,
     }
