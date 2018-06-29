@@ -262,6 +262,11 @@ module.exports = class Agent {
       return undefined;
     }
 
+    // First offer
+    if (!o) {
+      return offer;
+    }
+
     // Success
     let accept = true;
     for (let i = 0; i < offer.length; i++) {
