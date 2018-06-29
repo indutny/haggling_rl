@@ -258,6 +258,7 @@ module.exports = class Agent {
 
     // Timed out
     if (!offer) {
+      this.log('Timed out');
       return undefined;
     }
 
