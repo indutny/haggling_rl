@@ -121,7 +121,9 @@ class Environment:
 
     self.offer[index] = value
 
-    reward = 0.0
+    is_clamped = value == initial_value
+
+    reward = -0.05 if is_clamped else 0.0
     return reward, self._make_state()
 
   def _move(self, delta):
@@ -131,7 +133,9 @@ class Environment:
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    reward = 0.0
+    is_unchanged = inital_pos == pos
+
+    reward = -0.05 if is_unchanged else 0.0
     return reward, self._make_state()
 
   def _submit(self):
@@ -160,6 +164,8 @@ class Environment:
       # Stimulate bigger absolute score
       if self_reward > opponent_reward:
         self_reward *= 1.25
+      else:
+        self_reward *= 1.1
 
       # ...and bigger relative score
       reward = self_reward - opponent_reward
@@ -168,7 +174,7 @@ class Environment:
       reward = reward / self.total
     elif done:
       # Slightly discourage absence of consensus
-      reward = -0.15
+      reward = -0.07
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
