@@ -2,6 +2,7 @@ import numpy as np
 import random
 
 from generator import MAX_TYPES
+from env import ACTION_SPACE
 
 class BasePolicy:
   def __init__(self, values, counts):
@@ -119,6 +120,8 @@ class PolicyAgent:
 
   def step(self, obs, state):
     obs = obs.astype('int32')
+    obs = obs[ACTION_SPACE:]
+
     pos = obs[0]
     obs = obs[1:]
 

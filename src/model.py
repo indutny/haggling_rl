@@ -36,7 +36,10 @@ class Model:
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
-      x = tf.layers.dense(self.input, PRE_WIDTH, name='preprocess',
+      available_actions = self.input[:, :self.env.action_space]
+      x = self.input[:, self.env.action_space:]
+
+      x = tf.layers.dense(x, PRE_WIDTH, name='preprocess',
                           activation=tf.nn.relu)
 
       state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
@@ -47,6 +50,8 @@ class Model:
 
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
+      raw_action *= available_actions
+
       self.action = tf.nn.softmax(raw_action, name='action_probs')
       self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
       self.mean_value = tf.reduce_mean(self.value, name='mean_value')

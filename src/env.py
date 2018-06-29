@@ -4,6 +4,8 @@ import random
 from generator import Generator, MAX_TYPES
 from ui import UI
 
+ACTION_SPACE = 5
+
 class Environment:
   def __init__(self,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
@@ -21,7 +23,7 @@ class Environment:
     state = self.reset()
 
     # +- on each type, left/right, submit button
-    self.action_space = 5
+    self.action_space = ACTION_SPACE
     self.observation_space = state.shape[0]
 
   def reset(self, force_self=False):
@@ -100,7 +102,27 @@ class Environment:
     return state, reward, done, { 'player': player }
 
   def _make_state(self):
+    available_actions = [ 0.0 ] * ACTION_SPACE
+
+    available_actions[0] = 1.0
+
+    # Cell
+    pos = self.positions[self.player]
+    max_value = self.counts[pos]
+    current_value = self.offer[pos]
+    if current_value != max_value:
+      available_actions[1] = 1.0
+    if current_value != 0:
+      available_actions[2] = 1.0
+
+    # Movement
+    if pos != 0:
+      available_actions[3] = 1.0
+    if pos != self.types:
+      available_actions[4] = 1.0
+
     return np.concatenate([
+      available_actions,
       [ self.positions[self.player] ],
       self.offer,
       self.values[self.player],
@@ -121,10 +143,7 @@ class Environment:
 
     self.offer[index] = value
 
-    is_clamped = value == initial_value
-
-    reward = -0.05 if is_clamped else 0.0
-    return reward, self._make_state()
+    return 0.0, self._make_state()
 
   def _move(self, delta):
     initial_pos = self.positions[self.player]
@@ -133,10 +152,7 @@ class Environment:
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    is_unchanged = initial_pos == pos
-
-    reward = -0.05 if is_unchanged else 0.0
-    return reward, self._make_state()
+    return 0.0, self._make_state()
 
   def _submit(self):
     # No state change here
