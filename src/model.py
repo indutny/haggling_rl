@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
-LSTM_UNITS = 32
+PRE_WIDTH = 64
+LSTM_UNITS = 128
 VALUE_SCALE = 0.5
 MAX_STEPS = 100
 LR = 0.001
@@ -35,9 +36,12 @@ class Model:
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
+      x = tf.layers.dense(self.input, PRE_WIDTH, name='preprocess',
+                          activation=tf.nn.relu)
+
       state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
                                             h=self.rnn_state[:, state_size.c:])
-      x, state = self.cell(self.input, state)
+      x, state = self.cell(x, state)
 
       self.initial_state = np.zeros(self.rnn_state.shape[1])
 
