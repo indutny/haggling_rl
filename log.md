@@ -99,3 +99,15 @@ Trained against just downsize.
       "agreements": 339,
       "score": 2609
     },
+
+### 7 epochs
+
+    77.90% acceptance
+    8.33 per accepted
+    6.49 per deal
+
+    "all": {
+      "sessions": 887,
+      "agreements": 691,
+      "score": 5757
+    },
