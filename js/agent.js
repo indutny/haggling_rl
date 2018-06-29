@@ -229,7 +229,7 @@ module.exports = class Agent {
         this.state);
       this.state = newState;
 
-      // this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
+      this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
       offer = this.env.step(action);
       if (offer) {
         break;
