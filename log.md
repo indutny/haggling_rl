@@ -125,3 +125,14 @@ Trained against just downsize.
       "agreements": 670,
       "score": 5303
     },
+
+## anneal
+
+### 5 epochs
+
+    "all": {
+      "sessions": 909,
+      "agreements": 595,
+      "score": 4161
+    },
+
