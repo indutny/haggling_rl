@@ -141,7 +141,7 @@ class Model:
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, game_count=20000, step_count=256):
+  def explore(self, game_count=20000, reflect_every=25):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
@@ -149,9 +149,12 @@ class Model:
       states, model_states, actions, probs, values, rewards, dones = \
           [], [], [], [], [], [], []
 
+      reflect_target = finished_games + reflect_every
+      reflect_target = min(game_count, reflect_target)
+
       model_state = self.initial_state
       steps = 0
-      for i in range(step_count):
+      while finished_games < reflect_target:
         action, next_model_state, value, action_prob = \
             self.step(state, model_state, a2c=True)
 
