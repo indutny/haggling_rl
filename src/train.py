@@ -12,11 +12,11 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-NUM_ANTAGONISTS = 0
+NUM_ANTAGONISTS = 1
 ANTAGONIST_UPDATE_FREQ = 1
 
 # Not really constants, but meh...
-ANTAGONIST_INDEX = 0
+ANTAGONIST_INDEX = 1
 EPOCH = 0
 
 env = Environment()
@@ -29,10 +29,8 @@ writer = tf.summary.FileWriter(LOG_DIR)
 def entropy(game_count):
   if game_count < 100000:
     return 0.01
-  elif game_count < 200000:
-    return 0.01 * (0.5 ** ((game_count - 100000) / 10000))
   else:
-    return 0.0
+    return 0.01 * (0.9999 ** (game_count - 100000))
 
 with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')

@@ -51,6 +51,7 @@ class Model:
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
       raw_action *= available_actions
+      raw_action += (1.0 - available_actions) * -1e23
 
       self.action = tf.nn.softmax(raw_action, name='action_probs')
       self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
@@ -71,7 +72,7 @@ class Model:
           name='entropy_scale')
 
       self.entropy = -tf.reduce_mean(
-          tf.reduce_sum(self.action * tf.log(self.action), axis=-1),
+          tf.reduce_sum(self.action * tf.log(self.action + 1e-20), axis=-1),
           name='entropy')
 
       online_advantage = self.true_value - self.value

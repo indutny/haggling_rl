@@ -152,7 +152,13 @@ class Model {
     x = this.action.call(x);
 
     // Mask
-    x = mul(x, available);
+    assert.strictEqual(x.length, available.length);
+    for (let i = 0; i < available.length; i++) {
+      const mask = available[i];
+      if (!mask) {
+        x[i] = -Infinity;
+      }
+    }
     const probs = softmax(x);
 
     let roll = Math.random();
