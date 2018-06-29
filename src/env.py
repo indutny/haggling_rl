@@ -120,8 +120,7 @@ class Environment:
 
     self.offer[index] = value
 
-    reward = -0.001 if initial_value == value else \
-        0.0 * delta * cost / self.total
+    reward = 0.0
     return reward, self._make_state()
 
   def _move(self, delta):
@@ -131,7 +130,7 @@ class Environment:
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    reward = -0.001 if initial_pos == pos else 0.0
+    reward = 0.0
     return reward, self._make_state()
 
   def _submit(self):

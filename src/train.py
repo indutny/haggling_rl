@@ -12,17 +12,14 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-NUM_ANTAGONISTS = 4
+NUM_ANTAGONISTS = 1
+ANTAGONIST_UPDATE_FREQ = 4
 ANTAGONIST_INDEX = 0
 EPOCH = 0
 
 env = Environment()
 
 env.add_opponent(PolicyAgent(policy='half_or_all'))
-env.add_opponent(PolicyAgent(policy='downsize'))
-env.add_opponent(PolicyAgent(policy='altruist'))
-env.add_opponent(PolicyAgent(policy='greedy'))
-env.add_opponent(PolicyAgent(policy='stubborn'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
@@ -62,8 +59,9 @@ with tf.Session() as sess:
     print('Saving...')
     saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
 
-    print('Copying to antagonist #{}...'.format(ANTAGONIST_INDEX))
-    sess.run(antagonists_copy_ops[ANTAGONIST_INDEX])
-    antagonists[ANTAGONIST_INDEX].set_version(EPOCH)
+    if EPOCH % ANTAGONIST_UPDATE_FREQ == 0:
+      print('Copying to antagonist #{}...'.format(ANTAGONIST_INDEX))
+      sess.run(antagonists_copy_ops[ANTAGONIST_INDEX])
+      antagonists[ANTAGONIST_INDEX].set_version(EPOCH)
 
-    ANTAGONIST_INDEX = (ANTAGONIST_INDEX + 1) % len(antagonists)
+      ANTAGONIST_INDEX = (ANTAGONIST_INDEX + 1) % len(antagonists)
