@@ -156,7 +156,7 @@ class Model {
     for (let i = 0; i < available.length; i++) {
       const mask = available[i];
       if (!mask) {
-        x[i] = -Infinity;
+        x[i] = -1e23;
       }
     }
     const probs = softmax(x);
