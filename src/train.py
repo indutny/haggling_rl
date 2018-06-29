@@ -70,7 +70,7 @@ with tf.Session() as sess:
     print('Saving...')
     saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
 
-    if EPOCH % ANTAGONIST_UPDATE_FREQ == 0:
+    if EPOCH % ANTAGONIST_UPDATE_FREQ == 0 and NUM_ANTAGONISTS != 0:
       print('Copying to antagonist #{}...'.format(ANTAGONIST_INDEX))
       sess.run(antagonists_copy_ops[ANTAGONIST_INDEX])
       antagonists[ANTAGONIST_INDEX].set_version(EPOCH)
