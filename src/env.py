@@ -154,9 +154,11 @@ class Environment:
 
       # Stimulate bigger absolute score
       if self.player is 'self':
-        reward *= 1.25
+        if reward > counter_reward:
+          reward *= 1.25
       else:
-        reward *= 1.25
+        if counter_reward > reward:
+          counter_reward *= 1.25
 
       # ...and bigger relative score
       reward -= counter_reward
