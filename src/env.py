@@ -133,7 +133,7 @@ class Environment:
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    is_unchanged = inital_pos == pos
+    is_unchanged = initial_pos == pos
 
     reward = -0.05 if is_unchanged else 0.0
     return reward, self._make_state()
