@@ -49,6 +49,7 @@ with tf.Session() as sess:
     ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())
+  sess.graph.finalize()
 
   # Run preliminary games to get antogonist started
   while True:
