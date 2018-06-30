@@ -188,6 +188,9 @@ class Environment:
 
       # Normalze reward
       reward = reward / self.total
+
+      # Encourage observing more steps
+      reward -= 0.1 * (1.0 - (self.steps / (2 * self.max_rounds)))
     elif done:
       # Slightly discourage absence of consensus
       reward = -0.25
