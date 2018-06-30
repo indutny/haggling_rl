@@ -49,8 +49,8 @@ with tf.Session() as sess:
   # Run preliminary games to get antogonist started
   while True:
     game_off = 0
-    model.explore(game_count=100, game_off=game_off, entropy_scale=entropy)
-    game_off += 100
+    model.explore(game_count=1000, game_off=game_off, entropy_scale=entropy)
+    game_off += 1000
     EPOCH += 1
 
     if EPOCH % SAVE_EVERY == 0:

@@ -124,6 +124,7 @@ class Model(Agent):
       self.load_ops = []
       for var in self.trainable_variables:
         name = var.name.split(':', 1)[0]
+        name = var.name.split('/', 1)[1]
         placeholder = tf.placeholder(var.dtype,
             shape=var.shape,
             name='{}/placeholder'.format(name))
@@ -135,6 +136,7 @@ class Model(Agent):
     out = {}
     for var, value in zip(self.trainable_variables, values):
       name = var.name.split(':', 1)[0]
+      name = var.name.split('/', 1)[1]
       out[name] = value
     return out
 
