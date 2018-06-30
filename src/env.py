@@ -123,7 +123,7 @@ class Environment:
 
     return np.concatenate([
       available_actions,
-      [ self.positions[self.player] ],
+      [ self.steps, self.positions[self.player] ],
       self.offer,
       self.values[self.player],
       self.counts,

@@ -125,6 +125,9 @@ class PolicyAgent(Agent):
     obs = obs.astype('int32')
     obs = obs[ACTION_SPACE:]
 
+    steps = obs[0]
+    obs = obs[1:]
+
     pos = obs[0]
     obs = obs[1:]
 
