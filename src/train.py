@@ -44,7 +44,7 @@ with tf.Session() as sess:
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
-    antagonist = Model(env, sess, None, name='antagonist')
+    antagonist = Model(env, sess, None, name='antagonist_{}'.format(i))
     env.add_opponent(antagonist)
     ANTAGONISTS.append(antagonist)
 
