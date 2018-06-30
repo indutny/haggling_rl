@@ -11,7 +11,7 @@ LR = 0.001
 GRAD_CLIP = 0.5
 PPO_EPSILON = 0.1
 
-def default_entropy_scale(game_count):
+def default_entropy_schedule(game_count):
   return 0.01
 
 class Model(Agent):
@@ -73,8 +73,8 @@ class Model(Agent):
           shape=(None,), name='past_prob')
       self.selected_action = tf.placeholder(tf.int32,
           shape=(None,), name='selected_action')
-      self.entropy_scale = tf.placeholder(tf.float32, shape=(),
-          name='entropy_scale')
+      self.entropy_coeff = tf.placeholder(tf.float32, shape=(),
+          name='entropy_coeff')
 
       self.entropy = -tf.reduce_mean(
           tf.reduce_sum(self.action * tf.log(self.action + 1e-20), axis=-1),
@@ -108,7 +108,7 @@ class Model(Agent):
       optimizer = tf.train.AdamOptimizer(LR)
 
       self.loss = self.policy_loss + self.value_loss * VALUE_SCALE - \
-          self.entropy * self.entropy_scale
+          self.entropy * self.entropy_coeff
 
       variables = tf.trainable_variables()
       grads = tf.gradients(self.loss, variables)
@@ -182,7 +182,7 @@ class Model(Agent):
     return np.random.choice(self.env.action_space, p=probs)
 
   def explore(self, game_count=1024, reflect_every=128, game_off=0, \
-              entropy_scale=default_entropy_scale):
+              entropy_schedule=default_entropy_schedule):
     finished_games = 0
     while finished_games < game_count:
       reflect_target = min(game_count - finished_games, reflect_every)
@@ -191,7 +191,7 @@ class Model(Agent):
       finished_games += reflect_target
 
       self.reflect(games,
-          entropy_scale=entropy_scale(game_off + finished_games))
+          entropy_coeff=entropy_schedule(game_off + finished_games))
 
   def collect(self, count):
     states, model_states, actions, probs, values, rewards, dones = \
@@ -258,7 +258,7 @@ class Model(Agent):
 
     return estimates
 
-  def reflect(self, games, entropy_scale):
+  def reflect(self, games, entropy_coeff):
     estimates = self.estimate_rewards(games['rewards'], games['dones'])
 
     feed_dict = {
@@ -268,7 +268,7 @@ class Model(Agent):
       self.true_value: estimates,
       self.past_value: games['values'],
       self.past_prob: games['action_probs'],
-      self.entropy_scale: entropy_scale,
+      self.entropy_coeff: entropy_coeff,
     }
 
     tensors = [
@@ -282,7 +282,7 @@ class Model(Agent):
       'grad_norm': grad_norm,
       'loss': loss,
       'entropy': entropy,
-      'entropy_scale': entropy_scale,
+      'entropy_coeff': entropy_coeff,
       'value_loss': value_loss,
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],

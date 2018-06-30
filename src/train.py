@@ -30,15 +30,6 @@ env.add_opponent(PolicyAgent(policy='downsize'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
-# Linear schedule
-def entropy(game_count):
-  if game_count < 100000:
-    return 0.01
-  elif game_count < 200000:
-    return 0.01 - 0.009 * (game_count - 100000.0) / 100000.0
-  else:
-    return 0.001
-
 with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
@@ -56,7 +47,7 @@ with tf.Session() as sess:
     EPOCH += 1
     print('Epoch {}'.format(EPOCH))
 
-    model.explore(game_count=1024, game_off=game_off, entropy_scale=entropy)
+    model.explore(game_count=1024, game_off=game_off)
     game_off += 1024
 
     if EPOCH % SAVE_EVERY == 0:
