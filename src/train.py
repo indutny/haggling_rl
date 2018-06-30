@@ -13,10 +13,11 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-SAVE_EVERY = 10
+SAVE_EVERY = 1
 
 MAX_ANTAGONISTS = 1000
-NUM_ANTAGONISTS = 0
+NUM_ANTAGONISTS = 16
+ANTAGONIST_EPOCH = 20
 ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
 
@@ -36,7 +37,6 @@ with tf.Session() as sess:
 
   for i in range(NUM_ANTAGONISTS):
     antagonist = Model(env, sess, None, name='antagonist_{}'.format(i))
-    env.add_opponent(antagonist)
     ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())
@@ -47,11 +47,34 @@ with tf.Session() as sess:
     EPOCH += 1
     print('Epoch {}'.format(EPOCH))
 
-    model.explore(game_count=1024, game_off=game_off)
-    game_off += 1024
+    if EPOCH == ANTAGONIST_EPOCH:
+      print('Adding antagonists!')
+      env.clear_opponents()
+      for antagonist in ANTAGONISTS:
+        env.add_opponent(antagonist)
+
+      # Update weights
+      print('Initializing their weights...')
+      weights = model.save_weights(sess)
+      ops = []
+      feed_dict = {}
+      for antagonist in ANTAGONISTS:
+        a_dict, a_ops = antagonist.load_weights(weights)
+
+        feed_dict.update(a_dict)
+        ops += a_ops
+      sess.run(ops, feed_dict=feed_dict)
+
+      print('Time for real games!')
+
+    model.explore(game_count=8192, game_off=game_off)
+    game_off += 8192
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
+
+    if EPOCH < ANTAGONIST_EPOCH:
+      continue
 
     weights = model.save_weights(sess)
     ANTAGONIST_WEIGHTS.append({
@@ -68,7 +91,7 @@ with tf.Session() as sess:
       for antagonist in ANTAGONISTS:
         save = random.choice(ANTAGONIST_WEIGHTS)
         versions.append(save['epoch'])
-        a_dict, a_ops = antagonist.load_weights(sess, save['weights'])
+        a_dict, a_ops = antagonist.load_weights(save['weights'])
 
         feed_dict.update(a_dict)
         ops += a_ops

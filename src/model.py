@@ -140,7 +140,7 @@ class Model(Agent):
       out[name] = value
     return out
 
-  def load_weights(self, sess, weights):
+  def load_weights(self, weights):
     feed_dict = {}
     for name, value in weights.items():
       if name in self.weight_placeholders:
