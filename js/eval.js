@@ -118,12 +118,12 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
     if (ab.accepted) {
       pair.a.agreements++;
       pair.b.agreements++;
+      pair.a.rounds += ab.rounds;
+      pair.b.rounds += ab.rounds;
     }
 
     pair.a.sessions++;
     pair.b.sessions++;
-    pair.a.rounds += ab.rounds;
-    pair.b.rounds += ab.rounds;
     pair.a.score += ab.a;
     pair.b.score += ab.b;
   }
@@ -132,7 +132,7 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
 console.log(contestants.map((c) => {
   return {
     name: c.name,
-    rounds: (c.rounds / c.sessions).toFixed(4),
+    rounds: (c.rounds / c.agreements).toFixed(4),
     mean: (c.score / c.sessions).toFixed(4),
     meanAccepted: (c.score / c.agreements).toFixed(4),
     acceptance: (c.agreements / c.sessions).toFixed(4),
