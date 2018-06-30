@@ -186,7 +186,6 @@ class Model(Agent):
     state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
-      print('collecting...')
       states, model_states, actions, probs, values, rewards, dones = \
           [], [], [], [], [], [], []
 
@@ -203,7 +202,6 @@ class Model(Agent):
         next_state, reward, done, _ = self.env.step(action)
 
         if not done and steps > MAX_STEPS:
-          print('timed out...')
           reward = -1.0
           done = True
 
@@ -226,7 +224,6 @@ class Model(Agent):
           steps += 1
           model_state = next_model_state
 
-      print('reflecting...')
       self.reflect(states, model_states, actions, probs, values, rewards, dones,
           steps_per_game=np.mean(steps_per_game),
           entropy_scale=entropy_scale(game_off + finished_games))
