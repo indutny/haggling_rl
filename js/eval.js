@@ -40,18 +40,18 @@ class Arena {
         assert.notStrictEqual(previous, undefined, 'Invalid first offer');
 
         // Accept
-        return this.result(scene, previous);
+        return this.result(scene, i, previous);
       }
 
       previous = offer;
       offer = b.offer(this.inverseOffer(scene, offer));
       if (offer === undefined) {
-        return this.result(scene, previous);
+        return this.result(scene, i, previous);
       }
 
       offer = this.inverseOffer(scene, offer);
     }
-    return { accepted: false, a: 0, b: 0 };
+    return { accepted: false, rounds: scene.max_rounds, a: 0, b: 0 };
   }
 
   offerValue(scene, player, offer) {
@@ -70,12 +70,13 @@ class Arena {
     return res;
   }
 
-  result(scene, offer) {
+  result(scene, rounds, offer) {
     const aOffer = offer;
     const bOffer = this.inverseOffer(scene, aOffer);
 
     return {
       accepted: true,
+      rounds,
       a: this.offerValue(scene, 0, aOffer),
       b: this.offerValue(scene, 1, bOffer),
     };
@@ -91,6 +92,7 @@ function addContestant(name, A) {
     agent: A,
     name,
 
+    rounds: 0,
     sessions: 0,
     agreements: 0,
     score: 0,
@@ -120,6 +122,8 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
 
     pair.a.sessions++;
     pair.b.sessions++;
+    pair.a.rounds += ab.rounds;
+    pair.b.rounds += ab.rounds;
     pair.a.score += ab.a;
     pair.b.score += ab.b;
   }
@@ -128,6 +132,7 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
 console.log(contestants.map((c) => {
   return {
     name: c.name,
+    rounds: (c.rounds / c.sessions).toFixed(4),
     mean: (c.score / c.sessions).toFixed(4),
     meanAccepted: (c.score / c.agreements).toFixed(4),
     acceptance: (c.agreements / c.sessions).toFixed(4),
