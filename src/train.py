@@ -56,8 +56,8 @@ with tf.Session() as sess:
     EPOCH += 1
     print('Epoch {}'.format(EPOCH))
 
-    model.explore(game_count=1000, game_off=game_off, entropy_scale=entropy)
-    game_off += 1000
+    model.explore(game_count=1024, game_off=game_off, entropy_scale=entropy)
+    game_off += 1024
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
