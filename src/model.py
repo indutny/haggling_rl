@@ -160,7 +160,7 @@ class Model(Agent):
   def pick_action(self, probs):
     return np.random.choice(self.env.action_space, p=probs)
 
-  def explore(self, game_count=20000, reflect_every=25, game_off=0, \
+  def explore(self, game_count=20000, reflect_every=100, game_off=0, \
               entropy_scale=default_entropy_scale):
     state = self.env.reset()
     finished_games = 0
