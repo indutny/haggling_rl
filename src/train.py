@@ -16,7 +16,7 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 SAVE_EVERY = 10
 
 MAX_ANTAGONISTS = 1000
-NUM_ANTAGONISTS = 8
+NUM_ANTAGONISTS = 0
 ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
 
@@ -24,6 +24,9 @@ ANTAGONIST_WEIGHTS = []
 EPOCH = 0
 
 env = Environment()
+
+env.add_opponent(PolicyAgent(policy='half_or_all'))
+env.add_opponent(PolicyAgent(policy='downsize'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
