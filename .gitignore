@@ -4,3 +4,4 @@ saves/*
 !saves/.gitkeep
 export/*.json
 node_modules/
+js/neural*.js

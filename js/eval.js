@@ -117,8 +117,8 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
 console.log(contestants.map((c) => {
   return {
     name: c.name,
-    sessions: c.sessions,
-    agreements: c.agreements,
-    score: c.score,
+    mean: (c.score / c.sessions).toFixed(4),
+    meanAccepted: (c.score / c.agreements).toFixed(4),
+    acceptance: (c.agreements / c.sessions).toFixed(4),
   };
 }));
