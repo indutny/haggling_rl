@@ -10,7 +10,7 @@ const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
 const ENABLE_LOG = false;
-const TOTAL_MATCHES = 1000;
+const TOTAL_MATCHES = 200;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -101,19 +101,28 @@ addContestant('neural', Neural);
 addContestant('half-or-all', HalfOrAll);
 addContestant('downsize', Downsize);
 
-for (let i = 0; i < TOTAL_MATCHES; i++) {
-  const pair = random.sample(contestants, 2);
-
-  const ab = arena.match(pair[0].agent, pair[1].agent);
-  if (ab.accepted) {
-    pair[0].agreements++;
-    pair[1].agreements++;
+const pairs = [];
+for (const a of contestants) {
+  for (const b of contestants) {
+    if (a !== b) {
+      pairs.push({ a, b });
+    }
   }
+}
 
-  pair[0].sessions++;
-  pair[1].sessions++;
-  pair[0].score += ab.a;
-  pair[1].score += ab.b;
+for (let i = 0; i < TOTAL_MATCHES; i++) {
+  for (const pair of pairs) {
+    const ab = arena.match(pair.a.agent, pair.b.agent);
+    if (ab.accepted) {
+      pair.a.agreements++;
+      pair.b.agreements++;
+    }
+
+    pair.a.sessions++;
+    pair.b.sessions++;
+    pair.a.score += ab.a;
+    pair.b.score += ab.b;
+  }
 }
 
 console.log(contestants.map((c) => {
