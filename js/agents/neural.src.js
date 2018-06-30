@@ -198,6 +198,7 @@ class Environment {
     this.types = types;
 
     this.position = 0;
+    this.steps = 0;
     this.offer = new Array(MAX_COUNT).fill(0);
     this.values = new Array(MAX_COUNT).fill(0);
     this.counts = new Array(MAX_COUNT).fill(0);
@@ -232,8 +233,8 @@ class Environment {
     if (pos !== this.types - 1) {
       available[4] = 1;
     }
-    return [].concat(available, this.position, this.offer, this.values,
-        this.counts);
+    return [].concat(available, this.steps, this.position, this.offer,
+        this.values, this.counts);
   }
 
   setOffer(offer) {
@@ -291,6 +292,11 @@ module.exports = class Agent {
   }
 
   _offer(o) {
+    if (o === undefined) {
+      this.steps = -1;
+    }
+    this.steps++;
+
     if (o) {
       this.env.setOffer(o);
     }
@@ -309,6 +315,8 @@ module.exports = class Agent {
         break;
       }
     }
+
+    this.steps++;
 
     // Timed out
     if (!offer) {
