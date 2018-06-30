@@ -32,7 +32,7 @@ def entropy(game_count):
     return 0.01
   elif game_count < 200000:
     return 0.01 - 0.009 * (game_count - 100000.0) / 100000.0
-  elif:
+  else:
     return 0.001
 
 with tf.Session() as sess:
