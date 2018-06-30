@@ -3,6 +3,7 @@ import random
 
 from generator import MAX_TYPES
 from env import ACTION_SPACE
+from agent import Agent
 
 class BasePolicy:
   def __init__(self, values, counts):
@@ -98,8 +99,10 @@ class StubbornPolicy(BasePolicy):
       counter_offer[i] = random.randint(0, max_count)
     return False, counter_offer
 
-class PolicyAgent:
+class PolicyAgent(Agent):
   def __init__(self, policy):
+    super(PolicyAgent, self).__init__()
+
     if policy is 'downsize':
       self.policy = DownsizePolicy
     elif policy is 'half_or_all':

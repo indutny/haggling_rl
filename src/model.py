@@ -1,6 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
+from agent import Agent
+
 PRE_WIDTH = 64
 LSTM_UNITS = 128
 VALUE_SCALE = 0.5
@@ -12,7 +14,10 @@ PPO_EPSILON = 0.1
 def default_entropy_scale(game_count):
   return 0.01
 
-class Model:
+class Model(Agent):
+  def __init__(self, policy):
+    super(Model, self).__init__()
+
   def __init__(self, env, sess, writer, name='haggle'):
     self.original_name = name
     self.version = 0
