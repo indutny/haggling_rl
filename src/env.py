@@ -39,6 +39,7 @@ class Environment:
 
     self.steps = 0
     self.done = False
+    self.status = 'active'
 
     objects = self.generator.get()
     self.values = {
@@ -121,13 +122,18 @@ class Environment:
     if pos != self.types - 1:
       available_actions[4] = 1.0
 
-    return np.concatenate([
+    res = np.concatenate([
       available_actions,
-      [ self.steps, self.positions[self.player] ],
+      [
+        float(self.steps) / (2 * self.max_rounds - 1),
+        float(pos),
+      ],
       self.offer,
       self.values[self.player],
       self.counts,
     ]).astype('float32')
+    print(res)
+    return res
 
   def _make_change(self, delta):
     index = self.positions[self.player]
@@ -182,10 +188,12 @@ class Environment:
 
       # Normalze reward
       reward = reward / self.total
+      self.status = 'accepted'
     elif done:
       # Discourage absence of consensus
       reward = -0.25
       self.ui.no_consensus()
+      self.status = 'no consensus'
     else:
       self.ui.offer(self.offer, self.counts, self.player)
 

@@ -11,7 +11,7 @@ assert.strictEqual = (a, b) => {
     throw new Error('Assert equal failure');
 };
 
-const MAX_COUNT = 10;
+const MAX_TYPES = 10;
 const MAX_STEPS = 1000;
 const ACTION_SPACE = 5;
 
@@ -194,14 +194,16 @@ class Model {
 }
 
 class Environment {
-  constructor(values, counts, types = 3) {
+  constructor(values, counts, maxRounds, types = 3) {
     this.types = types;
 
-    this.position = 0;
     this.steps = 0;
-    this.offer = new Array(MAX_COUNT).fill(0);
-    this.values = new Array(MAX_COUNT).fill(0);
-    this.counts = new Array(MAX_COUNT).fill(0);
+    this.maxRounds = maxRounds;
+
+    this.position = 0;
+    this.offer = new Array(MAX_TYPES).fill(0);
+    this.values = new Array(MAX_TYPES).fill(0);
+    this.counts = new Array(MAX_TYPES).fill(0);
 
     assert(values.length <= this.values.length);
     for (let i = 0; i < values.length; i++)
@@ -233,8 +235,13 @@ class Environment {
     if (pos !== this.types - 1) {
       available[4] = 1;
     }
-    return [].concat(available, this.steps, this.position, this.offer,
-        this.values, this.counts);
+    return [].concat(
+      available,
+      this.steps / (this.maxRounds * 2 - 1),
+      this.position,
+      this.offer,
+      this.values,
+      this.counts);
   }
 
   setOffer(offer) {
@@ -275,10 +282,10 @@ class Environment {
 }
 
 module.exports = class Agent {
-  constructor(me, counts, values, max_rounds, log) {
+  constructor(me, counts, values, maxRounds, log) {
     this.m = new Model(weights);
 
-    this.env = new Environment(values, counts);
+    this.env = new Environment(values, counts, maxRounds);
     this.log = log;
     this.state = this.m.initialState;
   }
