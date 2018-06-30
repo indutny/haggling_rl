@@ -182,9 +182,6 @@ class Environment:
 
       # Normalze reward
       reward = reward / self.total
-
-      # Incentivize playing all rounds
-      reward *= (3.0 + float(self.steps) / (2 * self.max_rounds)) / 4.0
     elif done:
       # Discourage absence of consensus
       reward = -0.25

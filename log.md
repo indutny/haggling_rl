@@ -552,3 +552,23 @@ Trained against just downsize.
         mean: '5.9050',
         meanAccepted: '7.8891',
         acceptance: '0.7485' } ]
+
+## Relative, steps incentive
+
+### 40 rounds
+
+    [ { name: 'neural',
+        rounds: '1.6335',
+        mean: '4.7450',
+        meanAccepted: '5.7446',
+        acceptance: '0.8260' },
+      { name: 'half-or-all',
+        rounds: '1.4873',
+        mean: '6.0652',
+        meanAccepted: '7.4489',
+        acceptance: '0.8143' },
+      { name: 'downsize',
+        rounds: '1.7772',
+        mean: '6.3155',
+        meanAccepted: '8.0735',
+        acceptance: '0.7823' } ]
