@@ -286,7 +286,8 @@ class Model(Agent):
       'value_loss': value_loss,
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
-      'true_value': np.mean(estimates),
+      'reward': np.mean(estimates),
+      'max_reward': np.max(estimates),
       'value': value,
     }
     self.log_summary(metrics)
