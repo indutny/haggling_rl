@@ -177,13 +177,20 @@ class Environment:
           dtype='float32')
       self.ui.accept('opponent', opponent_reward)
 
-      reward = self_reward
+      # Stimulate bigger absolute score
+      if self_reward > opponent_reward:
+        self_reward *= 1.15
+      else:
+        self_reward *= 1.05
+
+      # ...and bigger relative score
+      reward = self_reward - opponent_reward
 
       # Normalze reward
       reward = reward / self.total
     elif done:
-      # Discourage absence of consensus
-      reward = 0.4
+      # Slightly discourage absence of consensus
+      reward = -0.25
       self.ui.no_consensus()
     else:
       self.ui.offer(self.offer, self.counts, self.player)
