@@ -122,7 +122,7 @@ class Environment:
     if pos != self.types - 1:
       available_actions[4] = 1.0
 
-    res = np.concatenate([
+    return np.concatenate([
       available_actions,
       [
         float(self.steps) / (2 * self.max_rounds - 1),
@@ -132,8 +132,6 @@ class Environment:
       self.values[self.player],
       self.counts,
     ]).astype('float32')
-    print(res)
-    return res
 
   def _make_change(self, delta):
     index = self.positions[self.player]
