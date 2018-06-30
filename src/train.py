@@ -12,7 +12,7 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-NUM_ANTAGONISTS = 0
+NUM_ANTAGONISTS = 1
 ANTAGONIST_UPDATE_FREQ = 1
 
 # Not really constants, but meh...
