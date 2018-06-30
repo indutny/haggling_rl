@@ -51,7 +51,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
   sess.graph.finalize()
 
-  # Run preliminary games to get antogonist started
+  game_off = 0
   while True:
     model.explore(game_count=1000, game_off=game_off, entropy_scale=entropy)
     game_off += 1000
