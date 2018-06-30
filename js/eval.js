@@ -7,6 +7,7 @@ const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
 const HalfOrAll = require('./agents/half-or-all');
+const Downsize = require('./agents/downsize');
 
 const ENABLE_LOG = false;
 const TOTAL_MATCHES = 1000;
@@ -98,6 +99,7 @@ function addContestant(name, A) {
 
 addContestant('neural', Neural);
 addContestant('half-or-all', HalfOrAll);
+addContestant('downsize', Downsize);
 
 for (let i = 0; i < TOTAL_MATCHES; i++) {
   const pair = random.sample(contestants, 2);

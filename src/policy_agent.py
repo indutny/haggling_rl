@@ -69,7 +69,7 @@ class DownsizePolicy(BasePolicy):
       if offer_value >= minimum:
         offers.append((offer_value, np.copy(offer),))
 
-      self.find_offers(offers, offer, minimum, i + 1, total + offer_value)
+      self.find_offers(offers, offer, minimum, i + 1, offer_value)
 
 class AltruistPolicy(BasePolicy):
   def on_offer(self, offer):
