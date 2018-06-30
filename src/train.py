@@ -26,11 +26,14 @@ env.add_opponent(PolicyAgent(policy='downsize'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
+# Linear schedule
 def entropy(game_count):
   if game_count < 100000:
     return 0.01
-  else:
-    return 0.01 * (0.9999 ** (game_count - 100000))
+  elif game_count < 200000:
+    return 0.01 - 0.009 * (game_count - 100000.0) / 100000.0
+  elif:
+    return 0.001
 
 with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
