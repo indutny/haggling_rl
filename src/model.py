@@ -117,14 +117,33 @@ class Model(Agent):
       self.grad_norm = grad_norm
       self.train = optimizer.apply_gradients(grads_and_vars=grads)
 
-  def copy_from(self, other):
-    self_vars = self.scope.trainable_variables()
-    other_vars = other.scope.trainable_variables()
+      # Weight loading
+      self.trainable_variables = self.scope.trainable_variables()
 
-    ops = []
-    for self_var, other_var in zip(self_vars, other_vars):
-      ops.append(self_var.assign(other_var))
-    return ops
+      self.weight_placeholders = {}
+      self.load_ops = []
+      for var in self.trainable_variables:
+        name = var.name.split(':', 1)[0]
+        placeholder = tf.placeholder(var.dtype,
+            shape=var.shape,
+            name='{}/placeholder'.format(name))
+        self.weight_placeholders[name] = placeholder
+        self.load_ops.append(var.assign(placeholder))
+
+  def save_weights(self, sess):
+    values = sess.run(self.trainable_variables)
+    out = {}
+    for var, value in zip(self.trainable_variables, values):
+      name = var.name.split(':', 1)[0]
+      out[name] = value
+    return out
+
+  def load_weights(self, sess, weights):
+    feed_dict = {}
+    for name, value in weights.items():
+      if name in self.weight_placeholders:
+        feed_dict[self.weight_placeholders[name]] = value
+    sess.run(self.load_ops, feed_dict=feed_dict)
 
   def set_version(self, version):
     self.version = version
