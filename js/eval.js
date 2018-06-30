@@ -38,18 +38,22 @@ class Arena {
       offer = a.offer(offer);
       if (offer === undefined) {
         assert.notStrictEqual(previous, undefined, 'Invalid first offer');
+        log('A accepted');
 
         // Accept
         return this.result(scene, i, previous);
       }
 
+      log('A wants: ' + offer.join(','));
       previous = offer;
       offer = b.offer(this.inverseOffer(scene, offer));
       if (offer === undefined) {
+        log('B accepted');
         return this.result(scene, i, previous);
       }
 
       offer = this.inverseOffer(scene, offer);
+      log('B gives: ' + offer.join(','));
     }
     return { accepted: false, rounds: scene.max_rounds, a: 0, b: 0 };
   }
@@ -100,7 +104,6 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
-addContestant('half-or-all', HalfOrAll);
 addContestant('downsize', Downsize);
 
 const pairs = [];
@@ -114,6 +117,7 @@ for (const a of contestants) {
 
 for (let i = 0; i < TOTAL_MATCHES; i++) {
   for (const pair of pairs) {
+    log('A: ' + pair.a.name + ' vs B: ' + pair.b.name);
     const ab = arena.match(pair.a.agent, pair.b.agent);
     if (ab.accepted) {
       pair.a.agreements++;

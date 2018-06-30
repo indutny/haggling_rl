@@ -238,6 +238,7 @@ class Environment {
   }
 
   setOffer(offer) {
+    this.position = 0;
     assert(offer.length <= this.offer.length);
     for (let i = 0; i < offer.length; i++)
       this.offer[i] = offer[i];
@@ -293,9 +294,9 @@ module.exports = class Agent {
 
   _offer(o) {
     if (o === undefined) {
-      this.steps = -1;
+      this.env.steps = -1;
     }
-    this.steps++;
+    this.env.steps++;
 
     if (o) {
       this.env.setOffer(o);
@@ -316,7 +317,7 @@ module.exports = class Agent {
       }
     }
 
-    this.steps++;
+    this.env.steps++;
 
     // Timed out
     if (!offer) {

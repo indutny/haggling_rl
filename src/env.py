@@ -143,7 +143,7 @@ class Environment:
 
     self.offer[index] = value
 
-    return 0.0, self._make_state()
+    return -0.007, self._make_state()
 
   def _move(self, delta):
     initial_pos = self.positions[self.player]
@@ -152,7 +152,7 @@ class Environment:
     pos = min(pos, MAX_TYPES - 1)
     self.positions[self.player] = pos
 
-    return 0.0, self._make_state()
+    return -0.007, self._make_state()
 
   def _submit(self):
     # No state change here
