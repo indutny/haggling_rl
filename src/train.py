@@ -16,6 +16,8 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 SAVE_EVERY = 10
 
 MAX_ANTAGONISTS = 1000
+NUM_ANTAGONISTS = 8
+ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
 
 # Not really constants, but meh...
@@ -41,8 +43,10 @@ with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
-  antagonist = Model(env, sess, None, name='antagonist')
-  env.add_opponent(antagonist)
+  for i in range(NUM_ANTAGONISTS):
+    antagonist = Model(env, sess, None, name='antagonist')
+    env.add_opponent(antagonist)
+    ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())
 
@@ -65,7 +69,8 @@ with tf.Session() as sess:
       ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
 
     if len(ANTAGONIST_WEIGHTS) > 0:
-      save = random.choice(ANTAGONIST_WEIGHTS)
-      print('Loading epoch {} into antagonist'.format(save['epoch']))
-      antagonist.load_weights(sess, save['weights'])
-      antagonist.set_version(save['epoch'])
+      for antagonist in ANTAGONISTS:
+        save = random.choice(ANTAGONIST_WEIGHTS)
+        print('Loading epoch {} into antagonist'.format(save['epoch']))
+        antagonist.load_weights(sess, save['weights'])
+        antagonist.set_version(save['epoch'])
