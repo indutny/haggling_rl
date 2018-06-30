@@ -53,9 +53,11 @@ with tf.Session() as sess:
 
   game_off = 0
   while True:
+    EPOCH += 1
+    print('Epoch {}'.format(EPOCH))
+
     model.explore(game_count=1000, game_off=game_off, entropy_scale=entropy)
     game_off += 1000
-    EPOCH += 1
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
@@ -69,8 +71,18 @@ with tf.Session() as sess:
       ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
 
     if len(ANTAGONIST_WEIGHTS) > 0:
+      ops = []
+      feed_dict = {}
+      versions = []
       for antagonist in ANTAGONISTS:
         save = random.choice(ANTAGONIST_WEIGHTS)
-        print('Loading epoch {} into antagonist'.format(save['epoch']))
-        antagonist.load_weights(sess, save['weights'])
+        versions.append(save['epoch'])
+        a_dict, a_ops = antagonist.load_weights(sess, save['weights'])
+
+        feed_dict.update(a_dict)
+        ops += a_ops
+
         antagonist.set_version(save['epoch'])
+
+      sess.run(ops, feed_dict=feed_dict)
+      print('Loaded {} into antagonists'.format(versions))

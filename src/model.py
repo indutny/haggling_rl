@@ -145,7 +145,7 @@ class Model(Agent):
     for name, value in weights.items():
       if name in self.weight_placeholders:
         feed_dict[self.weight_placeholders[name]] = value
-    sess.run(self.load_ops, feed_dict=feed_dict)
+    return feed_dict, self.load_ops
 
   def set_version(self, version):
     self.version = version
@@ -183,50 +183,67 @@ class Model(Agent):
 
   def explore(self, game_count=20000, reflect_every=100, game_off=0, \
               entropy_scale=default_entropy_scale):
-    state = self.env.reset()
     finished_games = 0
     while finished_games < game_count:
-      states, model_states, actions, probs, values, rewards, dones = \
-          [], [], [], [], [], [], []
+      reflect_target = min(game_count - finished_games, reflect_every)
 
-      reflect_target = finished_games + reflect_every
-      reflect_target = min(game_count, reflect_target)
+      games = self.collect(reflect_target)
+      finished_games += reflect_target
 
-      model_state = self.initial_state
-      steps = 0
-      steps_per_game = []
-      while finished_games < reflect_target:
-        action, next_model_state, value, action_prob = \
-            self.step(state, model_state, a2c=True)
-
-        next_state, reward, done, _ = self.env.step(action)
-
-        if not done and steps > MAX_STEPS:
-          reward = -1.0
-          done = True
-
-        states.append(state)
-        actions.append(action)
-        probs.append(action_prob)
-        values.append(value)
-        rewards.append(reward)
-        dones.append(done)
-        model_states.append(model_state)
-
-        if done:
-          state = self.env.reset()
-          steps_per_game.append(steps)
-          steps = 0
-          model_state = self.initial_state
-          finished_games += 1
-        else:
-          state = next_state
-          steps += 1
-          model_state = next_model_state
-
-      self.reflect(states, model_states, actions, probs, values, rewards, dones,
-          steps_per_game=np.mean(steps_per_game),
+      self.reflect(games,
           entropy_scale=entropy_scale(game_off + finished_games))
+
+  def collect(self, count):
+    states, model_states, actions, probs, values, rewards, dones = \
+        [], [], [], [], [], [], []
+
+    state = self.env.reset()
+    finished_games = 0
+
+    model_state = self.initial_state
+    steps = 0
+    steps_per_game = []
+    while finished_games < count:
+      action, next_model_state, value, action_prob = \
+          self.step(state, model_state, a2c=True)
+
+      next_state, reward, done, _ = self.env.step(action)
+
+      if not done and steps > MAX_STEPS:
+        reward = -1.0
+        done = True
+
+      states.append(state)
+      actions.append(action)
+      probs.append(action_prob)
+      values.append(value)
+      rewards.append(reward)
+      dones.append(done)
+      model_states.append(model_state)
+
+      if done:
+        state = self.env.reset()
+        steps_per_game.append(steps)
+        steps = 0
+        model_state = self.initial_state
+        finished_games += 1
+      else:
+        state = next_state
+        steps += 1
+        model_state = next_model_state
+
+    steps_per_game = np.mean(steps_per_game)
+
+    return {
+      'states': states,
+      'model_states': model_states,
+      'actions': actions,
+      'action_probs': probs,
+      'values': values,
+      'rewards': rewards,
+      'dones': dones,
+      'steps_per_game': steps_per_game
+    }
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros(len(rewards), dtype='float32')
@@ -241,17 +258,16 @@ class Model(Agent):
 
     return estimates
 
-  def reflect(self, states, model_states, actions, probs, values, rewards, \
-      dones, steps_per_game, entropy_scale):
-    estimates = self.estimate_rewards(rewards, dones)
+  def reflect(self, games, entropy_scale):
+    estimates = self.estimate_rewards(games['rewards'], games['dones'])
 
     feed_dict = {
-      self.input: states,
-      self.rnn_state: model_states,
-      self.selected_action: actions,
+      self.input: games['states'],
+      self.rnn_state: games['model_states'],
+      self.selected_action: games['actions'],
       self.true_value: estimates,
-      self.past_value: values,
-      self.past_prob: probs,
+      self.past_value: games['values'],
+      self.past_prob: games['action_probs'],
       self.entropy_scale: entropy_scale,
     }
 
@@ -269,7 +285,7 @@ class Model(Agent):
       'entropy_scale': entropy_scale,
       'value_loss': value_loss,
       'policy_loss': policy_loss,
-      'steps_per_game': steps_per_game,
+      'steps_per_game': games['steps_per_game'],
       'true_value': np.mean(estimates),
       'value': value,
     }
