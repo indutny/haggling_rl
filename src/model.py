@@ -51,7 +51,14 @@ class Model(Agent):
                                             h=self.rnn_state[:, state_size.c:])
       x, state = self.cell(x, state)
 
-      self.initial_state = np.zeros(self.rnn_state.shape[1])
+      self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
+      self.initial_state_var = tf.Variable(self.initial_state,
+          name='initial_state')
+
+      self.new_initial_state = tf.placeholder(tf.float32,
+          shape=self.initial_state_var.shape, name='new_initial_state')
+      self.update_initial_state = self.initial_state_var.assign(
+          self.new_initial_state)
 
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
@@ -197,10 +204,10 @@ class Model(Agent):
     states, model_states, actions, probs, values, rewards, dones = \
         [], [], [], [], [], [], []
 
+    model_state = self.initial_state
     state = self.env.reset()
     finished_games = 0
 
-    model_state = self.initial_state
     steps = 0
     steps_per_game = []
     while finished_games < count:
@@ -221,18 +228,24 @@ class Model(Agent):
       dones.append(done)
       model_states.append(model_state)
 
+      model_state = next_model_state
+
       if done:
         state = self.env.reset()
         steps_per_game.append(steps)
         steps = 0
-        model_state = self.initial_state
         finished_games += 1
       else:
         state = next_state
         steps += 1
-        model_state = next_model_state
 
     steps_per_game = np.mean(steps_per_game)
+
+    # Save new initial state
+    self.initial_state = model_state
+    self.sess.run(self.update_initial_state, feed_dict={
+      self.new_initial_state: self.initial_state,
+    })
 
     return {
       'states': states,
