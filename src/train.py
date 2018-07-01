@@ -13,11 +13,12 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-SAVE_EVERY = 1
+SAVE_EVERY = 10
 
 MAX_ANTAGONISTS = 1000
 NUM_ANTAGONISTS = 16
-ANTAGONIST_EPOCH = 20
+ANTAGONIST_EPOCH = 200
+ANTAGONIST_UPDATE_EVERY = 100
 ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
 
@@ -28,6 +29,9 @@ env = Environment()
 
 env.add_opponent(PolicyAgent(policy='half_or_all'))
 env.add_opponent(PolicyAgent(policy='downsize'))
+env.add_opponent(PolicyAgent(policy='altruist'))
+env.add_opponent(PolicyAgent(policy='greedy'))
+env.add_opponent(PolicyAgent(policy='stubborn'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
@@ -67,8 +71,8 @@ with tf.Session() as sess:
 
       print('Time for real games!')
 
-    model.explore(game_count=8192, game_off=game_off)
-    game_off += 8192
+    model.explore(game_count=1024, game_off=game_off)
+    game_off += 1024
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
@@ -76,13 +80,15 @@ with tf.Session() as sess:
     if EPOCH < ANTAGONIST_EPOCH:
       continue
 
-    weights = model.save_weights(sess)
-    ANTAGONIST_WEIGHTS.append({
-      'epoch': EPOCH,
-      'weights': weights
-    })
-    if len(ANTAGONIST_WEIGHTS) > MAX_ANTAGONISTS:
-      ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
+    if EPOCH % ANTAGONIST_UPDATE_EVERY == 0:
+      print('Adding new antagonist to the pool')
+      weights = model.save_weights(sess)
+      ANTAGONIST_WEIGHTS.append({
+        'epoch': EPOCH,
+        'weights': weights
+      })
+      if len(ANTAGONIST_WEIGHTS) > MAX_ANTAGONISTS:
+        ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
 
     if len(ANTAGONIST_WEIGHTS) > 0:
       ops = []
