@@ -181,7 +181,7 @@ class Environment:
       self.status = 'accepted'
     elif done:
       # Discourage absence of consensus
-      reward = -0.25
+      reward = -0.5
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
