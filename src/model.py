@@ -201,8 +201,8 @@ class Model(Agent):
           entropy_coeff=entropy_schedule(game_off + finished_games))
 
   def collect(self, count):
-    states, model_states, actions, probs, values, rewards, dones = \
-        [], [], [], [], [], [], []
+    states, model_states, actions, probs, values, rewards, dones, accepted = \
+        [], [], [], [], [], [], [], []
 
     model_state = self.initial_state
     state = self.env.reset()
@@ -215,9 +215,11 @@ class Model(Agent):
           self.step(state, model_state, a2c=True)
 
       next_state, reward, done, _ = self.env.step(action)
+      status = self.env.status
 
       if not done and steps > MAX_STEPS:
         reward = -1.0
+        status = 'timeout'
         done = True
 
       states.append(state)
@@ -235,6 +237,8 @@ class Model(Agent):
         steps_per_game.append(steps)
         steps = 0
         finished_games += 1
+
+        accepted.append(status is 'accepted')
       else:
         state = next_state
         steps += 1
@@ -255,6 +259,7 @@ class Model(Agent):
       'values': values,
       'rewards': rewards,
       'dones': dones,
+      'acceptance': np.mean(accepted),
       'steps_per_game': steps_per_game
     }
 
@@ -299,6 +304,7 @@ class Model(Agent):
       'value_loss': value_loss,
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
+      'acceptance': games['acceptance'],
       'reward': np.mean(estimates),
       'max_reward': np.max(estimates),
       'value': value,
