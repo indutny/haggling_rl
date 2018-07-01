@@ -147,6 +147,8 @@ class Environment:
 
   def _next(self):
     self.positions[self.player] += 1
+    if self.positions[self.player] >= self.types:
+      raise Exception('Invalid move')
 
     return 0.0, self._make_state()
 

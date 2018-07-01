@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-MAX_TYPES = 10
+MAX_TYPES = 3
 
 class Generator:
   def __init__(self, types, min_obj, max_obj, total):

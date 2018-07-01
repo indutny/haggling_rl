@@ -11,7 +11,7 @@ assert.strictEqual = (a, b) => {
     throw new Error('Assert equal failure');
 };
 
-const MAX_TYPES = 10;
+const MAX_TYPES = 3;
 const MAX_STEPS = 1000;
 const ACTION_SPACE = 4;
 
