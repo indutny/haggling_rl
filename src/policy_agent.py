@@ -161,9 +161,9 @@ class PolicyAgent(Agent):
       if d == 0:
         continue
 
-      if i < pos:
+      if i > pos:
         action = 3
-      elif i > pos:
+      elif i < pos:
         raise Exception('Unexpected position')
       elif d > 0:
         action = 1
