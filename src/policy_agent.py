@@ -163,8 +163,6 @@ class PolicyAgent(Agent):
 
       if i < pos:
         action = 3
-      elif i > pos:
-        action = 4
       elif d > 0:
         action = 1
       else:

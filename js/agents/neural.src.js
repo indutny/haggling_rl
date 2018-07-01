@@ -13,7 +13,7 @@ assert.strictEqual = (a, b) => {
 
 const MAX_TYPES = 10;
 const MAX_STEPS = 1000;
-const ACTION_SPACE = 5;
+const ACTION_SPACE = 4;
 
 function matmul(vec, mat) {
   assert.strictEqual(vec.length, mat.length);
@@ -216,7 +216,7 @@ class Environment {
   }
 
   buildObservation() {
-    const available = [ 1, 0, 0, 0, 0 ];
+    const available = [ 1, 0, 0, 0 ];
 
     // Cell
     const pos = this.position;
@@ -228,14 +228,10 @@ class Environment {
     if (currentValue !== 0) {
       available[2] = 1;
     }
-
-    // Movement
-    if (pos !== 0) {
+    if (pos < this.types - 1) {
       available[3] = 1;
     }
-    if (pos !== this.types - 1) {
-      available[4] = 1;
-    }
+
     return [].concat(
       available,
       this.steps / (this.maxRounds * 2 - 1),
@@ -262,8 +258,8 @@ class Environment {
     } else if (action === 1 || action === 2) {
       this.makeChange(action === 1 ? 1 : -1);
       return false;
-    } else if (action === 3 || action === 4) {
-      this.move(action === 3 ? -1 : 1);
+    } else if (action === 3) {
+      this.next();
       return false;
     }
     assert(false, 'Unexpected action');
@@ -276,9 +272,9 @@ class Environment {
     this.offer[this.position] = Math.min(Math.max(next, 0), max);
   }
 
-  move(delta) {
-    const next = this.position + delta;
-    this.position = Math.min(Math.max(next, 0), this.types - 1);
+  next() {
+    this.position += 1;
+    assert(0 <= this.position && this.position < this.types);
   }
 }
 

@@ -4,7 +4,7 @@ import random
 from generator import Generator, MAX_TYPES
 from ui import UI
 
-ACTION_SPACE = 5
+ACTION_SPACE = 4
 
 class Environment:
   def __init__(self,
@@ -93,9 +93,9 @@ class Environment:
     elif action == 1 or action == 2:
       reward, state = self._make_change(1 if action == 1 else -1)
 
-    # left/right
-    elif action == 3 or action == 4:
-      reward, state = self._move(-1 if action == 3 else 1)
+    # move to next cell
+    elif action == 3:
+      reward, state = self._next()
     else:
       raise Exception('Unknown action {}'.format(action))
 
@@ -115,12 +115,8 @@ class Environment:
       available_actions[1] = 1.0
     if current_value != 0:
       available_actions[2] = 1.0
-
-    # Movement
-    if pos != 0:
+    if pos < self.types - 1:
       available_actions[3] = 1.0
-    if pos != self.types - 1:
-      available_actions[4] = 1.0
 
     return np.concatenate([
       available_actions,
@@ -149,14 +145,10 @@ class Environment:
 
     return -0.007, self._make_state()
 
-  def _move(self, delta):
-    initial_pos = self.positions[self.player]
-    pos = initial_pos + delta
-    pos = max(pos, 0)
-    pos = min(pos, MAX_TYPES - 1)
-    self.positions[self.player] = pos
+  def _next(self):
+    self.positions[self.player] += 1
 
-    return -0.007, self._make_state()
+    return 0.0, self._make_state()
 
   def _submit(self):
     # No state change here

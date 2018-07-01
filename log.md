@@ -1174,3 +1174,75 @@ Trained against just downsize.
         mean: '5.9980',
         meanAccepted: '7.6873',
         acceptance: '0.7802' } ]
+
+### 19 epochs
+
+    [ { name: 'neural',
+        rounds: '1.8964',
+        mean: '6.3412',
+        meanAccepted: '7.1031',
+        acceptance: '0.8928' },
+      { name: 'half-or-all',
+        rounds: '1.5676',
+        mean: '5.9170',
+        meanAccepted: '7.1311',
+        acceptance: '0.8297' },
+      { name: 'downsize',
+        rounds: '2.0169',
+        mean: '6.5062',
+        meanAccepted: '7.7363',
+        acceptance: '0.8410' } ]
+
+### 22 epochs
+
+    [ { name: 'neural',
+        rounds: '1.6303',
+        mean: '6.2588',
+        meanAccepted: '7.1406',
+        acceptance: '0.8765' },
+      { name: 'half-or-all',
+        rounds: '1.4079',
+        mean: '5.9562',
+        meanAccepted: '7.2263',
+        acceptance: '0.8243' },
+      { name: 'downsize',
+        rounds: '1.8824',
+        mean: '6.5595',
+        meanAccepted: '7.8346',
+        acceptance: '0.8373' } ]
+
+### 29 epochs
+
+    [ { name: 'neural',
+        rounds: '1.7405',
+        mean: '6.1735',
+        meanAccepted: '7.6666',
+        acceptance: '0.8053' },
+      { name: 'half-or-all',
+        rounds: '1.4608',
+        mean: '5.6632',
+        meanAccepted: '7.1303',
+        acceptance: '0.7943' },
+      { name: 'downsize',
+        rounds: '1.9878',
+        mean: '6.1160',
+        meanAccepted: '7.6834',
+        acceptance: '0.7960' } ]
+
+### 203 epochs
+
+    [ { name: 'neural',
+        rounds: '1.9005',
+        mean: '6.1443',
+        meanAccepted: '7.4793',
+        acceptance: '0.8215' },
+      { name: 'half-or-all',
+        rounds: '1.4372',
+        mean: '5.5702',
+        meanAccepted: '7.0088',
+        acceptance: '0.7947' },
+      { name: 'downsize',
+        rounds: '2.1199',
+        mean: '6.0780',
+        meanAccepted: '7.5153',
+        acceptance: '0.8087' } ]
