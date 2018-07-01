@@ -1044,3 +1044,95 @@ Trained against just downsize.
         mean: '5.6563',
         meanAccepted: '7.7963',
         acceptance: '0.7255' } ]
+
+## Stable (propagating state)
+
+### 31 epochs
+
+    [ { name: 'neural',
+        rounds: '1.8788',
+        mean: '5.5773',
+        meanAccepted: '8.0018',
+        acceptance: '0.6970' },
+      { name: 'half-or-all',
+        rounds: '1.5156',
+        mean: '5.2265',
+        meanAccepted: '7.0772',
+        acceptance: '0.7385' },
+      { name: 'downsize',
+        rounds: '1.9777',
+        mean: '5.6178',
+        meanAccepted: '7.7008',
+        acceptance: '0.7295' } ]
+
+### 33 epochs
+
+    [ { name: 'neural',
+        rounds: '1.6523',
+        mean: '5.8952',
+        meanAccepted: '7.8238',
+        acceptance: '0.7535' },
+      { name: 'half-or-all',
+        rounds: '1.3750',
+        mean: '5.4355',
+        meanAccepted: '7.0890',
+        acceptance: '0.7668' },
+      { name: 'downsize',
+        rounds: '1.9248',
+        mean: '5.8872',
+        meanAccepted: '7.7286',
+        acceptance: '0.7618' } ]
+
+### 34 epochs
+
+    [ { name: 'neural',
+        rounds: '1.5123',
+        mean: '6.0810',
+        meanAccepted: '7.5611',
+        acceptance: '0.8043' },
+      { name: 'half-or-all',
+        rounds: '1.3335',
+        mean: '5.7572',
+        meanAccepted: '7.1652',
+        acceptance: '0.8035' },
+      { name: 'downsize',
+        rounds: '1.8595',
+        mean: '6.2130',
+        meanAccepted: '7.8126',
+        acceptance: '0.7953' } ]
+
+### 46 epochs
+
+    [ { name: 'neural',
+        rounds: '1.7203',
+        mean: '5.7393',
+        meanAccepted: '7.7089',
+        acceptance: '0.7445' },
+      { name: 'half-or-all',
+        rounds: '1.4186',
+        mean: '5.4445',
+        meanAccepted: '7.0892',
+        acceptance: '0.7680' },
+      { name: 'downsize',
+        rounds: '1.9366',
+        mean: '5.9322',
+        meanAccepted: '7.7092',
+        acceptance: '0.7695' } ]
+
+### 51 epochs
+
+    [ { name: 'neural',
+        rounds: '1.6295',
+        mean: '5.6333',
+        meanAccepted: '7.8540',
+        acceptance: '0.7173' },
+      { name: 'half-or-all',
+        rounds: '1.3553',
+        mean: '5.3818',
+        meanAccepted: '7.0627',
+        acceptance: '0.7620' },
+      { name: 'downsize',
+        rounds: '1.9511',
+        mean: '5.6585',
+        meanAccepted: '7.6856',
+        acceptance: '0.7362' } ]
