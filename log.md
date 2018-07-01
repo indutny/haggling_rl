@@ -1136,3 +1136,41 @@ Trained against just downsize.
         mean: '5.6585',
         meanAccepted: '7.6856',
         acceptance: '0.7362' } ]
+
+## non-consensus=0.5
+
+### 7 epochs
+
+    [ { name: 'neural',
+        rounds: '1.6972',
+        mean: '5.7100',
+        meanAccepted: '7.1509',
+        acceptance: '0.7985' },
+      { name: 'half-or-all',
+        rounds: '1.4504',
+        mean: '5.8210',
+        meanAccepted: '7.2831',
+        acceptance: '0.7993' },
+      { name: 'downsize',
+        rounds: '1.8531',
+        mean: '6.1900',
+        meanAccepted: '7.8728',
+        acceptance: '0.7863' } ]
+
+### 13 epochs
+
+    [ { name: 'neural',
+        rounds: '2.0182',
+        mean: '5.8965',
+        meanAccepted: '7.4193',
+        acceptance: '0.7947' },
+      { name: 'half-or-all',
+        rounds: '1.6335',
+        mean: '5.5367',
+        meanAccepted: '7.1075',
+        acceptance: '0.7790' },
+      { name: 'downsize',
+        rounds: '2.0301',
+        mean: '5.9980',
+        meanAccepted: '7.6873',
+        acceptance: '0.7802' } ]
