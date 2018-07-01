@@ -12,7 +12,7 @@ GRAD_CLIP = 0.5
 PPO_EPSILON = 0.1
 
 def default_entropy_schedule(game_count):
-  return 0.005
+  return 0.01
 
 class Model(Agent):
   def __init__(self, policy):
