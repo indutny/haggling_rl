@@ -223,10 +223,9 @@ class Model(Agent):
       dones.append(done)
       model_states.append(model_state)
 
-      model_state = next_model_state
-
       if done:
         state = self.env.reset()
+        model_state = self.initial_state
         steps_per_game.append(steps)
         steps = 0
         finished_games += 1
@@ -234,6 +233,7 @@ class Model(Agent):
         accepted.append(status is 'accepted')
       else:
         state = next_state
+        model_state = next_model_state
         steps += 1
 
     steps_per_game = np.mean(steps_per_game)
