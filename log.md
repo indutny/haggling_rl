@@ -1830,3 +1830,111 @@ Trained against just downsize.
         mean: '5.7140',
         meanAccepted: '8.0906',
         acceptance: '0.7063' } ]
+
+### 40
+
+    [ { name: 'neural',
+        rounds: '1.8804',
+        mean: '4.0578',
+        meanAccepted: '5.7782',
+        acceptance: '0.7023' },
+      { name: 'half-or-all',
+        rounds: '1.6418',
+        mean: '5.8385',
+        meanAccepted: '7.5021',
+        acceptance: '0.7782' },
+      { name: 'downsize',
+        rounds: '1.8359',
+        mean: '5.6920',
+        meanAccepted: '8.0339',
+        acceptance: '0.7085' } ]
+
+### 50
+
+    [ { name: 'neural',
+        rounds: '1.7107',
+        mean: '4.3535',
+        meanAccepted: '5.9555',
+        acceptance: '0.7310' },
+      { name: 'half-or-all',
+        rounds: '1.5375',
+        mean: '5.8665',
+        meanAccepted: '7.4899',
+        acceptance: '0.7833' },
+      { name: 'downsize',
+        rounds: '1.7885',
+        mean: '5.7648',
+        meanAccepted: '8.0598',
+        acceptance: '0.7153' } ]
+
+### 60
+
+    [ { name: 'neural',
+        rounds: '1.7520',
+        mean: '4.5670',
+        meanAccepted: '6.2221',
+        acceptance: '0.7340' },
+      { name: 'half-or-all',
+        rounds: '1.6033',
+        mean: '5.8060',
+        meanAccepted: '7.4964',
+        acceptance: '0.7745' },
+      { name: 'downsize',
+        rounds: '1.8085',
+        mean: '5.7947',
+        meanAccepted: '8.0260',
+        acceptance: '0.7220' } ]
+
+### 70
+
+    [ { name: 'neural',
+        rounds: '1.6275',
+        mean: '4.6290',
+        meanAccepted: '6.3695',
+        acceptance: '0.7268' },
+      { name: 'half-or-all',
+        rounds: '1.5160',
+        mean: '5.7717',
+        meanAccepted: '7.5596',
+        acceptance: '0.7635' },
+      { name: 'downsize',
+        rounds: '1.7690',
+        mean: '5.9463',
+        meanAccepted: '8.0436',
+        acceptance: '0.7392' } ]
+
+### 90
+
+    [ { name: 'neural',
+        rounds: '1.5501',
+        mean: '4.9925',
+        meanAccepted: '5.8529',
+        acceptance: '0.8530' },
+      { name: 'half-or-all',
+        rounds: '1.4949',
+        mean: '6.1602',
+        meanAccepted: '7.6217',
+        acceptance: '0.8083' },
+      { name: 'downsize',
+        rounds: '1.7269',
+        mean: '6.6605',
+        meanAccepted: '8.1399',
+        acceptance: '0.8183' } ]
+
+### 110
+
+    [ { name: 'neural',
+        rounds: '1.7642',
+        mean: '5.1045',
+        meanAccepted: '6.5150',
+        acceptance: '0.7835' },
+      { name: 'half-or-all',
+        rounds: '1.5729',
+        mean: '5.7145',
+        meanAccepted: '7.4699',
+        acceptance: '0.7650' },
+      { name: 'downsize',
+        rounds: '1.8397',
+        mean: '6.4052',
+        meanAccepted: '7.9916',
+        acceptance: '0.8015' } ]

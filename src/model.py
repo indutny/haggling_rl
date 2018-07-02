@@ -52,13 +52,6 @@ class Model(Agent):
       x, state = self.cell(x, state)
 
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
-      self.initial_state_var = tf.Variable(self.initial_state,
-          name='initial_state')
-
-      self.new_initial_state = tf.placeholder(tf.float32,
-          shape=self.initial_state_var.shape, name='new_initial_state')
-      self.update_initial_state = self.initial_state_var.assign(
-          self.new_initial_state)
 
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
@@ -244,12 +237,6 @@ class Model(Agent):
         steps += 1
 
     steps_per_game = np.mean(steps_per_game)
-
-    # Save new initial state
-    self.initial_state = model_state
-    self.sess.run(self.update_initial_state, feed_dict={
-      self.new_initial_state: self.initial_state,
-    })
 
     return {
       'states': states,
