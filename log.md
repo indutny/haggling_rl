@@ -2171,3 +2171,129 @@ Trained against just downsize.
         meanAccepted: '7.7889',
         meanDelta: '0.7922',
         acceptance: '0.8540' } ]
+
+### 810
+
+    [ { name: 'neural',
+        rounds: '2.1070',
+        mean: '6.2650',
+        meanAccepted: '7.1498',
+        meanDelta: '-0.3250',
+        acceptance: '0.8762' },
+      { name: 'half-or-all',
+        rounds: '1.7037',
+        mean: '5.9230',
+        meanAccepted: '7.3350',
+        meanDelta: '-0.2830',
+        acceptance: '0.8075' },
+      { name: 'downsize',
+        rounds: '2.1330',
+        mean: '6.5450',
+        meanAccepted: '7.7023',
+        meanDelta: '0.6040',
+        acceptance: '0.8498' } ]
+
+### 870
+
+    [ { name: 'neural',
+        rounds: '1.9975',
+        mean: '6.1525',
+        meanAccepted: '6.8399',
+        meanDelta: '-0.7240',
+        acceptance: '0.8995' },
+      { name: 'half-or-all',
+        rounds: '1.6009',
+        mean: '5.9592',
+        meanAccepted: '7.3232',
+        meanDelta: '-0.1318',
+        acceptance: '0.8137' },
+      { name: 'downsize',
+        rounds: '2.0489',
+        mean: '6.6930',
+        meanAccepted: '7.7939',
+        meanDelta: '0.8833',
+        acceptance: '0.8588' } ]
+
+### 900
+
+    [ { name: 'neural',
+        rounds: '1.9942',
+        mean: '6.1325',
+        meanAccepted: '7.1683',
+        meanDelta: '-0.3673',
+        acceptance: '0.8555' },
+      { name: 'half-or-all',
+        rounds: '1.5932',
+        mean: '5.9292',
+        meanAccepted: '7.3473',
+        meanDelta: '-0.3194',
+        acceptance: '0.8070' },
+      { name: 'downsize',
+        rounds: '2.0763',
+        mean: '6.5838',
+        meanAccepted: '7.7593',
+        meanDelta: '0.6741',
+        acceptance: '0.8485' } ]
+
+### 960
+
+    [ { name: 'neural',
+        rounds: '2.0699',
+        mean: '6.0832',
+        meanAccepted: '7.4231',
+        meanDelta: '-0.0015',
+        acceptance: '0.8195' },
+      { name: 'half-or-all',
+        rounds: '1.6074',
+        mean: '5.7005',
+        meanAccepted: '7.3013',
+        meanDelta: '-0.5789',
+        acceptance: '0.7808' },
+      { name: 'downsize',
+        rounds: '2.0636',
+        mean: '6.4512',
+        meanAccepted: '7.7796',
+        meanDelta: '0.5466',
+        acceptance: '0.8293' } ]
+
+### 1040
+
+    [ { name: 'neural',
+        rounds: '2.1053',
+        mean: '6.2767',
+        meanAccepted: '7.1246',
+        meanDelta: '-0.3479',
+        acceptance: '0.8810' },
+      { name: 'half-or-all',
+        rounds: '1.6334',
+        mean: '5.8985',
+        meanAccepted: '7.3114',
+        meanDelta: '-0.3173',
+        acceptance: '0.8067' },
+      { name: 'downsize',
+        rounds: '2.0921',
+        mean: '6.5077',
+        meanAccepted: '7.7358',
+        meanDelta: '0.6686',
+        acceptance: '0.8413' } ]
+
+### 1070
+
+    [ { name: 'neural',
+        rounds: '2.0818',
+        mean: '6.1967',
+        meanAccepted: '7.2689',
+        meanDelta: '-0.1282',
+        acceptance: '0.8525' },
+      { name: 'half-or-all',
+        rounds: '1.5759',
+        mean: '5.8030',
+        meanAccepted: '7.2697',
+        meanDelta: '-0.4754',
+        acceptance: '0.7983' },
+      { name: 'downsize',
+        rounds: '2.0924',
+        mean: '6.4230',
+        meanAccepted: '7.7316',
+        meanDelta: '0.5883',
+        acceptance: '0.8307' } ]
