@@ -27,20 +27,20 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
     }
   }
 
-  entries = entries.filter((a) => a.sessions >= 500);
+  const leaderboard = entries.filter((a) => a.sessions >= 500);
 
-  entries.sort((a, b) => b.mean - a.mean);
+  leaderboard.sort((a, b) => b.mean - a.mean);
 
-  console.log(entries.slice(0, 10));
+  console.log(leaderboard.slice(0, 10));
 
   const requested = process.argv[2];
   if (requested) {
     let pos = null;
-    let entry = null;
+    let match = null;
 
-    for (let i = 0; i < entries.length; i++) {
-      entry = entries[i];
-      if (entry.hash === requested) {
+    for (let i = 0; i < leaderboard.length; i++) {
+      match = leaderboard[i];
+      if (match.hash === requested) {
         pos = i;
         break;
       }
@@ -48,8 +48,14 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
 
     if (pos === null) {
       console.log('Not in the leaderboard yet!');
+      for (const entry of entries) {
+        if (entry.hash === requested) {
+          console.log(entry);
+          break;
+        }
+      }
     } else {
-      console.log(pos, entry);
+      console.log(pos, match);
     }
   }
 }).catch((e) => {
