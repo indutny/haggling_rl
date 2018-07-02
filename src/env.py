@@ -9,7 +9,7 @@ ACTION_SPACE = 4
 class Environment:
   def __init__(self,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
-               max_steps=50):
+               max_steps=100):
     self.opponent_list = []
 
     self.generator = Generator(types, min_obj, max_obj, total)
