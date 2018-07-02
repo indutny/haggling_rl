@@ -5,18 +5,6 @@ const fetch = require('node-fetch');
 let bestMean = 0;
 let best = null;
 
-function process(hash, date, entry) {
-  if (entry.sessions < 1000) {
-    return;
-  }
-
-  const mean = entry.score / entry.sessions;
-  if (mean > bestMean) {
-    bestMean = mean;
-    best = { hash, date, entry };
-  }
-}
-
 fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
   return res.json();
 }).then((json) => {
@@ -44,6 +32,22 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
   entries.sort((a, b) => b.mean - a.mean);
 
   console.log(entries.slice(0, 10));
+
+  const requested = process.argv[2];
+  if (requested) {
+    let pos = null;
+    let entry = null;
+
+    for (let i = 0; i < entries.length; i++) {
+      entry = entries[i];
+      if (entry.hash === requested) {
+        pos = i;
+        break;
+      }
+    }
+
+    console.log(pos, entry);
+  }
 }).catch((e) => {
   throw e;
 });
