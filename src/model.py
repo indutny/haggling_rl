@@ -227,7 +227,7 @@ class Model(Agent):
       if steps > MAX_STEPS:
         width = len(env_list)
 
-        rewards = [ -1.0 ] * width
+        rewards = [ -1.5 ] * width
         dones = [ True ] * width
         statuses = [ 'timeout' ] * width
 

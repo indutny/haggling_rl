@@ -100,6 +100,7 @@ function addContestant(name, A) {
     sessions: 0,
     agreements: 0,
     score: 0,
+    delta: 0,
   });
 }
 
@@ -121,6 +122,10 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
     log('A: ' + pair.a.name + ' vs B: ' + pair.b.name);
     const ab = arena.match(pair.a.agent, pair.b.agent);
     if (ab.accepted) {
+      const delta = ab.a - ab.b;
+
+      pair.a.delta += delta;
+      pair.b.delta -= delta;
       pair.a.agreements++;
       pair.b.agreements++;
       pair.a.rounds += ab.rounds;
@@ -140,6 +145,7 @@ console.log(contestants.map((c) => {
     rounds: (c.rounds / c.agreements).toFixed(4),
     mean: (c.score / c.sessions).toFixed(4),
     meanAccepted: (c.score / c.agreements).toFixed(4),
+    meanDelta: (c.delta / c.agreements).toFixed(4),
     acceptance: (c.agreements / c.sessions).toFixed(4),
   };
 }));
