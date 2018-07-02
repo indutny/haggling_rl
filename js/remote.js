@@ -46,7 +46,11 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
       }
     }
 
-    console.log(pos, entry);
+    if (pos === null) {
+      console.log('Not in the leaderboard yet!');
+    } else {
+      console.log(pos, entry);
+    }
   }
 }).catch((e) => {
   throw e;
