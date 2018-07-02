@@ -2402,3 +2402,24 @@ Trained against just downsize.
         meanAccepted: '7.6601',
         meanDelta: '0.4980',
         acceptance: '0.8267' } ]
+
+### 1920
+
+    [ { name: 'neural',
+        rounds: '2.2700',
+        mean: '5.8670',
+        meanAccepted: '7.5170',
+        meanDelta: '0.3575',
+        acceptance: '0.7805' },
+      { name: 'half-or-all',
+        rounds: '1.6944',
+        mean: '5.3815',
+        meanAccepted: '7.1420',
+        meanDelta: '-0.6987',
+        acceptance: '0.7535' },
+      { name: 'downsize',
+        rounds: '2.2067',
+        mean: '6.0812',
+        meanAccepted: '7.5968',
+        meanDelta: '0.3092',
+        acceptance: '0.8005' } ]
