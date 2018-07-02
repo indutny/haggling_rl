@@ -60,7 +60,11 @@ class Model(Agent):
       raw_action *= available_actions
       raw_action += (1.0 - available_actions) * -1e23
 
-      self.action = tf.nn.softmax(raw_action, name='action_probs')
+      self.action_probs = tf.nn.softmax(raw_action, name='action_probs')
+      action_dist = tf.distributions.Categorical(probs=self.action_probs)
+
+      self.action = action_dist.sample()
+
       self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
       self.mean_value = tf.reduce_mean(self.value, name='mean_value')
       self.new_state = tf.concat([ state.c, state.h ], axis=-1, \
@@ -79,7 +83,8 @@ class Model(Agent):
           name='entropy_coeff')
 
       self.entropy = -tf.reduce_mean(
-          tf.reduce_sum(self.action * tf.log(self.action + 1e-20), axis=-1),
+          tf.reduce_sum(self.action_probs * tf.log(self.action_probs + 1e-20),
+              axis=-1),
           name='entropy')
 
       online_advantage = self.true_value - self.value
@@ -87,11 +92,11 @@ class Model(Agent):
           name='value_loss') / 2.0
 
       action_one_hot = tf.one_hot(self.selected_action,
-          depth=self.action.shape[-1],
+          depth=self.action_probs.shape[-1],
           dtype='float32',
           name='action_one_hot')
       current_prob = tf.reduce_sum(
-          action_one_hot * self.action,
+          action_one_hot * self.action_probs,
           axis=-1,
           name='current_prob')
 
@@ -161,42 +166,27 @@ class Model(Agent):
     out[self.rnn_state] = state
     return out
 
-  def step(self, obs, state, a2c=False):
+  def step(self, obs, state):
     feed_dict = {}
     self.fill_feed_dict(feed_dict, [ obs ], [ state ])
     tensors = [ self.action, self.new_state ]
-    if a2c:
-      tensors.append(self.value)
 
-    out = self.sess.run(tensors, feed_dict=feed_dict)
-    if not a2c:
-      out.append(None)
-
-    action_probs, next_state, value = out
-    action = self.pick_action(action_probs[0])
-
-    if a2c:
-      return action, next_state[0], value, action_probs[0][action]
-    else:
-      return action, next_state[0]
+    action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
+    return action, next_state[0]
 
   def multi_step(self, env_states, model_states):
     feed_dict = {
       self.input: env_states,
       self.rnn_state: model_states,
     }
-    tensors = [ self.action, self.new_state, self.value ]
+    tensors = [ self.action, self.action_probs, self.new_state, self.value ]
     out = self.sess.run(tensors, feed_dict=feed_dict)
 
-    action_probs, next_model_states, values = out
-    actions = [ self.pick_action(probs) for probs in action_probs ]
+    actions, action_probs, next_model_states, values = out
     action_probs = [
         probs[action] for action, probs in zip(actions, action_probs) ]
 
     return actions, next_model_states, values, action_probs
-
-  def pick_action(self, probs):
-    return np.random.choice(self.action_space, p=probs)
 
   def game(self, env_list):
     log = [ {
@@ -322,7 +312,7 @@ class Model(Agent):
 
         statuses = entry['statuses'][:max_steps]
 
-        res['acceptance'] += [ status is 'accepted' for status in statuses ]
+        res['acceptance'].append(statuses[max_steps - 1] is 'accepted')
         res['steps_per_game'].append(max_steps)
 
     res['steps_per_game'] = np.mean(res['steps_per_game'])
