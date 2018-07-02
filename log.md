@@ -1792,3 +1792,41 @@ Trained against just downsize.
         mean: '6.3265',
         meanAccepted: '7.5948',
         acceptance: '0.8330' } ]
+
+## True self-play
+
+### 10
+
+    [ { name: 'neural',
+        rounds: '2.1067',
+        mean: '2.2003',
+        meanAccepted: '5.9789',
+        acceptance: '0.3680' },
+      { name: 'half-or-all',
+        rounds: '1.7587',
+        mean: '4.4212',
+        meanAccepted: '7.3200',
+        acceptance: '0.6040' },
+      { name: 'downsize',
+        rounds: '1.8214',
+        mean: '4.3143',
+        meanAccepted: '8.0265',
+        acceptance: '0.5375' } ]
+
+### 30
+
+    [ { name: 'neural',
+        rounds: '1.8021',
+        mean: '3.8167',
+        meanAccepted: '5.3568',
+        acceptance: '0.7125' },
+      { name: 'half-or-all',
+        rounds: '1.5921',
+        mean: '5.8020',
+        meanAccepted: '7.4889',
+        acceptance: '0.7748' },
+      { name: 'downsize',
+        rounds: '1.8251',
+        mean: '5.7140',
+        meanAccepted: '8.0906',
+        acceptance: '0.7063' } ]
