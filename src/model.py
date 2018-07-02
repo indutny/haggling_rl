@@ -24,15 +24,17 @@ class Model(Agent):
 
     self.name = name
 
+    self.observation_space = env.observation_space
+    self.action_space = env.action_space
+
     self.scope = tf.VariableScope(reuse=False, name=name)
-    self.env = env
     self.sess = sess
     self.writer = writer
     self.writer_step = 0
 
     with tf.variable_scope(self.scope):
       self.input = tf.placeholder(tf.float32,
-          shape=(None, env.observation_space), name='input')
+          shape=(None, self.observation_space), name='input')
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
           num_units=LSTM_UNITS)
@@ -42,7 +44,7 @@ class Model(Agent):
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
       available_actions, x = tf.split(self.input, [
-        env.action_space, env.observation_space - env.action_space ], axis=1)
+        self.action_space, self.observation_space - self.action_space ], axis=1)
 
       x = tf.layers.dense(x, PRE_WIDTH, name='preprocess',
                           activation=tf.nn.relu)
@@ -54,7 +56,7 @@ class Model(Agent):
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       # Outputs
-      raw_action = tf.layers.dense(x, env.action_space, name='action')
+      raw_action = tf.layers.dense(x, self.action_space, name='action')
       raw_action *= available_actions
       raw_action += (1.0 - available_actions) * -1e23
 
@@ -178,77 +180,155 @@ class Model(Agent):
     else:
       return action, next_state[0]
 
-  def pick_action(self, probs):
-    return np.random.choice(self.env.action_space, p=probs)
+  def multi_step(self, env_states, model_states):
+    feed_dict = {
+      self.input: env_states,
+      self.rnn_state: model_states,
+    }
+    tensors = [ self.action, self.new_state, self.value ]
+    out = self.sess.run(tensors, feed_dict=feed_dict)
 
-  def explore(self, game_count=1024, reflect_every=128, game_off=0, \
+    action_probs, next_model_states, values = out
+    actions = [ self.pick_action(probs) for probs in action_probs ]
+    action_probs = [
+        probs[action] for action, probs in zip(actions, action_probs) ]
+
+    return actions, next_model_states, values, action_probs
+
+  def pick_action(self, probs):
+    return np.random.choice(self.action_space, p=probs)
+
+  def game(self, env_list):
+    log = [ {
+      'env_states': [],
+      'actions': [],
+      'action_probs': [],
+      'values': [],
+      'rewards': [],
+      'dones': [],
+      'model_states': [],
+      'statuses': [],
+    } for i in range(len(env_list)) ]
+
+    model_states = [ self.initial_state for _ in env_list ]
+    env_states = [ env.reset() for env in env_list ]
+
+    steps = 0
+    while True:
+      actions, next_model_states, values, action_probs = \
+          self.multi_step(env_states, model_states)
+
+      next_env_states = []
+      rewards = []
+      dones = []
+      statuses = []
+      for env, env_state, action in zip(env_list, env_states, actions):
+        if not env.done:
+          next_env_state, reward, done, _ = env.step(action)
+        else:
+          next_env_state, reward, done = env_state, 0.0, True
+
+        next_env_states.append(next_env_state)
+        rewards.append(reward)
+        dones.append(done)
+        statuses.append(env.status)
+
+      steps += 1
+      if steps > MAX_STEPS:
+        width = len(env_list)
+
+        rewards = [ -1.0 ] * width
+        dones = [ True ] * width
+        statuses = [ 'timeout' ] * width
+
+      zipped = zip(env_states, rewards, dones, statuses, model_states, actions,
+          action_probs, values)
+      for i, t in enumerate(zipped):
+        env_state, reward, done, status, model_state, action, action_prob, \
+            value = t
+
+        entry = log[i]
+        entry['env_states'].append(env_state)
+        entry['rewards'].append(reward)
+        entry['dones'].append(done)
+        entry['statuses'].append(status)
+        entry['model_states'].append(model_state)
+        entry['actions'].append(action)
+        entry['action_probs'].append(action_prob)
+        entry['values'].append(value)
+
+      # Update states
+      env_states = next_env_states
+      model_states = next_model_states
+
+      has_pending = False in dones
+      if not has_pending:
+        # All completed
+        break
+
+      if steps > MAX_STEPS:
+        # All timed out
+        break
+
+    return log
+
+  def explore(self, env_list, game_count=1024, reflect_every=128, game_off=0, \
               entropy_schedule=default_entropy_schedule):
     finished_games = 0
     while finished_games < game_count:
       reflect_target = min(game_count - finished_games, reflect_every)
 
-      games = self.collect(reflect_target)
+      games = self.collect(env_list, reflect_target)
       finished_games += reflect_target
 
       self.reflect(games,
           entropy_coeff=entropy_schedule(game_off + finished_games))
 
-  def collect(self, count):
-    states, model_states, actions, probs, values, rewards, dones, accepted = \
-        [], [], [], [], [], [], [], []
-
-    model_state = self.initial_state
-    state = self.env.reset()
-    finished_games = 0
-
-    steps = 0
-    steps_per_game = []
-    while finished_games < count:
-      action, next_model_state, value, action_prob = \
-          self.step(state, model_state, a2c=True)
-
-      next_state, reward, done, _ = self.env.step(action)
-      status = self.env.status
-
-      if not done and steps > MAX_STEPS:
-        reward = -1.0
-        status = 'timeout'
-        done = True
-
-      states.append(state)
-      actions.append(action)
-      probs.append(action_prob)
-      values.append(value)
-      rewards.append(reward)
-      dones.append(done)
-      model_states.append(model_state)
-
-      if done:
-        state = self.env.reset()
-        model_state = self.initial_state
-        steps_per_game.append(steps)
-        steps = 0
-        finished_games += 1
-
-        accepted.append(status is 'accepted')
-      else:
-        state = next_state
-        model_state = next_model_state
-        steps += 1
-
-    steps_per_game = np.mean(steps_per_game)
-
-    return {
-      'states': states,
-      'model_states': model_states,
-      'actions': actions,
-      'action_probs': probs,
-      'values': values,
-      'rewards': rewards,
-      'dones': dones,
-      'acceptance': np.mean(accepted),
-      'steps_per_game': steps_per_game
+  def collect(self, env_list, count):
+    res = {
+      'env_states': [],
+      'model_states': [],
+      'actions': [],
+      'action_probs': [],
+      'values': [],
+      'rewards': [],
+      'dones': [],
+      'acceptance': [],
+      'steps_per_game': [],
     }
+
+    if count % len(env_list) != 0:
+      raise Exception('Number of games is not divisible by concurrency')
+
+    for game_index in range(count // len(env_list)):
+      log = self.game(env_list)
+
+      global_max_steps = len(log[0]['dones'])
+      for entry in log:
+        dones = entry['dones']
+        max_steps = None
+        for i in range(global_max_steps):
+          if dones[i]:
+            max_steps = i + 1
+            break
+
+        res['env_states'] += entry['env_states'][:max_steps]
+        res['model_states'] += entry['model_states'][:max_steps]
+        res['actions'] += entry['actions'][:max_steps]
+        res['action_probs'] += entry['action_probs'][:max_steps]
+        res['values'] += entry['values'][:max_steps]
+        res['rewards'] += entry['rewards'][:max_steps]
+        res['dones'] += entry['dones'][:max_steps]
+
+        statuses = entry['statuses'][:max_steps]
+
+        res['acceptance'] += [ status is 'accepted' for status in statuses ]
+        res['steps_per_game'].append(max_steps)
+
+    res['steps_per_game'] = np.mean(res['steps_per_game'])
+    res['acceptance'] = np.mean(res['acceptance'])
+
+    return res
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros(len(rewards), dtype='float32')
@@ -267,7 +347,7 @@ class Model(Agent):
     estimates = self.estimate_rewards(games['rewards'], games['dones'])
 
     feed_dict = {
-      self.input: games['states'],
+      self.input: games['env_states'],
       self.rnn_state: games['model_states'],
       self.selected_action: games['actions'],
       self.true_value: estimates,

@@ -13,6 +13,7 @@ if RUN_NAME is None:
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
+CONCURRENCY = 32
 SAVE_EVERY = 10
 
 MAX_ANTAGONISTS = 1000
@@ -25,18 +26,23 @@ ANTAGONIST_WEIGHTS = []
 # Not really constants, but meh...
 EPOCH = 0
 
-env = Environment()
+env_list = []
 
-# env.add_opponent(PolicyAgent(policy='half_or_all'))
-# env.add_opponent(PolicyAgent(policy='downsize'))
-# env.add_opponent(PolicyAgent(policy='altruist'))
-# env.add_opponent(PolicyAgent(policy='greedy'))
-# env.add_opponent(PolicyAgent(policy='stubborn'))
+for i in range(CONCURRENCY):
+  env = Environment()
+
+  # env.add_opponent(PolicyAgent(policy='half_or_all'))
+  # env.add_opponent(PolicyAgent(policy='downsize'))
+  # env.add_opponent(PolicyAgent(policy='altruist'))
+  # env.add_opponent(PolicyAgent(policy='greedy'))
+  # env.add_opponent(PolicyAgent(policy='stubborn'))
+
+  env_list.append(env)
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
-  model = Model(env, sess, writer, name='haggle')
+  model = Model(env_list[0], sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
@@ -53,9 +59,10 @@ with tf.Session() as sess:
 
     if EPOCH == ANTAGONIST_EPOCH:
       print('Adding antagonists!')
-      env.clear_opponents()
-      for antagonist in ANTAGONISTS:
-        env.add_opponent(antagonist)
+      for env in env_list:
+        env.clear_opponents()
+        for antagonist in ANTAGONISTS:
+          env.add_opponent(antagonist)
 
       # Update weights
       print('Initializing their weights...')
@@ -71,7 +78,7 @@ with tf.Session() as sess:
 
       print('Time for real games!')
 
-    model.explore(game_count=1024, game_off=game_off)
+    model.explore(env_list, game_count=1024, game_off=game_off)
     game_off += 1024
 
     if EPOCH % SAVE_EVERY == 0:
