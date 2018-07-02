@@ -90,7 +90,7 @@ function softmax(x) {
 }
 
 class LSTM {
-  constructor(kernel, bias, initialState) {
+  constructor(kernel, bias) {
     this.kernel = kernel;
     this.bias = bias;
 
@@ -99,8 +99,8 @@ class LSTM {
     this.activation = tanh;
 
     this.initialState = {
-      c: initialState.slice(0, this.units),
-      h: initialState.slice(this.units),
+      c: new Array(this.units).fill(0),
+      h: new Array(this.units).fill(0),
     };
   }
 
@@ -138,8 +138,7 @@ class Model {
     this.pre = new Dense(weights['haggle/preprocess/kernel:0'],
                          weights['haggle/preprocess/bias:0']);
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
-                         weights['haggle/lstm/bias:0'],
-                         weights['haggle/initial_state:0']);
+                         weights['haggle/lstm/bias:0']);
     this.action = new Dense(weights['haggle/action/kernel:0'],
                             weights['haggle/action/bias:0']);
   }

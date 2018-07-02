@@ -52,13 +52,6 @@ class Model(Agent):
       x, state = self.cell(x, state)
 
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
-      self.initial_state_var = tf.Variable(self.initial_state,
-          name='initial_state')
-
-      self.new_initial_state = tf.placeholder(tf.float32,
-          shape=self.initial_state_var.shape, name='new_initial_state')
-      self.update_initial_state = self.initial_state_var.assign(
-          self.new_initial_state)
 
       # Outputs
       raw_action = tf.layers.dense(x, env.action_space, name='action')
@@ -137,18 +130,6 @@ class Model(Agent):
             name='{}/placeholder'.format(name))
         self.weight_placeholders[name] = placeholder
         self.load_ops.append(var.assign(placeholder))
-
-      # Update `self.initial_state` from `self.initial_state_var` on weight
-      # load
-      def update_state(x):
-        self.initial_state = x
-        return np.zeros(1, dtype='int32')
-
-      with tf.control_dependencies(self.load_ops):
-        update_state_op = tf.py_func(update_state,
-            [ self.initial_state_var ], tf.int32,
-            name='update_state_on_load')
-      self.load_ops.append(update_state_op)
 
   def save_weights(self, sess):
     values = sess.run(self.trainable_variables)
@@ -242,10 +223,9 @@ class Model(Agent):
       dones.append(done)
       model_states.append(model_state)
 
-      model_state = next_model_state
-
       if done:
         state = self.env.reset()
+        model_state = self.initial_state
         steps_per_game.append(steps)
         steps = 0
         finished_games += 1
@@ -253,15 +233,10 @@ class Model(Agent):
         accepted.append(status is 'accepted')
       else:
         state = next_state
+        model_state = next_model_state
         steps += 1
 
     steps_per_game = np.mean(steps_per_game)
-
-    # Save new initial state
-    self.initial_state = model_state
-    self.sess.run(self.update_initial_state, feed_dict={
-      self.new_initial_state: self.initial_state,
-    })
 
     return {
       'states': states,
