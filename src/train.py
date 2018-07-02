@@ -15,11 +15,23 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
 SAVE_EVERY = 10
 
+MAX_ANTAGONISTS = 1000
+NUM_ANTAGONISTS = 16
+ANTAGONIST_EPOCH = 200
+ANTAGONIST_UPDATE_EVERY = 100
+ANTAGONISTS = []
+ANTAGONIST_WEIGHTS = []
+
 # Not really constants, but meh...
 EPOCH = 0
 
 env = Environment()
-opponent_env = Environment()
+
+env.add_opponent(PolicyAgent(policy='half_or_all'))
+env.add_opponent(PolicyAgent(policy='downsize'))
+env.add_opponent(PolicyAgent(policy='altruist'))
+env.add_opponent(PolicyAgent(policy='greedy'))
+env.add_opponent(PolicyAgent(policy='stubborn'))
 
 writer = tf.summary.FileWriter(LOG_DIR)
 
@@ -27,10 +39,9 @@ with tf.Session() as sess:
   model = Model(env, sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
-  opponent = Model(opponent_env, sess, writer, name='opponent')
-
-  env.add_opponent(opponent)
-  opponent_env.add_opponent(model)
+  for i in range(NUM_ANTAGONISTS):
+    antagonist = Model(env, sess, None, name='antagonist_{}'.format(i))
+    ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())
   sess.graph.finalize()
@@ -40,12 +51,58 @@ with tf.Session() as sess:
     EPOCH += 1
     print('Epoch {}'.format(EPOCH))
 
-    print('Model training')
-    model.explore(game_count=1024, game_off=game_off, prefix='model')
+    if EPOCH == ANTAGONIST_EPOCH:
+      print('Adding antagonists!')
+      env.clear_opponents()
+      for antagonist in ANTAGONISTS:
+        env.add_opponent(antagonist)
 
-    print('Opponent training')
-    opponent.explore(game_count=1024, game_off=game_off, prefix='opponent')
+      # Update weights
+      print('Initializing their weights...')
+      weights = model.save_weights(sess)
+      ops = []
+      feed_dict = {}
+      for antagonist in ANTAGONISTS:
+        a_dict, a_ops = antagonist.load_weights(weights)
+
+        feed_dict.update(a_dict)
+        ops += a_ops
+      sess.run(ops, feed_dict=feed_dict)
+
+      print('Time for real games!')
+
+    model.explore(game_count=1024, game_off=game_off)
     game_off += 1024
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
+
+    if EPOCH < ANTAGONIST_EPOCH:
+      continue
+
+    if EPOCH % ANTAGONIST_UPDATE_EVERY == 0:
+      print('Adding new antagonist to the pool')
+      weights = model.save_weights(sess)
+      ANTAGONIST_WEIGHTS.append({
+        'epoch': EPOCH,
+        'weights': weights
+      })
+      if len(ANTAGONIST_WEIGHTS) > MAX_ANTAGONISTS:
+        ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
+
+    if len(ANTAGONIST_WEIGHTS) > 0:
+      ops = []
+      feed_dict = {}
+      versions = []
+      for antagonist in ANTAGONISTS:
+        save = random.choice(ANTAGONIST_WEIGHTS)
+        versions.append(save['epoch'])
+        a_dict, a_ops = antagonist.load_weights(save['weights'])
+
+        feed_dict.update(a_dict)
+        ops += a_ops
+
+        antagonist.set_version(save['epoch'])
+
+      sess.run(ops, feed_dict=feed_dict)
+      print('Loaded {} into antagonists'.format(versions))

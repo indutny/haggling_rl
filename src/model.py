@@ -189,7 +189,7 @@ class Model(Agent):
     return np.random.choice(self.env.action_space, p=probs)
 
   def explore(self, game_count=1024, reflect_every=128, game_off=0, \
-              entropy_schedule=default_entropy_schedule, prefix='haggle'):
+              entropy_schedule=default_entropy_schedule):
     finished_games = 0
     while finished_games < game_count:
       reflect_target = min(game_count - finished_games, reflect_every)
@@ -198,7 +198,6 @@ class Model(Agent):
       finished_games += reflect_target
 
       self.reflect(games,
-          prefix=prefix,
           entropy_coeff=entropy_schedule(game_off + finished_games))
 
   def collect(self, count):
@@ -277,7 +276,7 @@ class Model(Agent):
 
     return estimates
 
-  def reflect(self, games, prefix, entropy_coeff):
+  def reflect(self, games, entropy_coeff):
     estimates = self.estimate_rewards(games['rewards'], games['dones'])
 
     feed_dict = {
@@ -310,13 +309,13 @@ class Model(Agent):
       'max_reward': np.max(estimates),
       'value': value,
     }
-    self.log_summary(metrics, prefix=prefix)
+    self.log_summary(metrics)
 
-  def log_summary(self, metrics, prefix):
+  def log_summary(self, metrics):
     summary = tf.Summary()
     for key in metrics:
       value = metrics[key]
-      summary.value.add(tag='{}/{}'.format(prefix, key), simple_value=value)
+      summary.value.add(tag='train/{}'.format(key), simple_value=value)
     self.writer.add_summary(summary, self.writer_step)
     self.writer.flush()
     self.writer_step += 1
