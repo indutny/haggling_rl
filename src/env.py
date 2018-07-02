@@ -143,7 +143,7 @@ class Environment:
 
     self.offer[index] = value
 
-    return -0.007, self._make_state()
+    return 0.0, self._make_state()
 
   def _next(self):
     self.positions[self.player] += 1

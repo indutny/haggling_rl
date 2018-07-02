@@ -1773,4 +1773,22 @@ Trained against just downsize.
         meanAccepted: '7.6090',
         acceptance: '0.8588' } ]
 
-### 500
+## Pairing (training two nets against each other)
+
+### 640
+
+    [ { name: 'neural',
+        rounds: '2.0523',
+        mean: '5.7713',
+        meanAccepted: '7.2299',
+        acceptance: '0.7983' },
+      { name: 'half-or-all',
+        rounds: '1.5624',
+        mean: '5.3445',
+        meanAccepted: '7.1141',
+        acceptance: '0.7512' },
+      { name: 'downsize',
+        rounds: '2.1026',
+        mean: '6.3265',
+        meanAccepted: '7.5948',
+        acceptance: '0.8330' } ]
