@@ -16,7 +16,7 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 CONCURRENCY = 32
 SAVE_EVERY = 10
 
-MAX_ANTAGONISTS = 1000
+MAX_ANTAGONISTS = 2000
 NUM_ANTAGONISTS = 32
 ANTAGONIST_EPOCH = 1
 ANTAGONIST_UPDATE_EVERY = 1
@@ -94,8 +94,11 @@ with tf.Session() as sess:
         'epoch': EPOCH,
         'weights': weights
       })
-      if len(ANTAGONIST_WEIGHTS) > MAX_ANTAGONISTS:
-        ANTAGONIST_WEIGHTS.pop(random.randrange(len(ANTAGONIST_WEIGHTS)))
+
+      # Equal spacing between everyone
+      if len(ANTAGONIST_WEIGHTS) >= 2 * MAX_ANTAGONISTS:
+        ANTAGONIST_WEIGHTS = ANTAGONIST_WEIGHTS[::2]
+        ANTAGONIST_UPDATE_EVERY *= 2
 
     if len(ANTAGONIST_WEIGHTS) > 0:
       ops = []

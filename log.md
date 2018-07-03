@@ -2613,6 +2613,10 @@ Trained against just downsize.
         meanDelta: '0.4038',
         acceptance: '0.7665' } ]
 
+### 4750
+
+    Very bad
+
 ## Entropy schedule
 
 ### 1710
