@@ -101,11 +101,16 @@ with tf.Session() as sess:
         ANTAGONIST_UPDATE_EVERY *= 2
 
     if len(ANTAGONIST_WEIGHTS) > 0:
+      if len(ANTAGONIST_WEIGHTS) < NUM_ANTAGONISTS:
+        weights = ANTAGONIST_WEIGHTS
+      else:
+        weights = random.sample(ANTAGONIST_WEIGHTS, NUM_ANTAGONISTS)
+
+      env.clear_opponents()
       ops = []
       feed_dict = {}
       versions = []
-      for antagonist in ANTAGONISTS:
-        save = random.choice(ANTAGONIST_WEIGHTS)
+      for antagonist, save in zip(ANTAGONISTS, weights):
         versions.append(save['epoch'])
         a_dict, a_ops = antagonist.load_weights(save['weights'])
 
@@ -113,6 +118,7 @@ with tf.Session() as sess:
         ops += a_ops
 
         antagonist.set_version(save['epoch'])
+        env.add_opponent(antagonist)
 
       sess.run(ops, feed_dict=feed_dict)
       print('Loaded {} into antagonists'.format(versions))
