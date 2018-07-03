@@ -6,6 +6,7 @@ const random = new (require('random-js'))();
 const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
+const BestNeural = require('./agents/best');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
