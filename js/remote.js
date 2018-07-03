@@ -12,19 +12,20 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
   for (const hash of Object.keys(json)) {
     const player = json[hash];
 
-    for (const date of Object.keys(player)) {
-      if (date === 'all') {
-        continue;
-      }
+    const dates = Object.keys(player).filter(date => date !== 'all')
+        .sort().reverse();
 
-      const data = player[date];
-      const sessions = data.sessions;
-      const mean = data.score / sessions;
-      const meanAccepted = data.score / data.agreements;
-      const acceptance = data.agreements / sessions;
+    const latest = dates[0];
 
-      entries.push({ hash, date, mean, meanAccepted, acceptance, sessions });
-    }
+    const data = player[latest];
+    const sessions = data.sessions;
+    const mean = data.score / sessions;
+    const meanAccepted = data.score / data.agreements;
+    const acceptance = data.agreements / sessions;
+
+    entries.push({
+      hash, date: latest, mean, meanAccepted, acceptance, sessions
+    });
   }
 
   const leaderboard = entries.filter((a) => a.sessions >= 500);

@@ -2423,3 +2423,45 @@ Trained against just downsize.
         meanAccepted: '7.5968',
         meanDelta: '0.3092',
         acceptance: '0.8005' } ]
+
+### 2110
+
+    [ { name: 'neural',
+        rounds: '2.0762',
+        mean: '6.1742',
+        meanAccepted: '7.1050',
+        meanDelta: '-0.2428',
+        acceptance: '0.8690' },
+      { name: 'half-or-all',
+        rounds: '1.5970',
+        mean: '5.9737',
+        meanAccepted: '7.2629',
+        meanDelta: '-0.2541',
+        acceptance: '0.8225' },
+      { name: 'downsize',
+        rounds: '2.1602',
+        mean: '6.3185',
+        meanAccepted: '7.6541',
+        meanDelta: '0.5088',
+        acceptance: '0.8255' } ]
+
+### 2130
+
+    [ { name: 'neural',
+        rounds: '2.2305',
+        mean: '5.8937',
+        meanAccepted: '7.1591',
+        meanDelta: '-0.0975',
+        acceptance: '0.8233' },
+      { name: 'half-or-all',
+        rounds: '1.6784',
+        mean: '5.7675',
+        meanAccepted: '7.2252',
+        meanDelta: '-0.3257',
+        acceptance: '0.7983' },
+      { name: 'downsize',
+        rounds: '2.2209',
+        mean: '6.1748',
+        meanAccepted: '7.5997',
+        meanDelta: '0.4188',
+        acceptance: '0.8125' } ]
