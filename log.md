@@ -2788,3 +2788,33 @@ Trained against just downsize.
         meanAccepted: '7.7485',
         meanDelta: '0.7371',
         acceptance: '0.8350' } ]
+
+Running on real arena:
+
+    43 { hash: 'bf015ba7b7643dcefdf574347b2511f6',
+      date: '2018-07-03',
+      mean: 6.380398671096345,
+      meanAccepted: 7.19778534923339,
+      acceptance: 0.8864391422530957,
+      sessions: 6622 }
+
+### 1160
+
+    [ { name: 'neural',
+        rounds: '2.1689',
+        mean: '6.1028',
+        meanAccepted: '7.2978',
+        meanDelta: '0.0383',
+        acceptance: '0.8363' },
+      { name: 'half-or-all',
+        rounds: '1.6852',
+        mean: '5.6220',
+        meanAccepted: '7.1210',
+        meanDelta: '-0.5839',
+        acceptance: '0.7895' },
+      { name: 'downsize',
+        rounds: '2.1872',
+        mean: '6.2332',
+        meanAccepted: '7.6646',
+        meanDelta: '0.5275',
+        acceptance: '0.8133' } ]
