@@ -2591,3 +2591,47 @@ Trained against just downsize.
         meanAccepted: '7.6783',
         meanDelta: '0.4240',
         acceptance: '0.8120' } ]
+
+### 2770
+
+    [ { name: 'neural',
+        rounds: '2.1490',
+        mean: '5.4370',
+        meanAccepted: '7.3647',
+        meanDelta: '0.0684',
+        acceptance: '0.7382' },
+      { name: 'half-or-all',
+        rounds: '1.5964',
+        mean: '5.4672',
+        meanAccepted: '7.2582',
+        meanDelta: '-0.4779',
+        acceptance: '0.7532' },
+      { name: 'downsize',
+        rounds: '2.1494',
+        mean: '5.8857',
+        meanAccepted: '7.6787',
+        meanDelta: '0.4038',
+        acceptance: '0.7665' } ]
+
+## Entropy schedule
+
+### 1710
+
+    [ { name: 'neural',
+        rounds: '2.3529',
+        mean: '5.7630',
+        meanAccepted: '7.5457',
+        meanDelta: '0.3008',
+        acceptance: '0.7638' },
+      { name: 'half-or-all',
+        rounds: '1.7206',
+        mean: '5.3647',
+        meanAccepted: '7.2399',
+        meanDelta: '-0.6937',
+        acceptance: '0.7410' },
+      { name: 'downsize',
+        rounds: '2.2411',
+        mean: '6.1550',
+        meanAccepted: '7.6105',
+        meanDelta: '0.3515',
+        acceptance: '0.8087' } ]
