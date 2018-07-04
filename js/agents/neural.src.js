@@ -135,8 +135,12 @@ class Dense {
 
 class Model {
   constructor(weights) {
-    this.pre = new Dense(weights['haggle/preprocess/kernel:0'],
-                         weights['haggle/preprocess/bias:0']);
+    if (weights['haggle/preprocess/kernel:0']) {
+      this.pre = new Dense(weights['haggle/preprocess/kernel:0'],
+                           weights['haggle/preprocess/bias:0']);
+    } else {
+      this.pre = null;
+    }
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
     this.action = new Dense(weights['haggle/action/kernel:0'],
@@ -172,7 +176,12 @@ class Model {
     const available = input.slice(0, ACTION_SPACE);
     input = input.slice(ACTION_SPACE);
 
-    const pre = relu(this.pre.call(input));
+    let pre;
+    if (this.pre !== null) {
+      pre = relu(this.pre.call(input));
+    } else {
+      pre = input;
+    }
     let { result: x, state: newState } = this.lstm.call(pre, state);
     x = this.action.call(x);
 
