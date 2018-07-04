@@ -31,7 +31,8 @@ config = {
 
 RUN_NAME = os.environ.get('HAGGLE_RUN')
 if RUN_NAME is None:
-  RUN_NAME = 'p' + args.pre + '-lstm' + str(args.lstm) + \
+  RUN_NAME = 'p' + args.pre.replace(',', '_') + \
+      '-lstm' + str(args.lstm) + \
       '-vs' + str(args.value_scale) + \
       '-ms' + str(args.max_steps) + \
       '-lr' + str(args.lr) + \
