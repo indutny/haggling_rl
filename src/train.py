@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 import random
@@ -7,9 +8,38 @@ from policy_agent import PolicyAgent
 from env import Environment
 from model import Model
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--pre', default='64')
+parser.add_argument('--lstm', type=int, default=128)
+parser.add_argument('--value_scale', type=float, default=0.5)
+parser.add_argument('--max_steps', type=int, default=50)
+parser.add_argument('--lr', type=float, default=0.001)
+parser.add_argument('--grad_clip', type=float, default=0.5)
+parser.add_argument('--ppo', type=float, default=0.1)
+
+args = parser.parse_args()
+
+config = {
+  'pre': [ int(v) for v in args.pre.split(',') ],
+  'lstm': args.lstm,
+  'value_scale': args.value_scale,
+  'max_steps': args.max_steps,
+  'lr': args.lr,
+  'grad_clip': args.grad_clip,
+  'ppo': args.ppo,
+}
+
 RUN_NAME = os.environ.get('HAGGLE_RUN')
 if RUN_NAME is None:
-  RUN_NAME = time.strftime('%d.%m.%Y_%H%M%S')
+  RUN_NAME = 'p' + args.pre + '-lstm' + str(args.lstm) + \
+      '-vs' + str(args.value_scale) + \
+      '-ms' + str(args.max_steps) + \
+      '-lr' + str(args.lr) + \
+      '-g' + str(args.grad_clip) + \
+      '-ppo' + str(args.ppo)
+
+print(RUN_NAME, config)
+
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
@@ -42,11 +72,11 @@ for i in range(CONCURRENCY):
 writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
-  model = Model(env_list[0], sess, writer, name='haggle')
+  model = Model(config, env_list[0], sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
-    antagonist = Model(env, sess, None, name='antagonist_{}'.format(i))
+    antagonist = Model(config, env, sess, None, name='antagonist_{}'.format(i))
     ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())

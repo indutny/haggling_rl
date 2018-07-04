@@ -3274,3 +3274,33 @@ Real:
         meanAccepted: '7.8083',
         meanDelta: '0.8503',
         acceptance: '0.8347' } ]
+
+Real:
+
+    Position 12/30, entry { hash: 'a390d6247e2f80f55a6351e5322edcb3',
+      date: '2018-07-04',
+      mean: 5.998804006577964,
+      meanAccepted: 7.031014543543018,
+      acceptance: 0.8531918074450591,
+      sessions: 6689 }
+
+### 990
+
+    [ { name: 'neural',
+        rounds: '1.9671',
+        mean: '6.0250',
+        meanAccepted: '6.8956',
+        meanDelta: '-0.7488',
+        acceptance: '0.8738' },
+      { name: 'half-or-all',
+        rounds: '1.6273',
+        mean: '6.0450',
+        meanAccepted: '7.4104',
+        meanDelta: '-0.1725',
+        acceptance: '0.8157' },
+      { name: 'downsize',
+        rounds: '1.9806',
+        mean: '6.5738',
+        meanAccepted: '7.8493',
+        meanDelta: '0.9493',
+        acceptance: '0.8375' } ]

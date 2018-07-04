@@ -3,22 +3,24 @@ import numpy as np
 
 from agent import Agent
 
-PRE_WIDTH = []
-LSTM_UNITS = 128
-VALUE_SCALE = 0.5
-MAX_STEPS = 100
-LR = 0.001
-GRAD_CLIP = 0.5
-PPO_EPSILON = 0.1
-
 def default_entropy_schedule(game_count):
   return 0.01
 
 class Model(Agent):
-  def __init__(self, policy):
+  def __init__(self, config, env, sess, writer, name='haggle'):
     super(Model, self).__init__()
+    self.config = {
+      'pre': [],
+      'lstm': 128,
+      'value_scale': 0.5,
+      'max_steps': 50,
+      'lr': 0.001,
+      'grad_clip': 0.5,
+      'ppo': 0.1,
+    }
 
-  def __init__(self, env, sess, writer, name='haggle'):
+    self.config.update(config)
+
     self.original_name = name
     self.version = 0
 
@@ -37,7 +39,7 @@ class Model(Agent):
           shape=(None, self.observation_space), name='input')
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
-          num_units=LSTM_UNITS)
+          num_units=self.config['lstm'])
       state_size = self.cell.state_size
 
       self.rnn_state = tf.placeholder(tf.float32,
@@ -46,7 +48,7 @@ class Model(Agent):
       available_actions, x = tf.split(self.input, [
         self.action_space, self.observation_space - self.action_space ], axis=1)
 
-      for i, width in enumerate(PRE_WIDTH):
+      for i, width in enumerate(self.config['pre']):
         x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
                             activation=tf.nn.relu)
 
@@ -102,8 +104,9 @@ class Model(Agent):
           name='current_prob')
 
       prob_ratio = current_prob / self.past_prob
-      clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - PPO_EPSILON,
-          1.0 + PPO_EPSILON, name='clipped_ratio')
+      ppo_epsilon = self.config['ppo']
+      clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - ppo_epsilon,
+          1.0 + ppo_epsilon, name='clipped_ratio')
 
       offline_advantage = self.true_value - self.past_value
       policy_loss = tf.minimum(
@@ -113,14 +116,15 @@ class Model(Agent):
           name='policy_loss')
       self.policy_loss = policy_loss
 
-      optimizer = tf.train.AdamOptimizer(LR)
+      optimizer = tf.train.AdamOptimizer(self.config['lr'])
 
-      self.loss = self.policy_loss + self.value_loss * VALUE_SCALE - \
+      self.loss = self.policy_loss + \
+          self.value_loss * self.config['value_scale'] - \
           self.entropy * self.entropy_coeff
 
       variables = tf.trainable_variables()
       grads = tf.gradients(self.loss, variables)
-      grads, grad_norm = tf.clip_by_global_norm(grads, GRAD_CLIP)
+      grads, grad_norm = tf.clip_by_global_norm(grads, self.config['grad_clip'])
       grads = list(zip(grads, variables))
       self.grad_norm = grad_norm
       self.train = optimizer.apply_gradients(grads_and_vars=grads)
@@ -225,7 +229,7 @@ class Model(Agent):
         statuses.append(env.status)
 
       steps += 1
-      if steps > MAX_STEPS:
+      if steps > self.config['max_steps']:
         width = len(env_list)
 
         rewards = [ -1.5 ] * width
@@ -257,7 +261,7 @@ class Model(Agent):
         # All completed
         break
 
-      if steps > MAX_STEPS:
+      if steps > self.config['max_steps']:
         # All timed out
         break
 
