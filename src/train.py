@@ -17,6 +17,7 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
 CONCURRENCY = 32
 SAVE_EVERY = 10
+BENCH_EVERY = 1
 
 MAX_ANTAGONISTS = 500
 NUM_ANTAGONISTS = 32
@@ -29,6 +30,9 @@ ANTAGONIST_WEIGHTS = []
 EPOCH = 0
 
 env_list = []
+arena = Environment()
+
+arena.add_opponent(PolicyAgent(policy='half_or_all'))
 
 for i in range(CONCURRENCY):
   env = Environment()
@@ -85,6 +89,16 @@ with tf.Session() as sess:
 
     if EPOCH % SAVE_EVERY == 0:
       saver.save(sess, os.path.join(SAVE_DIR, '{:08d}'.format(EPOCH)))
+
+    if EPOCH % BENCH_EVERY == 0:
+      print('Running benchmark...')
+      bench = arena.bench(model)
+
+      # TODO(indutny): move logging to model?
+      summary = tf.Summary()
+      for key, value in bench.items():
+        summary.value.add(tag='bench/{}'.format(key), simple_value=value)
+      writer.add_summary(summary, model.writer_step)
 
     if EPOCH < ANTAGONIST_EPOCH:
       continue

@@ -40,6 +40,7 @@ class Environment:
     self.steps = 0
     self.done = False
     self.status = 'active'
+    self.last_reward = 0.0
 
     objects = self.generator.get()
     self.values = {
@@ -85,9 +86,8 @@ class Environment:
     if action == 0:
       reward, state, done = self._submit()
       if not done and self.player is 'opponent':
-        reward, state, done = self._run_opponent()
-
         # NOTE: `reward` is always for `self`
+        reward, state, done = self._run_opponent()
 
     # +1/-1
     elif action == 1 or action == 2:
@@ -101,6 +101,35 @@ class Environment:
 
     self.done = done
     return state, reward, done, { 'player': player }
+
+  def bench(self, agent, times=100):
+    score = 0.0
+    accepted = 0
+    for i in range(times):
+      is_accepted, delta = self.bench_single(agent)
+      score += delta
+
+      if is_accepted:
+        accepted += 1
+
+    return {
+      'mean': score / float(times),
+      'mean_accepted': score / float(accepted),
+      'acceptance': float(accepted) / float(times),
+    }
+
+  def bench_single(self, agent):
+    state = self.reset()
+    agent_state = agent.initial_state
+
+    for i in range(self.max_steps):
+      action, agent_state = agent.step(state, agent_state)
+      state, _, done, _ = self.step(action)
+      if done:
+        return self.status == 'accepted', self.last_reward
+
+    # Timed out
+    return False, 0.0
 
   def _make_state(self):
     available_actions = [ 0.0 ] * ACTION_SPACE
@@ -181,6 +210,10 @@ class Environment:
       # Normalze reward
       reward = reward / self.total
       self.status = 'accepted'
+
+      # Just for benching (really messy)
+      # TODO(indutny): unmess it
+      self.last_reward = reward
     elif done:
       # Discourage absence of consensus
       reward = -1.0
