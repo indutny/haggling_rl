@@ -2,6 +2,9 @@
 
 const fetch = require('node-fetch');
 
+const requested = process.argv[2];
+const date = process.argv[3];
+
 let bestMean = 0;
 let best = null;
 
@@ -15,9 +18,13 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
     const dates = Object.keys(player).filter(date => date !== 'all')
         .sort().reverse();
 
-    const latest = dates[0];
+    const latest = date || dates[0];
 
     const data = player[latest];
+    if (!data) {
+      continue;
+    }
+
     const sessions = data.sessions;
     const mean = data.score / sessions;
     const meanAccepted = data.score / data.agreements;
@@ -34,7 +41,6 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
 
   console.log(leaderboard.slice(0, 10));
 
-  const requested = process.argv[2];
   if (requested) {
     let pos = null;
     let match = null;

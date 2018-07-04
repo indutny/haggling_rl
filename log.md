@@ -2965,12 +2965,12 @@ Real arena:
 
 Real:
 
-    49 { hash: 'ce706832ca69e1fb16001b074fd2ef0e',
+    52 { hash: 'ce706832ca69e1fb16001b074fd2ef0e',
       date: '2018-07-04',
-      mean: 6.299653078924544,
-      meanAccepted: 7.758077436582109,
-      acceptance: 0.812012142237641,
-      sessions: 4612 }
+      mean: 6.250992220987459,
+      meanAccepted: 7.735756385068762,
+      acceptance: 0.8080647721860613,
+      sessions: 6299 }
 
 ### 1690
 
@@ -2992,3 +2992,24 @@ Real:
         meanAccepted: '7.6374',
         meanDelta: '0.4998',
         acceptance: '0.8273' } ]
+
+### 1730
+
+    [ { name: 'neural',
+        rounds: '2.3435',
+        mean: '6.2235',
+        meanAccepted: '7.3218',
+        meanDelta: '0.0294',
+        acceptance: '0.8500' },
+      { name: 'half-or-all',
+        rounds: '1.7941',
+        mean: '5.8720',
+        meanAccepted: '7.2718',
+        meanDelta: '-0.4115',
+        acceptance: '0.8075' },
+      { name: 'downsize',
+        rounds: '2.2773',
+        mean: '6.2412',
+        meanAccepted: '7.5835',
+        meanDelta: '0.3733',
+        acceptance: '0.8230' } ]
