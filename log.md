@@ -2869,3 +2869,96 @@ Real arena:
         meanAccepted: '7.6393',
         meanDelta: '0.4158',
         acceptance: '0.8033' } ]
+
+Real arena:
+
+    75 { hash: '3717824739222fe3aa4e1d96d2b6eadc',
+      date: '2018-07-03',
+      mean: 6.090970578288807,
+      meanAccepted: 7.482758620689655,
+      acceptance: 0.8140006763611769,
+      sessions: 2957 }
+
+### 1400
+
+    [ { name: 'neural',
+        rounds: '2.2824',
+        mean: '6.2512',
+        meanAccepted: '7.4731',
+        meanDelta: '0.1742',
+        acceptance: '0.8365' },
+      { name: 'half-or-all',
+        rounds: '1.7438',
+        mean: '5.6392',
+        meanAccepted: '7.2601',
+        meanDelta: '-0.5552',
+        acceptance: '0.7768' },
+      { name: 'downsize',
+        rounds: '2.2219',
+        mean: '6.2882',
+        meanAccepted: '7.6152',
+        meanDelta: '0.3457',
+        acceptance: '0.8257' } ]
+
+### 1460
+
+    [ { name: 'neural',
+        rounds: '2.2293',
+        mean: '6.0030',
+        meanAccepted: '7.6350',
+        meanDelta: '0.4188',
+        acceptance: '0.7863' },
+      { name: 'half-or-all',
+        rounds: '1.6427',
+        mean: '5.5270',
+        meanAccepted: '7.2013',
+        meanDelta: '-0.7166',
+        acceptance: '0.7675' },
+      { name: 'downsize',
+        rounds: '2.1743',
+        mean: '6.0942',
+        meanAccepted: '7.6681',
+        meanDelta: '0.2778',
+        acceptance: '0.7947' } ]
+
+### 1490
+
+    [ { name: 'neural',
+        rounds: '2.3020',
+        mean: '5.9520',
+        meanAccepted: '7.5773',
+        meanDelta: '0.4122',
+        acceptance: '0.7855' },
+      { name: 'half-or-all',
+        rounds: '1.6807',
+        mean: '5.4807',
+        meanAccepted: '7.1879',
+        meanDelta: '-0.7384',
+        acceptance: '0.7625' },
+      { name: 'downsize',
+        rounds: '2.2023',
+        mean: '6.1033',
+        meanAccepted: '7.6100',
+        meanDelta: '0.2983',
+        acceptance: '0.8020' } ]
+
+### 1580
+
+    [ { name: 'neural',
+        rounds: '2.1799',
+        mean: '5.9832',
+        meanAccepted: '7.4488',
+        meanDelta: '0.2026',
+        acceptance: '0.8033' },
+      { name: 'half-or-all',
+        rounds: '1.6567',
+        mean: '5.5430',
+        meanAccepted: '7.2010',
+        meanDelta: '-0.6210',
+        acceptance: '0.7698' },
+      { name: 'downsize',
+        rounds: '2.1824',
+        mean: '6.1795',
+        meanAccepted: '7.6290',
+        meanDelta: '0.3892',
+        acceptance: '0.8100' } ]
