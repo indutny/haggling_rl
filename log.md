@@ -3376,3 +3376,75 @@ Real:
         meanAccepted: '7.7557',
         meanDelta: '0.6811',
         acceptance: '0.8340' } ]
+
+Real:
+
+    Position 2/45, entry { hash: '516140a83ce9bfb61928f8cc963e9163',
+      date: '2018-07-04',
+      mean: 6.810342134041556,
+      meanAccepted: 7.556422256890276,
+      acceptance: 0.901265427276988,
+      sessions: 6401 }
+
+### 1760
+
+    [ { name: 'neural',
+        rounds: '2.4188',
+        mean: '5.9620',
+        meanAccepted: '7.3650',
+        meanDelta: '-0.0219',
+        acceptance: '0.8095' },
+      { name: 'half-or-all',
+        rounds: '1.8312',
+        mean: '5.5462',
+        meanAccepted: '7.2714',
+        meanDelta: '-0.5552',
+        acceptance: '0.7628' },
+      { name: 'downsize',
+        rounds: '2.2066',
+        mean: '6.2955',
+        meanAccepted: '7.7080',
+        meanDelta: '0.5403',
+        acceptance: '0.8167' } ]
+
+### 1820
+
+    [ { name: 'neural',
+        rounds: '2.0048',
+        mean: '6.2195',
+        meanAccepted: '6.9686',
+        meanDelta: '-0.5950',
+        acceptance: '0.8925' },
+      { name: 'half-or-all',
+        rounds: '1.6188',
+        mean: '5.9995',
+        meanAccepted: '7.3299',
+        meanDelta: '-0.2532',
+        acceptance: '0.8185' },
+      { name: 'downsize',
+        rounds: '2.0269',
+        mean: '6.6312',
+        meanAccepted: '7.8384',
+        meanDelta: '0.8726',
+        acceptance: '0.8460' } ]
+
+### 1870
+
+    [ { name: 'neural',
+        rounds: '2.5241',
+        mean: '6.1692',
+        meanAccepted: '6.7850',
+        meanDelta: '-0.8375',
+        acceptance: '0.9093' },
+      { name: 'half-or-all',
+        rounds: '1.9898',
+        mean: '6.2720',
+        meanAccepted: '7.4979',
+        meanDelta: '0.0941',
+        acceptance: '0.8365' },
+      { name: 'downsize',
+        rounds: '2.2103',
+        mean: '6.6268',
+        meanAccepted: '7.7438',
+        meanDelta: '0.7978',
+        acceptance: '0.8558' } ]

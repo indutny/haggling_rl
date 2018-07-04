@@ -7,7 +7,6 @@ const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
 const BestNeural = require('./agents/best');
-const LSTM64 = require('./agents/lstm64');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
