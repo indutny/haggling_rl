@@ -3,7 +3,7 @@ import numpy as np
 
 from agent import Agent
 
-PRE_WIDTH = None
+PRE_WIDTH = []
 LSTM_UNITS = 64
 VALUE_SCALE = 0.5
 MAX_STEPS = 100
@@ -46,8 +46,8 @@ class Model(Agent):
       available_actions, x = tf.split(self.input, [
         self.action_space, self.observation_space - self.action_space ], axis=1)
 
-      if not PRE_WIDTH is None:
-        x = tf.layers.dense(x, PRE_WIDTH, name='preprocess',
+      for i, width in enumerate(PRE_WIDTH):
+        x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
                             activation=tf.nn.relu)
 
       state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],

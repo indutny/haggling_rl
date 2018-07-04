@@ -3115,3 +3115,18 @@ Real:
         meanAccepted: '7.6150',
         meanDelta: '0.3595',
         acceptance: '0.8040' } ]
+
+Real:
+
+    Position 5/21, entry { hash: 'ea63771bb8f37929ea879d748914f96e',
+      date: '2018-07-04',
+      mean: 6.221493795364084,
+      meanAccepted: 7.708732230925443,
+      acceptance: 0.8070709435729337,
+      sessions: 4271 }
+
+## lstm64
+
+### 3010
+
+Real:
