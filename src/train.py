@@ -1,4 +1,3 @@
-import argparse
 import os
 import time
 import random
@@ -7,39 +6,11 @@ import tensorflow as tf
 from policy_agent import PolicyAgent
 from env import Environment
 from model import Model
+from args import parse_args
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--pre', default='64')
-parser.add_argument('--lstm', type=int, default=128)
-parser.add_argument('--value_scale', type=float, default=0.5)
-parser.add_argument('--max_steps', type=int, default=50)
-parser.add_argument('--lr', type=float, default=0.001)
-parser.add_argument('--grad_clip', type=float, default=0.5)
-parser.add_argument('--ppo', type=float, default=0.1)
-
-args = parser.parse_args()
-
-config = {
-  'pre': [ int(v) for v in args.pre.split(',') ],
-  'lstm': args.lstm,
-  'value_scale': args.value_scale,
-  'max_steps': args.max_steps,
-  'lr': args.lr,
-  'grad_clip': args.grad_clip,
-  'ppo': args.ppo,
-}
-
-RUN_NAME = os.environ.get('HAGGLE_RUN')
-if RUN_NAME is None:
-  RUN_NAME = 'p' + args.pre.replace(',', '_') + \
-      '-lstm' + str(args.lstm) + \
-      '-vs' + str(args.value_scale) + \
-      '-ms' + str(args.max_steps) + \
-      '-lr' + str(args.lr) + \
-      '-g' + str(args.grad_clip) + \
-      '-ppo' + str(args.ppo)
-
-print(RUN_NAME, config)
+RUN_NAME, CONFIG, _ = parse_args()
+print('Booting up {}'.format(RUN_NAME))
+print('config', CONFIG)
 
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
@@ -73,11 +44,11 @@ for i in range(CONCURRENCY):
 writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
-  model = Model(config, env_list[0], sess, writer, name='haggle')
+  model = Model(CONFIG, env_list[0], sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
-    antagonist = Model(config, env, sess, None, name='antagonist_{}'.format(i))
+    antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i))
     ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())

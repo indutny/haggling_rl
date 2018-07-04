@@ -4,20 +4,19 @@ import sys
 import json
 import tensorflow as tf
 
+from args import parse_args
 from env import Environment
 from model import Model
 
+_, CONFIG, args = parse_args('transform-save')
+
 env = Environment()
 
-if len(sys.argv) < 3:
-  print('Not enough arguments, expected: import_path export_path')
-  exit(1)
-
-import_path = sys.argv[1]
-export_path = sys.argv[2]
+import_path = args.source
+export_path = args.target
 
 with tf.Session() as sess:
-  model = Model(env, sess, None, name='haggle')
+  model = Model(CONFIG, env, sess, None, name='haggle')
   saver = tf.train.Saver()
   saver.restore(sess, import_path)
 
