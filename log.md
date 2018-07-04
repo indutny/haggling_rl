@@ -3016,12 +3016,12 @@ Real:
 
 Real:
 
-    2 { hash: 'b9edc898ba44ae95d67f85ae545a6ba8',
+    Position 2/13, entry { hash: 'b9edc898ba44ae95d67f85ae545a6ba8',
       date: '2018-07-04',
-      mean: 6.373420544076112,
-      meanAccepted: 7.465436183179523,
-      acceptance: 0.8537237996134979,
-      sessions: 6727 }
+      mean: 6.360683567224989,
+      meanAccepted: 7.457935244161359,
+      acceptance: 0.8528746038931643,
+      sessions: 8836 }
 
 ### 1800
 
@@ -3066,3 +3066,22 @@ Real:
         acceptance: '0.8087' } ]
 
 ### 1890
+
+    [ { name: 'neural',
+        rounds: '2.2175',
+        mean: '5.9445',
+        meanAccepted: '7.7428',
+        meanDelta: '0.6252',
+        acceptance: '0.7678' },
+      { name: 'half-or-all',
+        rounds: '1.6671',
+        mean: '5.4795',
+        meanAccepted: '7.1255',
+        meanDelta: '-0.7877',
+        acceptance: '0.7690' },
+      { name: 'downsize',
+        rounds: '2.1842',
+        mean: '5.9140',
+        meanAccepted: '7.5893',
+        meanDelta: '0.1614',
+        acceptance: '0.7792' } ]
