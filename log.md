@@ -3351,10 +3351,10 @@ Real:
 
     Position 5/44, entry { hash: '64a2ad86bbf57eb1ac941d9e659784c2',
       date: '2018-07-04',
-      mean: 6.6300730519480515,
-      meanAccepted: 7.210990951224895,
-      acceptance: 0.919439935064935,
-      sessions: 4928 }
+      mean: 6.635683202785031,
+      meanAccepted: 7.217341915940931,
+      acceptance: 0.91940818102698,
+      sessions: 5745 }
 
 ### 1620
 
