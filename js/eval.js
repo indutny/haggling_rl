@@ -107,7 +107,8 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
-addContestant('lstm64', LSTM64);
+addContestant('half-or-all', HalfOrAll);
+addContestant('downsize', Downsize);
 
 const pairs = [];
 for (const a of contestants) {

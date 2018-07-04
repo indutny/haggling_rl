@@ -4,7 +4,7 @@ import numpy as np
 from agent import Agent
 
 PRE_WIDTH = []
-LSTM_UNITS = 64
+LSTM_UNITS = 128
 VALUE_SCALE = 0.5
 MAX_STEPS = 100
 LR = 0.001
