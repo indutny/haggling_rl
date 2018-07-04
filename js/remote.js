@@ -62,7 +62,7 @@ fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
         }
       }
     } else {
-      console.log(pos, match);
+      console.log('Position %d/%d, entry', pos, leaderboard.length, match);
     }
   }
 }).catch((e) => {
