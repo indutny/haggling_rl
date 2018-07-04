@@ -1,6 +1,15 @@
 'use strict';
 
+const TOTAL = 4000;
 const MAX_LEN = 1000;
+
+function fill(count) {
+  const list = [];
+  for (let i = 0; i < count; i++) {
+    list.push(i);
+  }
+  return list;
+}
 
 function fillA(count) {
   const list = [];
@@ -34,13 +43,21 @@ function fillB(count) {
   return list;
 }
 
-function mean(list) {
-  let res = 0;
+function stats(list) {
+  let mean = 0;
+  let stddev = 0;
   for (const elem of list) {
-    res += elem;
+    mean += elem;
+    stddev += Math.pow(elem, 2);
   }
-  return res / list.length;
+  mean /= list.length;
+  stddev /= list.length;
+  stddev -= Math.pow(mean, 2);
+  stddev = Math.sqrt(stddev);
+
+  return { mean, stddev };
 }
 
-console.log('A: %d', mean(fillA(8000)));
-console.log('B: %d', mean(fillB(8000)));
+console.log('_: %j', stats(fill(TOTAL)));
+console.log('A: %j', stats(fillA(TOTAL)));
+console.log('B: %j', stats(fillB(TOTAL)));
