@@ -3490,3 +3490,24 @@ Real:
         meanAccepted: '7.7148',
         meanDelta: '0.6368',
         acceptance: '0.8468' } ]
+
+### 2490
+
+    [ { name: 'neural',
+        rounds: '2.0416',
+        mean: '6.1227',
+        meanAccepted: '7.3304',
+        meanDelta: '-0.1467',
+        acceptance: '0.8353' },
+      { name: 'half-or-all',
+        rounds: '1.6388',
+        mean: '5.7207',
+        meanAccepted: '7.3272',
+        meanDelta: '-0.4188',
+        acceptance: '0.7808' },
+      { name: 'downsize',
+        rounds: '2.0772',
+        mean: '6.3475',
+        meanAccepted: '7.7503',
+        meanDelta: '0.5488',
+        acceptance: '0.8190' } ]
