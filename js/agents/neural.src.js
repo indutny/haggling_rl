@@ -135,11 +135,21 @@ class Dense {
 
 class Model {
   constructor(weights) {
-    if (weights['haggle/preprocess/kernel:0']) {
-      this.pre = new Dense(weights['haggle/preprocess/kernel:0'],
-                           weights['haggle/preprocess/bias:0']);
+    this.pre = [];
+    if (weights.hasOwnProperty('haggle/preprocess/kernel:0')) {
+      // Legacy
+      this.pre.push(new Dense(weights['haggle/preprocess/kernel:0'],
+                              weights['haggle/preprocess/bias:0']));
     } else {
-      this.pre = null;
+      for (let i = 0; ; i++) {
+        const prefix = `haggle/preprocess_${i}`;
+        if (!weights.hasOwnProperty(`${prefix}/kernel:0`)) {
+          break;
+        }
+
+        this.pre.push(new Dense(weights[`${prefix}/kernel:0`],
+                                weights[`${prefix}/bias:0`]));
+      }
     }
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
@@ -176,12 +186,8 @@ class Model {
     const available = input.slice(0, ACTION_SPACE);
     input = input.slice(ACTION_SPACE);
 
-    let pre;
-    if (this.pre !== null) {
-      pre = relu(this.pre.call(input));
-    } else {
-      pre = input;
-    }
+    let pre = input;
+    this.pre.forEach(layer => pre = layer.call(pre));
     let { result: x, state: newState } = this.lstm.call(pre, state);
     x = this.action.call(x);
 
@@ -334,7 +340,7 @@ module.exports = class Agent {
     // Timed out
     if (!offer) {
       this.log('Timed out');
-      return undefined;
+      return new Array(this.env.types).fill(0);
     }
 
     // First offer
