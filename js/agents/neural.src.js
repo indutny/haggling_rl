@@ -12,7 +12,7 @@ assert.strictEqual = (a, b) => {
 };
 
 const MAX_TYPES = 3;
-const MAX_STEPS = 1000;
+const MAX_STEPS = 50;
 const ACTION_SPACE = 4;
 
 function matmul(vec, mat) {
@@ -338,9 +338,10 @@ module.exports = class Agent {
     this.env.steps++;
 
     // Timed out
+    // TODO(indutny): ask everything in production mode
     if (!offer) {
       this.log('Timed out');
-      return new Array(this.env.types).fill(0);
+      return this.env.step(0);
     }
 
     // First offer
