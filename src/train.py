@@ -30,9 +30,9 @@ ANTAGONIST_WEIGHTS = []
 EPOCH = 0
 
 env_list = []
-arena = Environment()
+bench_env = Environment()
 
-arena.add_opponent(PolicyAgent(policy='half_or_all'))
+bench_env.add_opponent(PolicyAgent(policy='downsize'))
 
 for i in range(CONCURRENCY):
   env = Environment()
@@ -92,7 +92,7 @@ with tf.Session() as sess:
 
     if EPOCH % BENCH_EVERY == 0:
       print('Running benchmark...')
-      bench = arena.bench(model)
+      bench = bench_env.bench(model)
 
       # TODO(indutny): move logging to model?
       summary = tf.Summary()

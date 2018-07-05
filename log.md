@@ -3379,12 +3379,12 @@ Real:
 
 Real:
 
-    Position 2/45, entry { hash: '516140a83ce9bfb61928f8cc963e9163',
+    Position 1/45, entry { hash: '516140a83ce9bfb61928f8cc963e9163',
       date: '2018-07-04',
-      mean: 6.810342134041556,
-      meanAccepted: 7.556422256890276,
-      acceptance: 0.901265427276988,
-      sessions: 6401 }
+      mean: 6.879165638114046,
+      meanAccepted: 7.596429058198174,
+      acceptance: 0.9055788694149592,
+      sessions: 8102 }
 
 ### 1760
 
