@@ -10,6 +10,7 @@ def parse_args(kind=None):
   parser.add_argument('--lr', type=float, default=0.001)
   parser.add_argument('--grad_clip', type=float, default=0.5)
   parser.add_argument('--ppo', type=float, default=0.1)
+  parser.add_argument('--ppo_epochs', type=int, default=10)
 
   if kind == 'transform-save':
     parser.add_argument('source')
@@ -25,7 +26,8 @@ def parse_args(kind=None):
         '-ms' + str(args.max_steps) + \
         '-lr' + str(args.lr) + \
         '-g' + str(args.grad_clip) + \
-        '-ppo' + str(args.ppo)
+        '-ppo' + str(args.ppo) + \
+        '-pe' + str(args.ppo_epochs)
 
   if args.pre == 'none':
     pre = []
@@ -40,6 +42,7 @@ def parse_args(kind=None):
     'lr': args.lr,
     'grad_clip': args.grad_clip,
     'ppo': args.ppo,
+    'ppo_epochs': args.ppo_epochs,
   }
 
   return run_name, config, args

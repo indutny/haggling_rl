@@ -17,6 +17,7 @@ class Model(Agent):
       'lr': 0.001,
       'grad_clip': 0.5,
       'ppo': 0.1,
+      'ppo_epochs': 10,
     }
 
     self.config.update(config)
@@ -355,8 +356,11 @@ class Model(Agent):
         self.train, self.loss, self.entropy, self.value_loss, self.policy_loss,
         self.mean_value, self.grad_norm,
     ]
-    _, loss, entropy, value_loss, policy_loss, value, grad_norm = self.sess.run(
-        tensors, feed_dict=feed_dict)
+
+    # TODO(indutny): average over metrics?
+    for i in range(self.config['ppo_epochs']):
+      _, loss, entropy, value_loss, policy_loss, value, grad_norm = \
+          self.sess.run(tensors, feed_dict=feed_dict)
 
     metrics = {
       'grad_norm': grad_norm,
