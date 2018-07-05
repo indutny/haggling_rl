@@ -3520,3 +3520,23 @@ Real:
         meanAccepted: '7.7503',
         meanDelta: '0.5488',
         acceptance: '0.8190' } ]
+
+Real:
+
+    Position 6/18, entry { hash: '91184c4cd5ffa90966f1c403926ebdfd',
+      date: '2018-07-05',
+      mean: 6.625418906101802,
+      meanAccepted: 7.579781173704675,
+      acceptance: 0.8740910527979766,
+      sessions: 63260 }
+
+## pnone-lstm64
+
+### 1800
+
+    Position 2/27, entry { hash: '4ba318c831604ad6e3c22321b43d4a19',
+      date: '2018-07-05',
+      mean: 6.899339603762257,
+      meanAccepted: 7.5284971830370795,
+      acceptance: 0.9164298579147488,
+      sessions: 24985 }

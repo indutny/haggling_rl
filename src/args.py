@@ -11,6 +11,7 @@ def parse_args(kind=None):
   parser.add_argument('--grad_clip', type=float, default=0.5)
   parser.add_argument('--ppo', type=float, default=0.1)
   parser.add_argument('--ppo_epochs', type=int, default=10)
+  parser.add_argument('--tag', type=string)
 
   if kind == 'transform-save':
     parser.add_argument('source')
@@ -28,6 +29,9 @@ def parse_args(kind=None):
         '-g' + str(args.grad_clip) + \
         '-ppo' + str(args.ppo) + \
         '-pe' + str(args.ppo_epochs)
+
+  if not args.tag is None:
+    run_name = str(args.tag) + '-' + run_name
 
   if args.pre == 'none':
     pre = []
