@@ -3470,6 +3470,15 @@ Real:
         meanDelta: '0.7090',
         acceptance: '0.8618' } ]
 
+Real:
+
+    Position 0/6, entry { hash: '22f57b8987168a5ff10c9b042a6b2bcf',
+      date: '2018-07-05',
+      mean: 7.1786925196016105,
+      meanAccepted: 7.499723267655524,
+      acceptance: 0.9571943208306845,
+      sessions: 18876 }
+
 ### 2070
 
     [ { name: 'neural',

@@ -187,7 +187,9 @@ class Model {
     input = input.slice(ACTION_SPACE);
 
     let pre = input;
-    this.pre.forEach(layer => pre = layer.call(pre));
+    for (const layer of this.pre) {
+      pre = relu(layer.call(pre));
+    }
     let { result: x, state: newState } = this.lstm.call(pre, state);
     x = this.action.call(x);
 
