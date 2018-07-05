@@ -3,9 +3,6 @@ import numpy as np
 
 from agent import Agent
 
-def default_entropy_schedule(game_count):
-  return 0.01
-
 class Model(Agent):
   def __init__(self, config, env, sess, writer, name='haggle'):
     super(Model, self).__init__()
@@ -269,13 +266,16 @@ class Model(Agent):
     return log
 
   def explore(self, env_list, game_count=1024, reflect_every=128, game_off=0, \
-              entropy_schedule=default_entropy_schedule):
+              entropy_schedule=None):
     finished_games = 0
     while finished_games < game_count:
       reflect_target = min(game_count - finished_games, reflect_every)
 
       games = self.collect(env_list, reflect_target)
       finished_games += reflect_target
+
+      if entropy_schedule is None:
+        entropy_schedule = lambda: self.config['entropy']
 
       self.reflect(games,
           entropy_coeff=entropy_schedule(game_off + finished_games))

@@ -10,8 +10,8 @@ const BestNeural = require('./agents/best');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
-const ENABLE_LOG = false;
-const TOTAL_MATCHES = 10000;
+const ENABLE_LOG = true;
+const TOTAL_MATCHES = 10;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -56,6 +56,7 @@ class Arena {
       offer = this.inverseOffer(scene, offer);
       log('B gives: ' + offer.join(','));
     }
+    log('No consensus');
     return { accepted: false, rounds: scene.max_rounds, a: 0, b: 0 };
   }
 
@@ -79,11 +80,15 @@ class Arena {
     const aOffer = offer;
     const bOffer = this.inverseOffer(scene, aOffer);
 
+    const aValue = this.offerValue(scene, 0, aOffer);
+    const bValue = this.offerValue(scene, 1, bOffer);
+
+    log(`A gets: ${aValue} B gets: ${bValue}`);
     return {
       accepted: true,
       rounds,
-      a: this.offerValue(scene, 0, aOffer),
-      b: this.offerValue(scene, 1, bOffer),
+      a: aValue,
+      b: bValue,
     };
   }
 }
@@ -120,6 +125,7 @@ for (const a of contestants) {
 
 for (let i = 0; i < TOTAL_MATCHES; i++) {
   for (const pair of pairs) {
+    log('--------');
     log('A: ' + pair.a.name + ' vs B: ' + pair.b.name);
     const ab = arena.match(pair.a.agent, pair.b.agent);
     if (ab.accepted) {

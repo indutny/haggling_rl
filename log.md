@@ -1,5 +1,16 @@
 # Log of various configurations
 
+## downsize.js
+
+Real:
+
+Position 5/35, entry { hash: '53b762f59543e78bd02132ce5c49dac6',
+  date: '2018-07-05',
+  mean: 6.740509370494954,
+  meanAccepted: 7.841888595242936,
+  acceptance: 0.8595517889126731,
+  sessions: 22891 }
+
 ## example.js
 
 Baseline

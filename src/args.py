@@ -11,6 +11,7 @@ def parse_args(kind=None):
   parser.add_argument('--grad_clip', type=float, default=0.5)
   parser.add_argument('--ppo', type=float, default=0.1)
   parser.add_argument('--ppo_epochs', type=int, default=10)
+  parser.add_argument('--entropy', type=float, default=0.01)
   parser.add_argument('--tag')
 
   if kind == 'transform-save':
@@ -28,7 +29,8 @@ def parse_args(kind=None):
         '-lr' + str(args.lr) + \
         '-g' + str(args.grad_clip) + \
         '-ppo' + str(args.ppo) + \
-        '-pe' + str(args.ppo_epochs)
+        '-pe' + str(args.ppo_epochs) + \
+        '-e' + str(args.entropy)
 
   if not args.tag is None:
     run_name = str(args.tag) + '-' + run_name
@@ -47,6 +49,7 @@ def parse_args(kind=None):
     'grad_clip': args.grad_clip,
     'ppo': args.ppo,
     'ppo_epochs': args.ppo_epochs,
+    'entropy': args.entropy,
   }
 
   return run_name, config, args
