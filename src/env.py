@@ -25,13 +25,27 @@ class Environment:
     # +- on each type, left/right, submit button
     self.action_space = ACTION_SPACE
     self.observation_space = state.shape[0]
+    self.context_space = self.context().shape[0]
 
   def reset(self, force_self=False):
+    objects = self.generator.get()
+
+    self.counts = objects['counts']
+    self.values = {
+      'self': objects['valuations'][0],
+      'opponent': objects['valuations'][1],
+    }
+    self.positions = {
+      'self': 0,
+      'opponent': 0,
+    }
+
     if len(self.opponent_list) > 0:
       self.player = 'self' if force_self else \
           random.choice([ 'self', 'opponent' ])
       self.opponent = random.choice(self.opponent_list)
-      self.opponent_state = self.opponent.initial_state
+      self.opponent_state = self.opponent.build_initial_state(
+          self.context('opponent'))
     else:
       self.player = 'self'
       self.opponent = None
@@ -42,16 +56,6 @@ class Environment:
     self.status = 'active'
     self.last_reward = 0.0
 
-    objects = self.generator.get()
-    self.values = {
-      'self': objects['valuations'][0],
-      'opponent': objects['valuations'][1],
-    }
-    self.positions = {
-      'self': 0,
-      'opponent': 0,
-    }
-    self.counts = objects['counts']
     self.offer = np.zeros(self.counts.shape, dtype='int32')
     self.proposed_offer = np.copy(self.offer)
 
@@ -120,7 +124,7 @@ class Environment:
 
   def bench_single(self, agent):
     state = self.reset()
-    agent_state = agent.initial_state
+    agent_state = agent.build_initial_state(self.context())
 
     for i in range(self.max_steps):
       action, agent_state = agent.step(state, agent_state)
@@ -154,7 +158,11 @@ class Environment:
         float(pos),
       ],
       self.offer,
-      self.values[self.player],
+    ]).astype('float32')
+
+  def context(self, player='self'):
+    return np.concatenate([
+      self.values[player],
       self.counts,
     ]).astype('float32')
 

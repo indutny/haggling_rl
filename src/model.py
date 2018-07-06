@@ -24,6 +24,7 @@ class Model(Agent):
 
     self.name = name
 
+    self.context_space = env.context_space
     self.observation_space = env.observation_space
     self.action_space = env.action_space
 
@@ -33,8 +34,10 @@ class Model(Agent):
     self.writer_step = 0
 
     with tf.variable_scope(self.scope):
+      self.context = tf.placeholder(tf.float32,
+          shape=(None, self.context_space,), name='context')
       self.input = tf.placeholder(tf.float32,
-          shape=(None, self.observation_space), name='input')
+          shape=(None, self.observation_space,), name='input')
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
           num_units=self.config['lstm'])
@@ -54,7 +57,10 @@ class Model(Agent):
                                             h=self.rnn_state[:, state_size.c:])
       x, state = self.cell(x, state)
 
-      self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
+      self.initial_state = tf.layers.dense(self.context,
+                                           self.rnn_state.shape[1],
+                                           activation=tf.nn.relu,
+                                           name='initial_state')
 
       # Outputs
       raw_action = tf.layers.dense(x, self.action_space, name='action')
@@ -161,17 +167,19 @@ class Model(Agent):
     self.version = version
     self.name = '{}_v{}'.format(self.original_name, self.version)
 
-  def fill_feed_dict(self, out, obs, state=None):
-    if state is None:
-      state = [ self.initial_state ]
+  def build_initial_state(self, context):
+    return self.build_initial_states([ context ])[0]
 
-    out[self.input] = obs
-    out[self.rnn_state] = state
-    return out
+  def build_initial_states(self, contexts):
+    return self.sess.run(self.initial_state, feed_dict={
+      self.context: contexts,
+    })
 
   def step(self, obs, state):
-    feed_dict = {}
-    self.fill_feed_dict(feed_dict, [ obs ], [ state ])
+    feed_dict = {
+      self.input: [ obs ],
+      self.rnn_state: [ state ],
+    }
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
@@ -203,7 +211,8 @@ class Model(Agent):
       'statuses': [],
     } for i in range(len(env_list)) ]
 
-    model_states = [ self.initial_state for _ in env_list ]
+    model_states = self.build_initial_states(
+        [ env.context() for env in env_list ])
     env_states = [ env.reset() for env in env_list ]
 
     steps = 0

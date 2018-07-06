@@ -3580,3 +3580,14 @@ Real:
       sessions: 13712 }
 
 ### 4350
+
+    Position 21/35, entry { hash: 'f2d853ece7a2b77de9032ff11faa3a6a',
+      date: '2018-07-06',
+      mean: 5.937363999449111,
+      meanAccepted: 7.336952637042836,
+      acceptance: 0.8092411513565625,
+      sessions: 72610 }
+
+### 5990
+
+

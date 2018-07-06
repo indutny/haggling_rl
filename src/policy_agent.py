@@ -118,8 +118,15 @@ class PolicyAgent(Agent):
 
     self.name = 'agent_' + self.policy.__name__
 
-    self.initial_state = (True, None,)
     self.target = None
+
+  def build_initial_state(self, context):
+    context = context.astype('int32')
+    values = context[:MAX_TYPES]
+    counts = context[MAX_TYPES:]
+    state = { 'values': values, 'counts': counts }
+
+    return (True, state, None,)
 
   def step(self, obs, state):
     obs = obs.astype('int32')
@@ -134,27 +141,22 @@ class PolicyAgent(Agent):
     offer = obs[:MAX_TYPES]
     obs = obs[MAX_TYPES:]
 
-    values = obs[:MAX_TYPES]
-    obs = obs[MAX_TYPES:]
-
-    counts = obs[:MAX_TYPES]
-
-    is_first, policy = state
+    is_first, state, policy = state
     if policy is None:
-      policy = self.policy(values, counts)
+      policy = self.policy(state['values'], state['counts'])
 
     if is_first:
       accept, target = policy.on_offer(offer)
 
       # Accept offer
       if accept:
-        return 0, self.initial_state
+        return 0, (True, state, None,)
 
       self.target = target
 
     # Target reached
     if np.array_equal(offer, self.target):
-      return 0, (True, policy,)
+      return 0, (True, state, policy,)
 
     delta = self.target - offer
     for i, d in enumerate(delta):
@@ -171,4 +173,4 @@ class PolicyAgent(Agent):
         action = 2
       break
 
-    return action, (False, policy,)
+    return action, (False, state, policy,)
