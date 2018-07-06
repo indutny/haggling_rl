@@ -155,6 +155,8 @@ class Model {
                          weights['haggle/lstm/bias:0']);
     this.action = new Dense(weights['haggle/action/kernel:0'],
                             weights['haggle/action/bias:0']);
+
+    this.initialState = this.lstm.initialState;
   }
 
   random(probs) {
@@ -327,10 +329,11 @@ module.exports = class Agent {
       const { action, probs, state: newState } = this.m.call(
           this.env.buildObservation(),
           this.state);
-      this.state = newState;
 
       this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
       this.log('Action: ' + action);
+
+      this.state = newState;
       offer = this.env.step(action);
       if (offer) {
         break;
