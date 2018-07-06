@@ -10,8 +10,8 @@ const BestNeural = require('./agents/best');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
-const ENABLE_LOG = true;
-const TOTAL_MATCHES = 10;
+const ENABLE_LOG = false;
+const TOTAL_MATCHES = 10000;
 
 function log(msg) {
   if (ENABLE_LOG) {
