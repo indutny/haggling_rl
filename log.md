@@ -3551,3 +3551,21 @@ Real:
       meanAccepted: 7.5284971830370795,
       acceptance: 0.9164298579147488,
       sessions: 24985 }
+
+### 3090
+
+    Position 12/42, entry { hash: '4d9f77efc06b3abed6f48f790bc0ab80',
+      date: '2018-07-05',
+      mean: 6.443995853565388,
+      meanAccepted: 7.494416243654823,
+      acceptance: 0.8598395984505428,
+      sessions: 18329 }
+
+### 3600
+
+    Position 2/7, entry { hash: 'faff41e67c4cbf2695d54680a3307fe4',
+      date: '2018-07-06',
+      mean: 6.61498200850507,
+      meanAccepted: 7.40190336749634,
+      acceptance: 0.8936866208701341,
+      sessions: 3057 }

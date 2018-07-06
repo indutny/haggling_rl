@@ -32,6 +32,9 @@ class Arena {
     const b = new B('b', scene.counts, scene.valuations[1], scene.max_rounds,
         log);
 
+    log('A values: ' + scene.valuations[0].join(','));
+    log('B values: ' + scene.valuations[1].join(','));
+
     let offer = undefined;
     for (let i = 0; i < scene.max_rounds; i++) {
       let previous = offer;
