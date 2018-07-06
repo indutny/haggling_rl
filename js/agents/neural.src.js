@@ -97,11 +97,6 @@ class LSTM {
     this.units = (this.kernel[0].length / 4) | 0;
     this.forgetBias = new Array(this.units).fill(1);
     this.activation = tanh;
-
-    this.initialState = {
-      c: new Array(this.units).fill(0),
-      h: new Array(this.units).fill(0),
-    };
   }
 
   call(input, state=this.initialState) {
@@ -135,6 +130,9 @@ class Dense {
 
 class Model {
   constructor(weights) {
+    this.initialState = new Dense(weights['haggle/initial_state/kernel:0'],
+                                  weights['haggle/initial_state/bias:0']);
+
     this.pre = [];
     if (weights.hasOwnProperty('haggle/preprocess/kernel:0')) {
       // Legacy
@@ -155,8 +153,14 @@ class Model {
                          weights['haggle/lstm/bias:0']);
     this.action = new Dense(weights['haggle/action/kernel:0'],
                             weights['haggle/action/bias:0']);
+  }
 
-    this.initialState = this.lstm.initialState;
+  buildInitialState(context) {
+    const raw = relu(this.initialState.call(context));
+    return {
+      c: raw.slice(0, this.lstm.units),
+      h: raw.slice(this.lstm.units),
+    };
   }
 
   random(probs) {
@@ -254,9 +258,11 @@ class Environment {
       available,
       this.steps / (this.maxRounds * 2 - 1),
       this.position,
-      this.offer,
-      this.values,
-      this.counts);
+      this.offer);
+  }
+
+  buildContext() {
+    return [].concat(this.values, this.counts);
   }
 
   setOffer(offer) {
@@ -302,7 +308,7 @@ module.exports = class Agent {
 
     this.env = new Environment(values, counts, maxRounds);
     this.log = log;
-    this.state = this.m.initialState;
+    this.state = this.m.buildInitialState(this.env.buildContext());
   }
 
   offer(o) {
