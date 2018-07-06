@@ -275,7 +275,7 @@ class Model(Agent):
       finished_games += reflect_target
 
       if entropy_schedule is None:
-        entropy_schedule = lambda: self.config['entropy']
+        entropy_schedule = lambda game_step: self.config['entropy']
 
       self.reflect(games,
           entropy_coeff=entropy_schedule(game_off + finished_games))

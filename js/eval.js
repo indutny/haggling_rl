@@ -114,6 +114,8 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
+// addContestant('best', BestNeural);
+//
 // addContestant('half-or-all', HalfOrAll);
 addContestant('downsize', Downsize);
 

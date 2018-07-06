@@ -3574,9 +3574,9 @@ Real:
 
     Position 4/11, entry { hash: '7a654ec5805ee5a2a676a9157c13e0b8',
       date: '2018-07-06',
-      mean: 6.441769681197138,
-      meanAccepted: 7.611762444743417,
-      acceptance: 0.846291476903058,
-      sessions: 12296 }
+      mean: 6.4533255542590435,
+      meanAccepted: 7.6144910076585495,
+      acceptance: 0.8475058343057176,
+      sessions: 13712 }
 
 ### 4350
