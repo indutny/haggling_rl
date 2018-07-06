@@ -211,9 +211,9 @@ class Model(Agent):
       'statuses': [],
     } for i in range(len(env_list)) ]
 
+    env_states = [ env.reset() for env in env_list ]
     model_states = self.build_initial_states(
         [ env.context() for env in env_list ])
-    env_states = [ env.reset() for env in env_list ]
 
     steps = 0
     while True:
