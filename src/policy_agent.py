@@ -2,7 +2,6 @@ import numpy as np
 import random
 
 from generator import MAX_TYPES
-from env import ACTION_SPACE
 from agent import Agent
 
 class BasePolicy:
@@ -100,8 +99,10 @@ class StubbornPolicy(BasePolicy):
     return False, counter_offer
 
 class PolicyAgent(Agent):
-  def __init__(self, policy):
+  def __init__(self, env, policy):
     super(PolicyAgent, self).__init__()
+
+    self.env = env
 
     if policy is 'downsize':
       self.policy = DownsizePolicy
@@ -118,57 +119,31 @@ class PolicyAgent(Agent):
 
     self.name = 'agent_' + self.policy.__name__
 
-    self.initial_state = (True, None,)
+    self.initial_state = None
     self.target = None
 
-  def step(self, obs, state):
-    obs = obs.astype('int32')
-    obs = obs[ACTION_SPACE:]
+  def step(self, obs, policy):
+    available_offers = obs[:self.env.action_space]
+    obs = obs[:len(available_offers)]
 
-    steps = obs[0]
+    proposed_offer_i = obs[0]
+    proposed_offer = self.env.get_offer(proposed_offer_i)
     obs = obs[1:]
-
-    pos = obs[0]
-    obs = obs[1:]
-
-    offer = obs[:MAX_TYPES]
-    obs = obs[MAX_TYPES:]
 
     values = obs[:MAX_TYPES]
     obs = obs[MAX_TYPES:]
 
     counts = obs[:MAX_TYPES]
 
-    is_first, policy = state
     if policy is None:
       policy = self.policy(values, counts)
 
-    if is_first:
-      accept, target = policy.on_offer(offer)
+    accept, target = policy.on_offer(proposed_offer)
 
-      # Accept offer
-      if accept:
-        return 0, self.initial_state
+    # Accept offer
+    if accept:
+      return proposed_offer_i, self.initial_state
 
-      self.target = target
+    offer_id = self.env.identify_offer(target)
 
-    # Target reached
-    if np.array_equal(offer, self.target):
-      return 0, (True, policy,)
-
-    delta = self.target - offer
-    for i, d in enumerate(delta):
-      if d == 0:
-        continue
-
-      if i > pos:
-        action = 3
-      elif i < pos:
-        raise Exception('Unexpected position')
-      elif d > 0:
-        action = 1
-      else:
-        action = 2
-      break
-
-    return action, (False, policy,)
+    return offer_id, policy

@@ -3,7 +3,7 @@ ITEM_NAMES = [ 'book', 'hat', 'ball', 'flower', 'bottle', 'cookie', 'hammer',
 
 class UI:
   def __init__(self):
-    self.disabled = True
+    self.disabled = False
 
   def initial(self, opponent, counts, values):
     items = self._enumerate(counts)

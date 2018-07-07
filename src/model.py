@@ -37,7 +37,7 @@ class Model(Agent):
 
       self.embedding = tf.Variable(tf.initializers.random_normal,
           name='embedding',
-          shape=(, self.observation_space, self.config['lstm']))
+          shape=(, self.action_space, self.config['lstm']))
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
           num_units=self.config['lstm'])
@@ -46,25 +46,33 @@ class Model(Agent):
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
-      available_actions, x = tf.split(self.input, [
-        self.action_space, 1 ], axis=1)
+      # Get offer mask
+      available_actions, offer_i, context = tf.split(self.input, [
+        self.action_space, 1, self.observation_space - self.action_space - 1
+      ], axis=1)
       available_actions = tf.cast(available_actions, dtype=tf.float32,
           name='available_actions')
+      context = tf.cast(context, dtype=tf.float32, name='context')
 
-      x = tf.squeeze(x, axis=-1, name='observation')
-      x = tf.gather(self.embedding, x, axis=0, name='embedded_observation')
+      # Apply embedding to observation
+      offer_i = tf.squeeze(offer_i, axis=-1, name='offer_i')
+      x = tf.concatenate([
+        tf.gather(self.embedding, offer_i, axis=0, name='proposed_offer'),
+        context
+      ], axis=-1, name='observation')
 
       for i, width in enumerate(self.config['pre']):
         x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
                             activation=tf.nn.relu)
 
+      # Feed embedding into LSTM
       state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
                                             h=self.rnn_state[:, state_size.c:])
       x, state = self.cell(x, state)
 
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
-      # Outputs
+      # Transform output to probs through same embedding, applying offer mask
       raw_action = tf.matmul(self.embedding * available_actions, x)
       raw_action += (1.0 - available_actions) * -1e23
 

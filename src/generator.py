@@ -54,7 +54,7 @@ class Generator:
       self._init_valuations(obj_set, values, i + 1, total_value + j * count)
 
   def _init_offer_mask(self, obj_set):
-    mask = np.zeros(len(self.offers))
+    mask = np.zeros(len(self.offers), dtype='int32')
 
     for i, offer in enumerate(self.offers):
       valid = True

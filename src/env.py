@@ -19,8 +19,9 @@ class Environment:
     state = self.reset()
 
     # +- on each type, left/right, submit button
-    self.action_space = self.max_obj ** self.types
-    self.observation_space = self.action_space
+    self.offers = self.generator.offers
+    self.action_space = len(self.offers)
+    self.observation_space = len(state)
 
   def reset(self, force_self=False):
     if len(self.opponent_list) > 0:
@@ -33,7 +34,7 @@ class Environment:
       self.opponent = None
       self.opponent_state = None
 
-    self.rounds = 0
+    self.steps = 0
     self.done = False
     self.status = 'active'
     self.last_reward = 0.0
@@ -44,16 +45,13 @@ class Environment:
       'opponent': objects['valuations'][1],
     }
     self.counts = objects['counts']
-    self.offer = None
+    self.offer_mask = objects['offer_mask']
+    self.proposed_offer = None
 
     self.ui.initial(self.opponent, self.counts, self.values['self'])
 
     if self.player is 'opponent':
       self._run_opponent()
-
-      # Opponent accepted zero-offer, can't do nothing!
-      if self.done:
-        return self.reset()
 
     if not self.player is 'self':
       raise Exception('Unexpected!')
@@ -71,24 +69,17 @@ class Environment:
     if self.done:
       raise Exception('Already done, can\'t go on')
 
+    if not self.offer_mask[action]:
+      raise Exception('Invalid offer {}'.format(action))
+
+    offer = self.offers[action]
+
     done = False
 
-    # Submit
-    if action == 0:
-      reward, state, done = self._submit()
-      if not done and self.player is 'opponent':
-        # NOTE: `reward` is always for `self`
-        reward, state, done = self._run_opponent()
-
-    # +1/-1
-    elif action == 1 or action == 2:
-      reward, state = self._make_change(1 if action == 1 else -1)
-
-    # move to next cell
-    elif action == 3:
-      reward, state = self._next()
-    else:
-      raise Exception('Unknown action {}'.format(action))
+    reward, state, done = self._submit(offer)
+    if not done and self.player is 'opponent':
+      # NOTE: `reward` is always for `self`
+      reward, state, done = self._run_opponent()
 
     self.done = done
     return state, reward, done, { 'player': player }
@@ -122,67 +113,44 @@ class Environment:
     # Timed out
     return False, 0.0
 
-  def _make_state(self):
+  def get_offer(self, i):
+    return self.offers[i]
 
-    # Cell
-    pos = self.positions[self.player]
-    max_value = self.counts[pos]
-    current_value = self.offer[pos]
-    if current_value != max_value:
-      available_actions[1] = 1.0
-    if current_value != 0:
-      available_actions[2] = 1.0
-    if pos < self.types - 1:
-      available_actions[3] = 1.0
+  def identify_offer(self, offer):
+    for i, other in enumerate(self.offers):
+      if np.array_equal(offer, other):
+        return i
+    raise Exception('Unexpected offer')
+
+  def _make_state(self):
+    offer_i = 0
+    if not self.proposed_offer is None:
+      offer_i = self.identify_offer(self.proposed_offer)
 
     return np.concatenate([
-      available_actions,
-      [
-        float(self.steps) / (2 * self.max_rounds - 1),
-        float(pos),
-      ],
-      self.offer,
+      self.offer_mask,
+      [ offer_i ],
       self.values[self.player],
       self.counts,
-    ]).astype('float32')
+    ])
 
-  def _make_change(self, delta):
-    index = self.positions[self.player]
-
-    initial_value = self.offer[index]
-    value = initial_value + delta
-    max_value = self.counts[index]
-    cost = self.values[self.player][index]
-
-    # Clamp
-    value = min(value, max_value)
-    value = max(value, 0.0)
-
-    self.offer[index] = value
-
-    return 0.0, self._make_state()
-
-  def _next(self):
-    self.positions[self.player] += 1
-    if self.positions[self.player] >= self.types:
-      raise Exception('Invalid move')
-
-    return 0.0, self._make_state()
-
-  def _submit(self):
+  def _submit(self, offer):
     # No state change here
     state = self._make_state()
     counter_player = 'opponent' if self.player is 'self' else 'self'
 
-    accepted = np.array_equal(self.offer, self.proposed_offer)
+    if self.proposed_offer is None:
+      accepted = False
+    else:
+      accepted = np.array_equal(offer, self.proposed_offer)
 
     self.steps += 1
 
     done = accepted or self.steps == 2 * self.max_rounds
     reward = 0.0
     if accepted:
-      self_offer = self.offer
-      opponent_offer = self.counts - self_offer
+      self_offer = offer
+      opponent_offer = self.counts - offer
       if not self.player is 'self':
         self_offer, opponent_offer = opponent_offer, self_offer
 
@@ -208,39 +176,23 @@ class Environment:
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
-      self.ui.offer(self.offer, self.counts, self.player)
+      self.ui.offer(offer, self.counts, self.player)
 
     # Switch player
     self.player = counter_player
-    self.positions[self.player] = 0
-    self._inverse_offer()
-    self.proposed_offer = np.copy(self.offer)
+    self.proposed_offer = self.counts - offer
 
     # NOTE: reward is actually for `self`, not `opponent`
     return reward, state, done
-
-  def _inverse_offer(self):
-    self.offer = self.counts - self.offer
 
   def _run_opponent(self):
     if not self.player is 'opponent':
       raise Exception('Unexpected!')
 
     state = self._make_state()
+    action, self.opponent_state = self.opponent.step(state, self.opponent_state)
 
-    for i in range(0, self.max_steps):
-      action, opponent_state = self.opponent.step(state, self.opponent_state)
-      self.opponent_state = opponent_state
-
-      state, reward, done, _ = self.step(action)
-
-      # Submitted
-      if not self.player is 'opponent':
-        break
-
-    # Didn't finish in time, submit current state
-    if self.player is 'opponent':
-      _, reward, done, _ = self.step(0)
+    state, reward, done, _ = self.step(action)
 
     # Offer accepted, return reward
     return reward, self._make_state(), done
