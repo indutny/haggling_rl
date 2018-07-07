@@ -10,7 +10,6 @@ class Model(Agent):
       'pre': [],
       'lstm': 128,
       'value_scale': 0.5,
-      'max_steps': 50,
       'lr': 0.001,
       'grad_clip': 0.5,
       'ppo': 0.1,
@@ -33,8 +32,12 @@ class Model(Agent):
     self.writer_step = 0
 
     with tf.variable_scope(self.scope):
-      self.input = tf.placeholder(tf.float32,
-          shape=(None, self.observation_space), name='input')
+      self.input = tf.placeholder(tf.int32,
+          shape=(None, self.action_space + 1), name='input')
+
+      self.embedding = tf.Variable(tf.initializers.random_normal,
+          name='embedding',
+          shape=(, self.observation_space, self.config['lstm']))
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
           num_units=self.config['lstm'])
@@ -44,7 +47,12 @@ class Model(Agent):
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
       available_actions, x = tf.split(self.input, [
-        self.action_space, self.observation_space - self.action_space ], axis=1)
+        self.action_space, 1 ], axis=1)
+      available_actions = tf.cast(available_actions, dtype=tf.float32,
+          name='available_actions')
+
+      x = tf.squeeze(x, axis=-1, name='observation')
+      x = tf.gather(self.embedding, x, axis=0, name='embedded_observation')
 
       for i, width in enumerate(self.config['pre']):
         x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
@@ -57,8 +65,7 @@ class Model(Agent):
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       # Outputs
-      raw_action = tf.layers.dense(x, self.action_space, name='action')
-      raw_action *= available_actions
+      raw_action = tf.matmul(self.embedding * available_actions, x)
       raw_action += (1.0 - available_actions) * -1e23
 
       self.action_probs = tf.nn.softmax(raw_action, name='action_probs')
@@ -227,12 +234,6 @@ class Model(Agent):
         statuses.append(env.status)
 
       steps += 1
-      if steps > self.config['max_steps']:
-        width = len(env_list)
-
-        rewards = [ -1.5 ] * width
-        dones = [ True ] * width
-        statuses = [ 'timeout' ] * width
 
       zipped = zip(env_states, rewards, dones, statuses, model_states, actions,
           action_probs, values)
@@ -257,10 +258,6 @@ class Model(Agent):
       has_pending = False in dones
       if not has_pending:
         # All completed
-        break
-
-      if steps > self.config['max_steps']:
-        # All timed out
         break
 
     return log

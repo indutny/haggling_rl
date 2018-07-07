@@ -11,7 +11,9 @@ class Generator:
     self.total = total
 
     self.sets = []
+    self.offers = []
 
+    self._init_offers(np.zeros(MAX_TYPES, dtype='int32'), 0)
     self._init_sets(np.zeros(MAX_TYPES, dtype='int32'), 0, 0)
 
   def _init_sets(self, counts, i, total_count):
@@ -28,8 +30,9 @@ class Generator:
         self._init_sets(counts, i + 1, total_count + j)
         continue
 
-      res = { 'counts': np.copy(counts), 'valuations': [] }
+      res = { 'counts': np.copy(counts), 'valuations': [], 'offer_mask': None }
       self._init_valuations(res, np.zeros(MAX_TYPES, dtype='int32'), 0, 0)
+      self._init_offer_mask(res)
 
       if len(res['valuations']) >= 2:
         self.sets.append(res)
@@ -50,11 +53,39 @@ class Generator:
       values[i] = j
       self._init_valuations(obj_set, values, i + 1, total_value + j * count)
 
+  def _init_offer_mask(self, obj_set):
+    mask = np.zeros(len(self.offers))
+
+    for i, offer in enumerate(self.offers):
+      valid = True
+      for j, count in enumerate(offer):
+        if count > obj_set['counts'][j]:
+          valid = False
+          break
+      mask[i] = 1 if valid else 0
+
+    obj_set['offer_mask'] = mask
+
+  def _init_offers(self, offer, i):
+    if i == self.types:
+      # TODO(indutny): make this more efficient
+      sum = np.sum(offer)
+      if sum < self.min_obj or sum > self.max_obj:
+        return
+
+      self.offers.append(np.copy(offer))
+      return
+
+    for j in range(0, self.max_obj + 1):
+      offer[i] = j
+      self._init_offers(offer, i + 1)
+
   def get(self):
     pick = random.sample(self.sets, 1)[0]
     valuations = random.sample(pick['valuations'], 2)
 
     return {
       'counts': pick['counts'],
+      'offer_mask': pick['offer_mask'],
       'valuations': valuations,
     }

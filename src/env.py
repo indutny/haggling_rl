@@ -4,12 +4,9 @@ import random
 from generator import Generator, MAX_TYPES
 from ui import UI
 
-ACTION_SPACE = 4
-
 class Environment:
   def __init__(self,
-               types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0,
-               max_steps=100):
+               types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0):
     self.opponent_list = []
 
     self.generator = Generator(types, min_obj, max_obj, total)
@@ -18,13 +15,12 @@ class Environment:
     self.types = types
     self.max_rounds = max_rounds
     self.total = total
-    self.max_steps = max_steps
 
     state = self.reset()
 
     # +- on each type, left/right, submit button
-    self.action_space = ACTION_SPACE
-    self.observation_space = state.shape[0]
+    self.action_space = self.max_obj ** self.types
+    self.observation_space = self.action_space
 
   def reset(self, force_self=False):
     if len(self.opponent_list) > 0:
@@ -37,7 +33,7 @@ class Environment:
       self.opponent = None
       self.opponent_state = None
 
-    self.steps = 0
+    self.rounds = 0
     self.done = False
     self.status = 'active'
     self.last_reward = 0.0
@@ -47,13 +43,8 @@ class Environment:
       'self': objects['valuations'][0],
       'opponent': objects['valuations'][1],
     }
-    self.positions = {
-      'self': 0,
-      'opponent': 0,
-    }
     self.counts = objects['counts']
-    self.offer = np.zeros(self.counts.shape, dtype='int32')
-    self.proposed_offer = np.copy(self.offer)
+    self.offer = None
 
     self.ui.initial(self.opponent, self.counts, self.values['self'])
 
@@ -132,9 +123,6 @@ class Environment:
     return False, 0.0
 
   def _make_state(self):
-    available_actions = [ 0.0 ] * ACTION_SPACE
-
-    available_actions[0] = 1.0
 
     # Cell
     pos = self.positions[self.player]
