@@ -14,7 +14,6 @@ assert.strictEqual = (a, b) => {
 const MAX_TYPES = 3;
 const MIN_OBJ = 1;
 const MAX_OBJ = 6;
-const MAX_STEPS = 50;
 const ACTION_SPACE = [];
 
 function genOffers(out, offer, minObj, maxObj, i) {
@@ -248,9 +247,6 @@ class Model {
 class Environment {
   constructor(values, counts, maxRounds, types = 3) {
     this.types = types;
-
-    this.steps = 0;
-    this.maxRounds = maxRounds;
 
     this.offer = new Array(MAX_TYPES).fill(0);
     this.values = new Array(MAX_TYPES).fill(0);
