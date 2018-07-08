@@ -15,13 +15,13 @@ print('config', CONFIG)
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-CONCURRENCY = 1
+CONCURRENCY = 32
 SAVE_EVERY = 10
 BENCH_EVERY = 1
 
 MAX_ANTAGONISTS = 500
-NUM_ANTAGONISTS = 0
-ANTAGONIST_EPOCH = 1000000000
+NUM_ANTAGONISTS = 32
+ANTAGONIST_EPOCH = 1
 ANTAGONIST_UPDATE_EVERY = 1
 ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
@@ -38,7 +38,7 @@ for i in range(CONCURRENCY):
   env = Environment()
 
   # env.add_opponent(PolicyAgent(env, policy='half_or_all'))
-  env.add_opponent(PolicyAgent(env, policy='downsize'))
+  # env.add_opponent(PolicyAgent(env, policy='downsize'))
   # env.add_opponent(PolicyAgent(env, policy='altruist'))
   # env.add_opponent(PolicyAgent(env, policy='greedy'))
   # env.add_opponent(PolicyAgent(env, policy='stubborn'))
