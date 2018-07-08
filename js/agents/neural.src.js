@@ -12,8 +12,31 @@ assert.strictEqual = (a, b) => {
 };
 
 const MAX_TYPES = 3;
+const MIN_OBJ = 1;
+const MAX_OBJ = 6;
 const MAX_STEPS = 50;
-const ACTION_SPACE = 4;
+const ACTION_SPACE = [];
+
+function genOffers(out, offer, minObj, maxObj, i) {
+  if (i === MAX_TYPES) {
+    let sum = 0;
+    for (const count of offer) {
+      sum += count;
+    }
+    if (sum < minObj || sum > maxObj) {
+      return;
+    }
+    out.push(offer.slice());
+    return;
+  }
+
+  for (let j = 0; j <= maxObj; j++) {
+    offer[i] = j;
+    genOffers(out, offer, minObj, maxObj, i + 1);
+  }
+}
+
+genOffers(ACTION_SPACE, new Array(MAX_TYPES).fill(0), MIN_OBJ, MAX_OBJ, 0);
 
 function matmul(vec, mat) {
   assert.strictEqual(vec.length, mat.length);
@@ -23,6 +46,21 @@ function matmul(vec, mat) {
     let acc = 0;
     for (let i = 0; i < vec.length; i++) {
       acc += vec[i] * mat[i][j];
+    }
+    res[j] = acc;
+  }
+
+  return res;
+}
+
+function matmulT(vec, mat) {
+  assert.strictEqual(vec.length, mat[0].length);
+
+  const res = new Array(mat.length).fill(0);
+  for (let j = 0; j < res.length; j++) {
+    let acc = 0;
+    for (let i = 0; i < vec.length; i++) {
+      acc += vec[i] * mat[j][i];
     }
     res[j] = acc;
   }
@@ -135,26 +173,21 @@ class Dense {
 
 class Model {
   constructor(weights) {
-    this.pre = [];
-    if (weights.hasOwnProperty('haggle/preprocess/kernel:0')) {
-      // Legacy
-      this.pre.push(new Dense(weights['haggle/preprocess/kernel:0'],
-                              weights['haggle/preprocess/bias:0']));
-    } else {
-      for (let i = 0; ; i++) {
-        const prefix = `haggle/preprocess_${i}`;
-        if (!weights.hasOwnProperty(`${prefix}/kernel:0`)) {
-          break;
-        }
+    this.embedding = weights['haggle/embedding:0'];
 
-        this.pre.push(new Dense(weights[`${prefix}/kernel:0`],
-                                weights[`${prefix}/bias:0`]));
+    this.pre = [];
+    for (let i = 0; ; i++) {
+      const prefix = `haggle/preprocess_${i}`;
+      if (!weights.hasOwnProperty(`${prefix}/kernel:0`)) {
+        break;
       }
+
+      this.pre.push(new Dense(weights[`${prefix}/kernel:0`],
+                              weights[`${prefix}/bias:0`]));
     }
+
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
-    this.action = new Dense(weights['haggle/action/kernel:0'],
-                            weights['haggle/action/bias:0']);
 
     this.initialState = this.lstm.initialState;
   }
@@ -185,15 +218,15 @@ class Model {
   }
 
   call(input, state) {
-    const available = input.slice(0, ACTION_SPACE);
-    input = input.slice(ACTION_SPACE);
+    const available = input.slice(0, ACTION_SPACE.length);
+    input = input.slice(available.length);
 
     let pre = input;
     for (const layer of this.pre) {
       pre = relu(layer.call(pre));
     }
     let { result: x, state: newState } = this.lstm.call(pre, state);
-    x = this.action.call(x);
+    x = matmulT(x, this.embedding);
 
     // Mask
     assert.strictEqual(x.length, available.length);
@@ -219,7 +252,6 @@ class Environment {
     this.steps = 0;
     this.maxRounds = maxRounds;
 
-    this.position = 0;
     this.offer = new Array(MAX_TYPES).fill(0);
     this.values = new Array(MAX_TYPES).fill(0);
     this.counts = new Array(MAX_TYPES).fill(0);
@@ -231,68 +263,26 @@ class Environment {
     assert(counts.length <= this.counts.length);
     for (let i = 0; i < counts.length; i++)
       this.counts[i] = counts[i];
+
+    this.available = ACTION_SPACE.map((offer) => {
+      return offer.every((count, i) => {
+        return count <= this.counts[i];
+      });
+    });
   }
 
   buildObservation() {
-    const available = [ 1, 0, 0, 0 ];
-
-    // Cell
-    const pos = this.position;
-    const maxValue = this.counts[pos];
-    const currentValue = this.offer[pos];
-    if (currentValue !== maxValue) {
-      available[1] = 1;
-    }
-    if (currentValue !== 0) {
-      available[2] = 1;
-    }
-    if (pos < this.types - 1) {
-      available[3] = 1;
-    }
-
     return [].concat(
-      available,
-      this.steps / (this.maxRounds * 2 - 1),
-      this.position,
+      this.available,
       this.offer,
       this.values,
       this.counts);
   }
 
   setOffer(offer) {
-    this.position = 0;
     assert(offer.length <= this.offer.length);
     for (let i = 0; i < offer.length; i++)
       this.offer[i] = offer[i];
-  }
-
-  getOffer() {
-    return this.offer.slice(0, this.types);
-  }
-
-  step(action) {
-    if (action === 0) {
-      return this.getOffer();
-    } else if (action === 1 || action === 2) {
-      this.makeChange(action === 1 ? 1 : -1);
-      return false;
-    } else if (action === 3) {
-      this.next();
-      return false;
-    }
-    assert(false, 'Unexpected action');
-  }
-
-  makeChange(delta) {
-    const next = this.offer[this.position] + delta;
-    const max = this.counts[this.position];
-
-    this.offer[this.position] = Math.min(Math.max(next, 0), max);
-  }
-
-  next() {
-    this.position += 1;
-    assert(0 <= this.position && this.position < this.types);
   }
 }
 
@@ -315,39 +305,19 @@ module.exports = class Agent {
   }
 
   _offer(o) {
-    if (o === undefined) {
-      this.env.steps = -1;
-    }
-    this.env.steps++;
-
-    if (o) {
+    if (o !== undefined) {
       this.env.setOffer(o);
     }
 
-    let offer = undefined;
-    for (let i = 0; i < MAX_STEPS; i++) {
-      const { action, probs, state: newState } = this.m.call(
-          this.env.buildObservation(),
-          this.state);
+    const { action, probs, state: newState } = this.m.call(
+        this.env.buildObservation(),
+        this.state);
 
-      this.log('Probabilities: ' + probs.map(p => p.toFixed(2)).join(', '));
-      this.log('Action: ' + action);
+    this.log('Action: ' + action);
 
-      this.state = newState;
-      offer = this.env.step(action);
-      if (offer) {
-        break;
-      }
-    }
+    this.state = newState;
 
-    this.env.steps++;
-
-    // Timed out
-    // TODO(indutny): ask everything in production mode
-    if (!offer) {
-      this.log('Timed out');
-      return this.env.step(0);
-    }
+    const offer = ACTION_SPACE[action];
 
     // First offer
     if (!o) {
