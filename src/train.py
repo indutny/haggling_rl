@@ -15,13 +15,13 @@ print('config', CONFIG)
 LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
-CONCURRENCY = 32
+CONCURRENCY = 1
 SAVE_EVERY = 10
 BENCH_EVERY = 1
 
 MAX_ANTAGONISTS = 500
-NUM_ANTAGONISTS = 32
-ANTAGONIST_EPOCH = 1
+NUM_ANTAGONISTS = 0
+ANTAGONIST_EPOCH = 1000000000
 ANTAGONIST_UPDATE_EVERY = 1
 ANTAGONISTS = []
 ANTAGONIST_WEIGHTS = []
@@ -32,16 +32,16 @@ EPOCH = 0
 env_list = []
 bench_env = Environment()
 
-bench_env.add_opponent(PolicyAgent(policy='downsize'))
+bench_env.add_opponent(PolicyAgent(bench_env, policy='downsize'))
 
 for i in range(CONCURRENCY):
   env = Environment()
 
-  # env.add_opponent(PolicyAgent(policy='half_or_all'))
-  # env.add_opponent(PolicyAgent(policy='downsize'))
-  # env.add_opponent(PolicyAgent(policy='altruist'))
-  # env.add_opponent(PolicyAgent(policy='greedy'))
-  # env.add_opponent(PolicyAgent(policy='stubborn'))
+  # env.add_opponent(PolicyAgent(env, policy='half_or_all'))
+  env.add_opponent(PolicyAgent(env, policy='downsize'))
+  # env.add_opponent(PolicyAgent(env, policy='altruist'))
+  # env.add_opponent(PolicyAgent(env, policy='greedy'))
+  # env.add_opponent(PolicyAgent(env, policy='stubborn'))
 
   env_list.append(env)
 

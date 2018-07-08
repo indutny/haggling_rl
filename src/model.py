@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 from agent import Agent
+from generator import MAX_TYPES
 
 class Model(Agent):
   def __init__(self, config, env, sess, writer, name='haggle'):
@@ -33,11 +34,11 @@ class Model(Agent):
 
     with tf.variable_scope(self.scope):
       self.input = tf.placeholder(tf.int32,
-          shape=(None, self.action_space + 1), name='input')
+          shape=(None, self.observation_space), name='input')
 
-      self.embedding = tf.Variable(tf.initializers.random_normal,
-          name='embedding',
-          shape=(, self.action_space, self.config['lstm']))
+      self.embedding = tf.get_variable('embedding', dtype=tf.float32,
+          initializer=tf.initializers.random_normal,
+          shape=(self.action_space, self.config['lstm']))
 
       self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
           num_units=self.config['lstm'])
@@ -47,17 +48,15 @@ class Model(Agent):
           shape=(None, state_size.c + state_size.h), name='rnn_state')
 
       # Get offer mask
-      available_actions, offer_i, context = tf.split(self.input, [
-        self.action_space, 1, self.observation_space - self.action_space - 1
+      obs = tf.cast(self.input, dtype=tf.float32, name='float_input')
+      available_actions, offer, context = tf.split(obs, [
+        self.action_space, MAX_TYPES,
+        self.observation_space - self.action_space - MAX_TYPES,
       ], axis=1)
-      available_actions = tf.cast(available_actions, dtype=tf.float32,
-          name='available_actions')
-      context = tf.cast(context, dtype=tf.float32, name='context')
 
-      # Apply embedding to observation
-      offer_i = tf.squeeze(offer_i, axis=-1, name='offer_i')
-      x = tf.concatenate([
-        tf.gather(self.embedding, offer_i, axis=0, name='proposed_offer'),
+      # TODO(indutny): move context to initial state
+      x = tf.concat([
+        offer,
         context
       ], axis=-1, name='observation')
 
@@ -73,7 +72,8 @@ class Model(Agent):
       self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       # Transform output to probs through same embedding, applying offer mask
-      raw_action = tf.matmul(self.embedding * available_actions, x)
+      raw_action = tf.matmul(x, self.embedding, transpose_b=True)
+      raw_action *= available_actions
       raw_action += (1.0 - available_actions) * -1e23
 
       self.action_probs = tf.nn.softmax(raw_action, name='action_probs')
@@ -81,7 +81,7 @@ class Model(Agent):
 
       self.action = action_dist.sample()
 
-      self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
+      self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'), axis=-1)
       self.mean_value = tf.reduce_mean(self.value, name='mean_value')
       self.new_state = tf.concat([ state.c, state.h ], axis=-1, \
           name='new_state')
@@ -190,7 +190,7 @@ class Model(Agent):
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
-    return action, next_state[0]
+    return int(action), next_state[0]
 
   def multi_step(self, env_states, model_states):
     feed_dict = {
@@ -231,6 +231,7 @@ class Model(Agent):
       dones = []
       statuses = []
       for env, env_state, action in zip(env_list, env_states, actions):
+        action = int(action)
         if not env.done:
           next_env_state, reward, done, _ = env.step(action)
         else:

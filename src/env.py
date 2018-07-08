@@ -64,15 +64,17 @@ class Environment:
   def clear_opponents(self):
     self.opponent_list = []
 
-  def step(self, action):
+  def step(self, offer):
     player = self.player
     if self.done:
       raise Exception('Already done, can\'t go on')
 
-    if not self.offer_mask[action]:
-      raise Exception('Invalid offer {}'.format(action))
+    if isinstance(offer, int):
+      offer = self.offers[offer]
 
-    offer = self.offers[action]
+    for val, max in zip(offer, self.counts):
+      if val < 0 or val > max:
+        raise Exception('Invalid offer')
 
     done = False
 
@@ -113,23 +115,14 @@ class Environment:
     # Timed out
     return False, 0.0
 
-  def get_offer(self, i):
-    return self.offers[i]
-
-  def identify_offer(self, offer):
-    for i, other in enumerate(self.offers):
-      if np.array_equal(offer, other):
-        return i
-    raise Exception('Unexpected offer')
-
   def _make_state(self):
-    offer_i = 0
-    if not self.proposed_offer is None:
-      offer_i = self.identify_offer(self.proposed_offer)
+    proposed_offer = self.proposed_offer
+    if proposed_offer is None:
+      proposed_offer = np.zeros(MAX_TYPES, dtype='int32')
 
     return np.concatenate([
       self.offer_mask,
-      [ offer_i ],
+      proposed_offer,
       self.values[self.player],
       self.counts,
     ])
