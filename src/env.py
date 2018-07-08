@@ -106,7 +106,7 @@ class Environment:
     state = self.reset()
     agent_state = agent.initial_state
 
-    for i in range(self.max_steps):
+    while True:
       action, agent_state = agent.step(state, agent_state)
       state, _, done, _ = self.step(action)
       if done:
