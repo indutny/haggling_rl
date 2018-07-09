@@ -190,6 +190,9 @@ class Model {
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
 
+    this.value = new Dense(weights['haggle/value/kernel:0'],
+                           weights['haggle/value/bias:0']);
+
     this.initialState = undefined;
   }
 
@@ -237,22 +240,24 @@ class Model {
       pre = relu(layer.call(pre));
     }
     let { result: x, state: newState } = this.lstm.call(pre, state);
-    x = matmulT(x, this.embedding);
+    const rawAction = matmulT(x, this.embedding);
 
     // Mask
-    assert.strictEqual(x.length, available.length);
+    assert.strictEqual(rawAction.length, available.length);
     for (let i = 0; i < available.length; i++) {
       const mask = available[i];
       if (!mask) {
-        x[i] = -1e23;
+        rawAction[i] = -1e23;
       }
     }
-    const probs = softmax(x);
+    const probs = softmax(rawAction);
 
     const action = this.random(probs);
     // const action = this.max(probs);
 
-    return { probs, action, state: newState };
+    const value = this.value.call(x)[0];
+
+    return { probs, action, value, state: newState };
   }
 }
 
@@ -317,10 +322,11 @@ module.exports = class Agent {
       this.env.setOffer(o);
     }
 
-    const { action, probs, state: newState } = this.m.call(
+    const { action, value, state: newState } = this.m.call(
         this.env.buildObservation(),
         this.state);
 
+    this.log('Value: ' + value.toFixed(3));
     this.log('Action: ' + action);
 
     this.state = newState;
