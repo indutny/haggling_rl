@@ -3580,3 +3580,14 @@ Real:
       sessions: 13712 }
 
 ### 4350
+
+## anta
+
+### 3350
+
+    Position 8/14, entry { hash: 'f47e40b1ad650fe08954f0df87353a9a',
+      date: '2018-07-09',
+      mean: 4.5908569790771,
+      meanAccepted: 7.298929141034404,
+      acceptance: 0.6289767841788478,
+      sessions: 13956 }
