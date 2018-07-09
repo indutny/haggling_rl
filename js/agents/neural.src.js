@@ -173,6 +173,8 @@ class Dense {
 class Model {
   constructor(weights) {
     this.embedding = weights['haggle/embedding:0'];
+    this.context = new Dense(weights['haggle/context/kernel:0'],
+                             weights['haggle/context/bias:0']);
 
     this.pre = [];
     for (let i = 0; ; i++) {
@@ -219,6 +221,9 @@ class Model {
   call(input, state) {
     const available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
+
+    const proposed = input.slice(0, MAX_TYPES);
+    const context = relu(this.context.call(input.slice(proposed.length)));
 
     let pre = input;
     for (const layer of this.pre) {
