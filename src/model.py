@@ -180,12 +180,6 @@ class Model(Agent):
     self.version = version
     self.name = '{}_v{}'.format(self.original_name, self.version)
 
-  def fill_feed_dict(self, out, obs, state=None):
-    if state is None:
-      state = [ self.initial_state ]
-
-    return out
-
   def step(self, obs, state):
     feed_dict = {
       self.input: [ obs ],

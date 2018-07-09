@@ -219,7 +219,6 @@ class Model {
   }
 
   call(input, state) {
-    console.log('input: ' + input.join(', '));
     const available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
 
@@ -227,7 +226,6 @@ class Model {
     const context = input.slice(proposed.length);
     if (state === undefined) {
       state = relu(this.context.call(context));
-      console.log('initial: ' + state.join(', '));
       state = {
         c: state.slice(0, this.lstm.units),
         h: state.slice(this.lstm.units),
@@ -250,7 +248,6 @@ class Model {
       }
     }
     const probs = softmax(x);
-    console.log('probs: ' + probs);
 
     const action = this.random(probs);
     // const action = this.max(probs);
