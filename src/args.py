@@ -16,6 +16,8 @@ def parse_args(kind=None):
   if kind == 'transform-save':
     parser.add_argument('source')
     parser.add_argument('target')
+  elif kind == 'check-js':
+    parser.add_argument('source')
 
   args = parser.parse_args()
 

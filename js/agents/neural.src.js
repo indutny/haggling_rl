@@ -8,7 +8,7 @@ function assert(exp) {
 }
 assert.strictEqual = (a, b) => {
   if (a !== b)
-    throw new Error('Assert equal failure');
+    throw new Error(`Assert equal failure ${a} !== ${b}`);
 };
 
 const MAX_TYPES = 3;
@@ -219,6 +219,7 @@ class Model {
   }
 
   call(input, state) {
+    console.log('input: ' + input.join(', '));
     const available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
 
@@ -226,13 +227,14 @@ class Model {
     const context = input.slice(proposed.length);
     if (state === undefined) {
       state = relu(this.context.call(context));
+      console.log('initial: ' + state.join(', '));
       state = {
         c: state.slice(0, this.lstm.units),
         h: state.slice(this.lstm.units),
       };
     }
 
-    let pre = input;
+    let pre = proposed;
     for (const layer of this.pre) {
       pre = relu(layer.call(pre));
     }
@@ -248,6 +250,7 @@ class Model {
       }
     }
     const probs = softmax(x);
+    console.log('probs: ' + probs);
 
     const action = this.random(probs);
     // const action = this.max(probs);
@@ -275,7 +278,7 @@ class Environment {
     this.available = ACTION_SPACE.map((offer) => {
       return offer.every((count, i) => {
         return count <= this.counts[i];
-      });
+      }) ? 1 : 0;
     });
   }
 
