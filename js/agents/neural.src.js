@@ -141,7 +141,7 @@ class LSTM {
     };
   }
 
-  call(input, state=this.initialState) {
+  call(input, state = this.initialState) {
     const x = input.concat(state.h);
 
     const gateInputs = add(matmul(x, this.kernel), this.bias);
@@ -190,7 +190,7 @@ class Model {
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
 
-    this.initialState = this.lstm.initialState;
+    this.initialState = undefined;
   }
 
   random(probs) {
@@ -223,7 +223,14 @@ class Model {
     input = input.slice(available.length);
 
     const proposed = input.slice(0, MAX_TYPES);
-    const context = relu(this.context.call(input.slice(proposed.length)));
+    const context = input.slice(proposed.length);
+    if (state === undefined) {
+      state = relu(this.context.call(context));
+      state = {
+        c: state.slice(0, this.lstm.units),
+        h: state.slice(this.lstm.units),
+      };
+    }
 
     let pre = input;
     for (const layer of this.pre) {
