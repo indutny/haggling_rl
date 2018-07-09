@@ -49,6 +49,8 @@ writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
   model = Model(CONFIG, env_list[0], sess, writer, name='haggle')
+
+  writer.add_graph(tf.get_default_graph())
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):

@@ -44,8 +44,12 @@ class Model(Agent):
           num_units=self.config['lstm'])
       state_size = self.cell.state_size
 
-      self.rnn_state = tf.placeholder(tf.float32,
-          shape=(None, state_size.c + state_size.h), name='rnn_state')
+      self.is_first_round = tf.placeholder(tf.bool, shape=(None,),
+          name='is_first_round')
+
+      self.rnn_state = tf.placeholder(tf.float32, name='rnn_state',
+          shape=(None, state_size.c + state_size.h))
+      self.zero_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       # Get offer mask
       obs = tf.cast(self.input, dtype=tf.float32, name='float_input')
@@ -54,22 +58,22 @@ class Model(Agent):
         self.observation_space - self.action_space - MAX_TYPES,
       ], axis=1)
 
-      # TODO(indutny): move context to initial state
-      x = tf.concat([
-        offer,
-        context
-      ], axis=-1, name='observation')
+      context = tf.layers.dense(context, self.rnn_state.shape[1],
+                                name='context', activation=tf.nn.relu)
+      rnn_state = tf.where(self.is_first_round, context, self.rnn_state)
+
+      x = offer
 
       for i, width in enumerate(self.config['pre']):
         x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
                             activation=tf.nn.relu)
 
       # Feed embedding into LSTM
-      state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
-                                            h=self.rnn_state[:, state_size.c:])
+      state = tf.contrib.rnn.LSTMStateTuple(c=rnn_state[:, :state_size.c],
+                                            h=rnn_state[:, state_size.c:])
       x, state = self.cell(x, state)
 
-      self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
+      self.initial_state = None
 
       # Transform output to probs through same embedding, applying offer mask
       raw_action = tf.matmul(x, self.embedding, transpose_b=True)
@@ -180,13 +184,14 @@ class Model(Agent):
     if state is None:
       state = [ self.initial_state ]
 
-    out[self.input] = obs
-    out[self.rnn_state] = state
     return out
 
   def step(self, obs, state):
-    feed_dict = {}
-    self.fill_feed_dict(feed_dict, [ obs ], [ state ])
+    feed_dict = {
+      self.input: [ obs ],
+      self.is_first_round: [ state is None ],
+      self.rnn_state: [ self.zero_state if state is None else state ],
+    }
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
@@ -195,7 +200,9 @@ class Model(Agent):
   def multi_step(self, env_states, model_states):
     feed_dict = {
       self.input: env_states,
-      self.rnn_state: model_states,
+      self.is_first_round: [ state is None for state in model_states ],
+      self.rnn_state: [ self.zero_state if state is None else state \
+          for state in model_states ],
     }
     tensors = [ self.action, self.action_probs, self.new_state, self.value ]
     out = self.sess.run(tensors, feed_dict=feed_dict)
@@ -348,9 +355,13 @@ class Model(Agent):
   def reflect(self, games, entropy_coeff):
     estimates = self.estimate_rewards(games['rewards'], games['dones'])
 
+    model_states = games['model_states']
+
     feed_dict = {
       self.input: games['env_states'],
-      self.rnn_state: games['model_states'],
+      self.is_first_round: [ state is None for state in model_states ],
+      self.rnn_state: [ self.zero_state if state is None else state \
+          for state in model_states ],
       self.selected_action: games['actions'],
       self.true_value: estimates,
       self.past_value: games['values'],
