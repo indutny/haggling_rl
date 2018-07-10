@@ -3605,9 +3605,20 @@ Real:
 
 ### 5530
 
-    Position 8/14, entry { hash: '8f61ce3cf5e654dae71d750302a238ca',
+    Position 7/15, entry { hash: '8f61ce3cf5e654dae71d750302a238ca',
       date: '2018-07-10',
-      mean: 5.288173061740092,
-      meanAccepted: 7.183612183612183,
-      acceptance: 0.7361440075793463,
-      sessions: 6333 }
+      mean: 5.332732544471436,
+      meanAccepted: 7.217202248382649,
+      acceptance: 0.7388919363686232,
+      sessions: 12761 }
+
+### 6610
+
+    Position 4/20, entry { hash: '525015ad885b4f8dafb7f5d4aa615985',
+      date: '2018-07-10',
+      mean: 5.438418921798423,
+      meanAccepted: 7.346718480138169,
+      acceptance: 0.7402514383123802,
+      sessions: 9386 }
+
+### 7560
