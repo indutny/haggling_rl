@@ -322,12 +322,12 @@ module.exports = class Agent {
       this.env.setOffer(o);
     }
 
-    const { action, value, state: newState } = this.m.call(
+    const { action, value, probs, state: newState } = this.m.call(
         this.env.buildObservation(),
         this.state);
 
-    this.log('Value: ' + value.toFixed(3));
-    this.log('Action: ' + action);
+    this.log(`value=${value.toFixed(3)} action=${action} ` +
+        `prob=${probs[action].toFixed(3)}`);
 
     this.state = newState;
 
