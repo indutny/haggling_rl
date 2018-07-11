@@ -3641,4 +3641,20 @@ Real:
 
 ### 14290
 
+    Position 35/84, entry { hash: '72405c868be67b60a26c173417ac4343',
+      date: '2018-07-10',
+      mean: 5.783291808613414,
+      meanAccepted: 7.495469372961217,
+      acceptance: 0.7715716682768089,
+      sessions: 39334 }
 
+### 21310
+
+    Position 20/57, entry { hash: 'bdce7de2f28a6e3895be89ca1b24da67',
+      date: '2018-07-11',
+      mean: 5.95437597017075,
+      meanAccepted: 7.499405421747455,
+      acceptance: 0.7939797404343164,
+      sessions: 62489 }
+
+### 26640
