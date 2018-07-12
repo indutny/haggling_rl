@@ -222,15 +222,8 @@ class Model {
   }
 
   call(input, state) {
-    let available = input.slice(0, ACTION_SPACE.length);
+    const available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
-
-    const legacySpace = available.length !== this.embedding.length;
-
-    // Old version couldn't do greedy zero offer
-    if (legacySpace) {
-      available = available.slice(1);
-    }
 
     const proposed = input.slice(0, MAX_TYPES);
     const context = input.slice(proposed.length);
@@ -259,12 +252,8 @@ class Model {
     }
     const probs = softmax(rawAction);
 
-    let action = this.random(probs);
-    // let action = this.max(probs);
-
-    if (legacySpace) {
-      action += 1;
-    }
+    const action = this.random(probs);
+    // const action = this.max(probs);
 
     const value = this.value.call(x)[0];
 
