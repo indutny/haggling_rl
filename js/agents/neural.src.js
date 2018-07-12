@@ -190,6 +190,11 @@ class Model {
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
 
+    this.preValue = null;
+    if (weights.hasOwnProperty('haggle/pre_value/kernel:0')) {
+      this.preValue = new Dense(weights['haggle/pre_value/kernel:0'],
+                                weights['haggle/pre_value/bias:0']);
+    }
     this.value = new Dense(weights['haggle/value/kernel:0'],
                            weights['haggle/value/bias:0']);
 
@@ -255,7 +260,11 @@ class Model {
     const action = this.random(probs);
     // const action = this.max(probs);
 
-    const value = this.value.call(x)[0];
+    let value = x;
+    if (this.preValue) {
+      value = relu(this.preValue.call(value));
+    }
+    value = this.value.call(value)[0];
 
     return { probs, action, value, state: newState };
   }
