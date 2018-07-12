@@ -114,8 +114,8 @@ function addContestant(name, A) {
   });
 }
 
-// addContestant('neural', Neural);
-addContestant('rel', Rel);
+addContestant('neural', Neural);
+// addContestant('rel', Rel);
 // addContestant('best', BestNeural);
 //
 // addContestant('half-or-all', HalfOrAll);

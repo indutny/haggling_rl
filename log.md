@@ -3676,3 +3676,10 @@ Real:
       sessions: 9250 }
 
 ### 35040
+
+    Position 26/79, entry { hash: '5fc4bee2bc98b0f23096736f9e142719',
+      date: '2018-07-12',
+      mean: 6.028472465935273,
+      meanAccepted: 7.401978417266187,
+      acceptance: 0.8144406976211911,
+      sessions: 65537 }
