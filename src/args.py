@@ -34,7 +34,7 @@ def parse_args(kind=None):
         '-pe' + str(args.ppo_epochs) + \
         '-e' + str(args.entropy) + \
         '-g' + str(args.gamma) + \
-        '-vw' + str(args.value_width) + \
+        '-vw' + str(args.value_width)
 
   if not args.tag is None:
     run_name = str(args.tag) + '-' + run_name
