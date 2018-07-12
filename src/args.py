@@ -12,6 +12,7 @@ def parse_args(kind=None):
   parser.add_argument('--ppo_epochs', type=int, default=10)
   parser.add_argument('--entropy', type=float, default=0.01)
   parser.add_argument('--gamma', type=float, default=0.99)
+  parser.add_argument('--value_width', type=int, default=32)
   parser.add_argument('--tag')
 
   if kind == 'transform-save':
@@ -32,7 +33,8 @@ def parse_args(kind=None):
         '-ppo' + str(args.ppo) + \
         '-pe' + str(args.ppo_epochs) + \
         '-e' + str(args.entropy) + \
-        '-g' + str(args.gamma)
+        '-g' + str(args.gamma) + \
+        '-vw' + str(args.value_width) + \
 
   if not args.tag is None:
     run_name = str(args.tag) + '-' + run_name
@@ -51,6 +53,8 @@ def parse_args(kind=None):
     'ppo': args.ppo,
     'ppo_epochs': args.ppo_epochs,
     'entropy': args.entropy,
+    'gamma': args.gamma,
+    'value_width': args.value_width,
   }
 
   return run_name, config, args
