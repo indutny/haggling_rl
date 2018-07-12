@@ -70,7 +70,7 @@ class Generator:
     if i == self.types:
       # TODO(indutny): make this more efficient
       sum = np.sum(offer)
-      if sum < self.min_obj or sum > self.max_obj:
+      if sum > self.max_obj:
         return
 
       self.offers.append(np.copy(offer))

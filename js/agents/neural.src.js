@@ -22,7 +22,7 @@ function genOffers(out, offer, minObj, maxObj, i) {
     for (const count of offer) {
       sum += count;
     }
-    if (sum < minObj || sum > maxObj) {
+    if (sum > maxObj) {
       return;
     }
     out.push(offer.slice());
@@ -222,8 +222,15 @@ class Model {
   }
 
   call(input, state) {
-    const available = input.slice(0, ACTION_SPACE.length);
+    let available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
+
+    const legacySpace = available.length !== this.embedding.length;
+
+    // Old version couldn't do greedy zero offer
+    if (legacySpace) {
+      available = available.slice(1);
+    }
 
     const proposed = input.slice(0, MAX_TYPES);
     const context = input.slice(proposed.length);
@@ -252,8 +259,12 @@ class Model {
     }
     const probs = softmax(rawAction);
 
-    const action = this.random(probs);
-    // const action = this.max(probs);
+    let action = this.random(probs);
+    // let action = this.max(probs);
+
+    if (legacySpace) {
+      action += 1;
+    }
 
     const value = this.value.call(x)[0];
 
