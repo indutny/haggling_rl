@@ -15,6 +15,7 @@ class Model(Agent):
       'grad_clip': 0.5,
       'ppo': 0.1,
       'ppo_epochs': 10,
+      'gamma': 0.99,
     }
 
     self.config.update(config)
@@ -333,14 +334,14 @@ class Model(Agent):
 
     return res
 
-  def estimate_rewards(self, rewards, dones, gamma=0.99):
+  def estimate_rewards(self, rewards, dones):
     estimates = np.zeros(len(rewards), dtype='float32')
     future = 0.0
 
     for i, reward in reversed(list(enumerate(rewards))):
       if dones[i]:
         future = 0.0
-      future *= gamma
+      future *= self.config['gamma']
       estimates[i] = reward + future
       future += reward
 

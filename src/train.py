@@ -16,7 +16,7 @@ LOG_DIR = os.path.join('.', 'logs', RUN_NAME)
 SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 
 CONCURRENCY = 32
-SAVE_EVERY = 10
+SAVE_EVERY = 100
 BENCH_EVERY = 1
 
 MAX_ANTAGONISTS = 500
@@ -51,7 +51,7 @@ with tf.Session() as sess:
   model = Model(CONFIG, env_list[0], sess, writer, name='haggle')
 
   writer.add_graph(tf.get_default_graph())
-  saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
+  saver = tf.train.Saver(max_to_keep=100, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
     antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i))

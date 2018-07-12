@@ -162,10 +162,11 @@ class Environment:
 
       # Just for benching (really messy)
       # TODO(indutny): unmess it
-      self.last_reward = reward
+      self.last_reward = self_reward
     elif done:
       # Discourage absence of consensus
       reward = 0.0
+      self.last_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
