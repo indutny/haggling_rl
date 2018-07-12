@@ -161,7 +161,7 @@ class Environment:
         if self_reward_p < 0:
           raise Exception('Unexpected reward')
 
-        self_reward_p = self_reward_p ** 1.5
+        opponent_reward_p *= (1.7 - self.reward_p)
 
       # Stimulate bigger relative score
       reward = self_reward_p - opponent_reward_p
