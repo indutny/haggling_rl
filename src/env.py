@@ -153,11 +153,19 @@ class Environment:
           dtype='float32')
       self.ui.accept('opponent', opponent_reward)
 
-      # Stimulate bigger absolute score
-      reward = self_reward
+      # Normalze rewards
+      self_reward_p = self_reward / self.total
+      opponent_reward_p = opponent_reward / self.total
 
-      # Normalze reward
-      reward = reward / self.total
+      if self_reward_p < 0.7:
+        if self_reward_p < 0:
+          raise Exception('Unexpected reward')
+
+        self_reward_p = self_reward_p ** 1.5
+
+      # Stimulate bigger relative score
+      reward = self_reward_p - opponent_reward_p
+
       self.status = 'accepted'
 
       # Just for benching (really messy)
@@ -165,7 +173,7 @@ class Environment:
       self.last_reward = self_reward
     elif done:
       # Discourage absence of consensus
-      reward = 0.0
+      reward = -1.0
       self.last_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
