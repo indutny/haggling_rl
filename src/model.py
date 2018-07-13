@@ -42,33 +42,19 @@ class Model(Agent):
 
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
-
-      available_actions, x = tf.split(self.input, [
-        self.action_space, self.observation_space - self.action_space ], axis=1)
-
-      for i, width in enumerate(self.config['pre']):
-        x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
-                            activation=tf.nn.relu)
+      self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       state = tf.contrib.rnn.LSTMStateTuple(c=self.rnn_state[:, :state_size.c],
                                             h=self.rnn_state[:, state_size.c:])
-      x, state = self.cell(x, state)
 
-      self.initial_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
+      new_state, action, action_probs, value = \
+          self._network(state, self.input)
 
-      # Outputs
-      raw_action = tf.layers.dense(x, self.action_space, name='action')
-      raw_action *= available_actions
-      raw_action += (1.0 - available_actions) * -1e23
-
-      self.action_probs = tf.nn.softmax(raw_action, name='action_probs')
-      action_dist = tf.distributions.Categorical(probs=self.action_probs)
-
-      self.action = action_dist.sample()
-
-      self.value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
+      self.action = action
+      self.action_probs = action_probs
+      self.value = value
       self.mean_value = tf.reduce_mean(self.value, name='mean_value')
-      self.new_state = tf.concat([ state.c, state.h ], axis=-1, \
+      self.new_state = tf.concat([ new_state.c, new_state.h ], axis=-1, \
           name='new_state')
 
       # Losses
@@ -140,6 +126,30 @@ class Model(Agent):
             name='{}/placeholder'.format(name))
         self.weight_placeholders[name] = placeholder
         self.load_ops.append(var.assign(placeholder))
+
+  def _network(self, state, obs):
+    available_actions, x = tf.split(obs, [
+      self.action_space, self.observation_space - self.action_space ], axis=1)
+
+    for i, width in enumerate(self.config['pre']):
+      x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
+                          activation=tf.nn.relu)
+
+    x, state = self.cell(x, state)
+
+    # Outputs
+    raw_action = tf.layers.dense(x, self.action_space, name='action')
+    raw_action *= available_actions
+    raw_action += (1.0 - available_actions) * -1e23
+
+    action_probs = tf.nn.softmax(raw_action, name='action_probs')
+    action_dist = tf.distributions.Categorical(probs=action_probs)
+
+    action = action_dist.sample()
+
+    value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
+
+    return state, action, action_probs, value
 
   def save_weights(self, sess):
     values = sess.run(self.trainable_variables)
