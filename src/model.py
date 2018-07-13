@@ -16,7 +16,6 @@ class Model(Agent):
       'ppo': 0.1,
       'ppo_epochs': 10,
       'gamma': 0.99,
-      'value_width': 32,
     }
 
     self.config.update(config)
@@ -94,9 +93,6 @@ class Model(Agent):
       self.action = action_dist.sample()
 
       value = x
-      if self.config['value_width'] != 0:
-        value = tf.layers.dense(value, self.config['value_width'],
-            activation=tf.nn.relu, name='pre_value')
       value = tf.squeeze(tf.layers.dense(value, 1, name='value'), axis=-1)
 
       self.value = value
