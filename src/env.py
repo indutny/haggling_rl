@@ -158,7 +158,8 @@ class Environment:
       self_reward_p = self_reward / self.total
       opponent_reward_p = opponent_reward / self.total
 
-      opponent_reward_p *= (2.0 - self_reward_p)
+      # Opponent cheats a bit to prevent saddle-points
+      opponent_reward_p *= 1.2
 
       # Stimulate bigger relative score
       reward = self_reward_p - opponent_reward_p
