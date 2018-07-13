@@ -74,6 +74,9 @@ class Environment:
       raise Exception('Already done, can\'t go on')
 
     if isinstance(offer, int):
+      if not self.offer_mask[offer]:
+        raise Exception('Not allowed offer')
+
       offer = self.offers[offer]
 
     for val, max in zip(offer, self.counts):
