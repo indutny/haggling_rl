@@ -48,11 +48,14 @@ for i in range(CONCURRENCY):
 writer = tf.summary.FileWriter(LOG_DIR)
 
 with tf.Session() as sess:
+  print('Initializing model')
   model = Model(CONFIG, env_list[0], sess, writer, name='haggle')
   saver = tf.train.Saver(max_to_keep=10000, name=RUN_NAME)
 
   for i in range(NUM_ANTAGONISTS):
-    antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i))
+    print('Initializing antagonist {}'.format(i))
+    antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i),
+                       trainable=False)
     ANTAGONISTS.append(antagonist)
 
   sess.run(tf.global_variables_initializer())

@@ -4,7 +4,7 @@ import numpy as np
 from agent import Agent
 
 class Model(Agent):
-  def __init__(self, config, env, sess, writer, name='haggle'):
+  def __init__(self, config, env, sess, writer, name='haggle', trainable=True):
     super(Model, self).__init__()
     self.config = {
       'pre': [],
@@ -36,9 +36,22 @@ class Model(Agent):
       self.input = tf.placeholder(tf.float32,
           shape=(None, self.observation_space), name='input')
 
-      self.cell = tf.contrib.rnn.LSTMBlockCell(name='lstm', \
-          num_units=self.config['lstm'])
-      state_size = self.cell.state_size
+      # Init layers
+
+      self.layers = {
+        'pre': [],
+        'action': tf.layers.Dense(self.action_space, name='action'),
+        'value': tf.layers.Dense(1, name='value'),
+        'lstm': tf.contrib.rnn.LSTMBlockCell(name='lstm',
+                                             num_units=self.config['lstm']),
+      }
+
+      for i, width in enumerate(self.config['pre']):
+        pre = tf.layers.Dense(width, activation=tf.nn.relu,
+                              name='preprocess_{}'.format(i))
+        self.layers['pre'].append(pre)
+
+      state_size = self.layers['lstm'].state_size
 
       self.rnn_state = tf.placeholder(tf.float32,
           shape=(None, state_size.c + state_size.h), name='rnn_state')
@@ -53,65 +66,12 @@ class Model(Agent):
       self.action = action
       self.action_probs = action_probs
       self.value = value
-      self.mean_value = tf.reduce_mean(self.value, name='mean_value')
       self.new_state = tf.concat([ new_state.c, new_state.h ], axis=-1, \
           name='new_state')
 
       # Losses
-      self.true_value = tf.placeholder(tf.float32,
-          shape=(None,), name='true_value')
-      self.past_value = tf.placeholder(tf.float32,
-          shape=(None,), name='past_value')
-      self.past_prob = tf.placeholder(tf.float32,
-          shape=(None,), name='past_prob')
-      self.selected_action = tf.placeholder(tf.int32,
-          shape=(None,), name='selected_action')
-      self.entropy_coeff = tf.placeholder(tf.float32, shape=(),
-          name='entropy_coeff')
-
-      self.entropy = -tf.reduce_mean(
-          tf.reduce_sum(self.action_probs * tf.log(self.action_probs + 1e-20),
-              axis=-1),
-          name='entropy')
-
-      online_advantage = self.true_value - self.value
-      self.value_loss = tf.reduce_mean(online_advantage ** 2,
-          name='value_loss') / 2.0
-
-      action_one_hot = tf.one_hot(self.selected_action,
-          depth=self.action_probs.shape[-1],
-          dtype='float32',
-          name='action_one_hot')
-      current_prob = tf.reduce_sum(
-          action_one_hot * self.action_probs,
-          axis=-1,
-          name='current_prob')
-
-      prob_ratio = current_prob / self.past_prob
-      ppo_epsilon = self.config['ppo']
-      clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - ppo_epsilon,
-          1.0 + ppo_epsilon, name='clipped_ratio')
-
-      offline_advantage = self.true_value - self.past_value
-      policy_loss = tf.minimum(
-          prob_ratio * offline_advantage,
-          clipped_ratio * offline_advantage)
-      policy_loss = -tf.reduce_mean(policy_loss,
-          name='policy_loss')
-      self.policy_loss = policy_loss
-
-      optimizer = tf.train.AdamOptimizer(self.config['lr'])
-
-      self.loss = self.policy_loss + \
-          self.value_loss * self.config['value_scale'] - \
-          self.entropy * self.entropy_coeff
-
-      variables = tf.trainable_variables()
-      grads = tf.gradients(self.loss, variables)
-      grads, grad_norm = tf.clip_by_global_norm(grads, self.config['grad_clip'])
-      grads = list(zip(grads, variables))
-      self.grad_norm = grad_norm
-      self.train = optimizer.apply_gradients(grads_and_vars=grads)
+      if trainable:
+        self._losses()
 
       # Weight loading
       self.trainable_variables = self.scope.trainable_variables()
@@ -127,29 +87,134 @@ class Model(Agent):
         self.weight_placeholders[name] = placeholder
         self.load_ops.append(var.assign(placeholder))
 
-  def _network(self, state, obs):
+  def _network(self, state, obs, sample=True):
     available_actions, x = tf.split(obs, [
       self.action_space, self.observation_space - self.action_space ], axis=1)
 
-    for i, width in enumerate(self.config['pre']):
-      x = tf.layers.dense(x, width, name='preprocess_{}'.format(i),
-                          activation=tf.nn.relu)
+    for i, layer in enumerate(self.layers['pre']):
+      x = layer(x)
 
-    x, state = self.cell(x, state)
+    x, state = self.layers['lstm'](x, state)
 
     # Outputs
-    raw_action = tf.layers.dense(x, self.action_space, name='action')
+    raw_action = self.layers['action'](x)
     raw_action *= available_actions
     raw_action += (1.0 - available_actions) * -1e23
 
     action_probs = tf.nn.softmax(raw_action, name='action_probs')
-    action_dist = tf.distributions.Categorical(probs=action_probs)
+    value = tf.squeeze(self.layers['value'](x), name='scalar_value')
 
+    if not sample:
+      return state, action_probs, value
+
+    action_dist = tf.distributions.Categorical(probs=action_probs)
     action = action_dist.sample()
 
-    value = tf.squeeze(tf.layers.dense(x, 1, name='value'))
-
     return state, action, action_probs, value
+
+  def _losses(self):
+    self.entropy_coeff = tf.placeholder(tf.float32, shape=(),
+        name='entropy_coeff')
+
+    input_shape = (None, self.config['max_steps'],)
+    self.train_input = tf.placeholder(tf.float32,
+        shape=input_shape + (self.observation_space,), name='train_input')
+    self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
+        name='train_mask')
+    self.true_value = tf.placeholder(tf.float32,
+        shape=input_shape, name='true_value')
+    self.past_value = tf.placeholder(tf.float32,
+        shape=input_shape, name='past_value')
+    self.past_prob = tf.placeholder(tf.float32,
+        shape=input_shape, name='past_prob')
+    self.selected_action = tf.placeholder(tf.int32,
+        shape=input_shape, name='selected_action')
+
+    # TODO(indutny): reduce copy-paste?
+    state = self.layers['lstm'].zero_state(tf.shape(self.train_input)[0],
+        dtype=tf.float32)
+
+    entropy = []
+    value_loss = []
+    policy_loss = []
+    values = []
+
+    for i in range(self.config['max_steps']):
+      with tf.name_scope('train_step_{}'.format(i)):
+        obs = self.train_input[:, i]
+        true_value = self.true_value[:, i]
+        past_value = self.past_value[:, i]
+        past_prob = self.past_prob[:, i]
+        selected_action = self.selected_action[:, i]
+
+        state, action_probs, value = self._network(state, obs, sample=False)
+
+        round_entropy = \
+            -tf.reduce_sum(action_probs * tf.log(action_probs + 1e-20),
+                           axis=-1)
+
+        online_advantage = true_value - value
+        round_value_loss = online_advantage ** 2 / 2.0
+
+        action_one_hot = tf.one_hot(selected_action,
+            depth=action_probs.shape[-1],
+            dtype='float32',
+            name='action_one_hot')
+        current_prob = tf.reduce_sum(
+            action_one_hot * action_probs,
+            axis=-1,
+            name='current_prob')
+
+        prob_ratio = current_prob / (past_prob + 1e-12)
+        ppo_epsilon = self.config['ppo']
+        clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - ppo_epsilon,
+            1.0 + ppo_epsilon, name='clipped_ratio')
+
+        offline_advantage = true_value - past_value
+        round_policy_loss = -tf.minimum(
+            prob_ratio * offline_advantage,
+            clipped_ratio * offline_advantage)
+
+        entropy.append(round_entropy)
+        value_loss.append(round_value_loss)
+        policy_loss.append(round_policy_loss)
+        values.append(value)
+
+    mask = tf.cast(self.train_mask, tf.float32, name='float_mask')
+
+    mean_mask = mask / tf.expand_dims(tf.reduce_sum(mask, axis=-1) + 1e-12, \
+        axis=-1)
+
+    entropy = tf.stack(entropy, axis=-1, name='stacked_entropy')
+    value_loss = tf.stack(value_loss, axis=-1, name='stacked_value_loss')
+    policy_loss = tf.stack(policy_loss, axis=-1, name='stacked_policy_loss')
+    values = tf.stack(values, axis=-1, name='stacked_values')
+
+    self.entropy = tf.reduce_mean(
+        tf.reduce_sum(entropy * mean_mask, axis=-1),
+        axis=-1, name='entropy')
+    self.value_loss = tf.reduce_mean(
+        tf.reduce_sum(value_loss * mean_mask, axis=-1),
+        axis=-1, name='value_loss')
+    self.policy_loss = tf.reduce_mean(
+        tf.reduce_sum(policy_loss * mean_mask, axis=-1),
+        axis=-1, name='policy_loss')
+    self.mean_value = tf.reduce_mean(
+        tf.reduce_sum(values * mean_mask, axis=-1),
+        axis=-1, name='mean_value')
+
+    optimizer = tf.train.AdamOptimizer(self.config['lr'])
+
+    self.loss = self.policy_loss + \
+        self.value_loss * self.config['value_scale'] - \
+        self.entropy * self.entropy_coeff
+
+    variables = tf.trainable_variables()
+    grads = tf.gradients(self.loss, variables)
+    grads, grad_norm = tf.clip_by_global_norm(grads, self.config['grad_clip'])
+    grads = list(zip(grads, variables))
+    self.grad_norm = grad_norm
+    self.train = optimizer.apply_gradients(grads_and_vars=grads)
 
   def save_weights(self, sess):
     values = sess.run(self.trainable_variables)
@@ -209,7 +274,6 @@ class Model(Agent):
       'values': [],
       'rewards': [],
       'dones': [],
-      'model_states': [],
       'statuses': [],
     } for i in range(len(env_list)) ]
 
@@ -237,17 +301,17 @@ class Model(Agent):
         statuses.append(env.status)
 
       steps += 1
-      if steps > self.config['max_steps']:
+      if steps >= self.config['max_steps']:
         width = len(env_list)
 
         rewards = [ -1.5 ] * width
         dones = [ True ] * width
         statuses = [ 'timeout' ] * width
 
-      zipped = zip(env_states, rewards, dones, statuses, model_states, actions,
+      zipped = zip(env_states, rewards, dones, statuses, actions,
           action_probs, values)
       for i, t in enumerate(zipped):
-        env_state, reward, done, status, model_state, action, action_prob, \
+        env_state, reward, done, status, action, action_prob, \
             value = t
 
         entry = log[i]
@@ -255,7 +319,6 @@ class Model(Agent):
         entry['rewards'].append(reward)
         entry['dones'].append(done)
         entry['statuses'].append(status)
-        entry['model_states'].append(model_state)
         entry['actions'].append(action)
         entry['action_probs'].append(action_prob)
         entry['values'].append(value)
@@ -292,19 +355,28 @@ class Model(Agent):
 
   def collect(self, env_list, count):
     res = {
+      'masks': [],
       'env_states': [],
-      'model_states': [],
       'actions': [],
       'action_probs': [],
       'values': [],
       'rewards': [],
-      'dones': [],
       'acceptance': [],
       'steps_per_game': [],
     }
 
     if count % len(env_list) != 0:
       raise Exception('Number of games is not divisible by concurrency')
+
+    def pad(l, val):
+      to_pad = self.config['max_steps'] - len(l)
+      if to_pad == 0:
+        return l
+      padding = [ val ] * to_pad
+      res = np.concatenate([ l, padding ], axis=0)
+      return res
+
+    empty_obs = [ 0.0 ] * self.observation_space
 
     for game_index in range(count // len(env_list)):
       log = self.game(env_list)
@@ -318,16 +390,17 @@ class Model(Agent):
             max_steps = i + 1
             break
 
-        res['env_states'] += entry['env_states'][:max_steps]
-        res['model_states'] += entry['model_states'][:max_steps]
-        res['actions'] += entry['actions'][:max_steps]
-        res['action_probs'] += entry['action_probs'][:max_steps]
-        res['values'] += entry['values'][:max_steps]
-        res['rewards'] += entry['rewards'][:max_steps]
-        res['dones'] += entry['dones'][:max_steps]
+        rewards = self.estimate_rewards(entry['rewards'], entry['dones'])
 
-        statuses = entry['statuses'][:max_steps]
+        res['env_states'].append(pad(entry['env_states'], empty_obs))
+        res['actions'].append(pad(entry['actions'], 0))
+        res['action_probs'].append(pad(entry['action_probs'], 0.0))
+        res['values'].append(pad(entry['values'], 0.0))
+        res['rewards'].append(pad(rewards, 0.0))
+        res['masks'].append(pad([ True for e in entry['dones'] ], False))
 
+        # Averaged stats
+        statuses = entry['statuses']
         res['acceptance'].append(statuses[max_steps - 1] is 'accepted')
         res['steps_per_game'].append(max_steps)
 
@@ -350,13 +423,11 @@ class Model(Agent):
     return estimates
 
   def reflect(self, games, entropy_coeff):
-    estimates = self.estimate_rewards(games['rewards'], games['dones'])
-
     feed_dict = {
-      self.input: games['env_states'],
-      self.rnn_state: games['model_states'],
+      self.train_input: games['env_states'],
+      self.train_mask: games['masks'],
       self.selected_action: games['actions'],
-      self.true_value: estimates,
+      self.true_value: games['rewards'],
       self.past_value: games['values'],
       self.past_prob: games['action_probs'],
       self.entropy_coeff: entropy_coeff,
@@ -372,6 +443,15 @@ class Model(Agent):
       _, loss, entropy, value_loss, policy_loss, value, grad_norm = \
           self.sess.run(tensors, feed_dict=feed_dict)
 
+    end_rewards = []
+    for rewards, masks in zip(games['rewards'], games['masks']):
+      last_reward = 0.0
+      for reward, mask in zip(rewards, masks):
+        if not mask:
+          break
+        last_reward = reward
+      end_rewards.append(last_reward)
+
     metrics = {
       'grad_norm': grad_norm,
       'loss': loss,
@@ -381,8 +461,7 @@ class Model(Agent):
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
       'acceptance': games['acceptance'],
-      'reward': np.mean(estimates),
-      'max_reward': np.max(estimates),
+      'reward': np.mean(end_rewards),
       'value': value,
     }
     self.log_summary(metrics)
