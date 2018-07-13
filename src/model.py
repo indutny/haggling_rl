@@ -140,7 +140,7 @@ class Model(Agent):
     self.entropy_coeff = tf.placeholder(tf.float32, shape=(),
         name='entropy_coeff')
 
-    input_shape = (None, self.config['max_steps'],)
+    input_shape = (None, self.env.max_rounds,)
     self.train_input = tf.placeholder(tf.int32,
         shape=input_shape + (self.observation_space,), name='train_input')
     self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
@@ -279,7 +279,7 @@ class Model(Agent):
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
-    return action, next_state[0]
+    return action[0], next_state[0]
 
   def multi_step(self, env_states, model_states):
     feed_dict = {
