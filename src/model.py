@@ -308,7 +308,7 @@ class Model(Agent):
     } for i in range(len(env_list)) ]
 
     env_states = [ env.reset() for env in env_list ]
-    env_contexts = [ env.get_context() for env in env_list ]
+    env_contexts = [ env.get_context('self') for env in env_list ]
 
     model_states = sess.run(self.build_context, feed_dict={
       self.context: env_contexts,
