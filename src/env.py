@@ -138,8 +138,9 @@ class Environment:
       accepted = np.array_equal(offer, self.proposed_offer)
 
     self.steps += 1
+    timed_out = self.steps == 2 * self.max_rounds
 
-    done = accepted or self.steps == 2 * self.max_rounds
+    done = accepted or timed_out
     reward = 0.0
     if accepted:
       self_offer = offer
@@ -167,7 +168,7 @@ class Environment:
       # Just for benching (really messy)
       # TODO(indutny): unmess it
       self.last_reward = self_reward
-    elif done:
+    elif timed_out:
       # Discourage absence of consensus
       reward = -1.0
       self.last_reward = 0.0
