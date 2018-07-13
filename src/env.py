@@ -204,6 +204,9 @@ class Environment:
           dtype='float32')
       self.ui.accept('opponent', opponent_reward)
 
+      # Opponent is always cheating
+      opponent_reward *= 1.2
+
       # Stimulate bigger relative score
       reward = self_reward - opponent_reward
 
@@ -213,7 +216,7 @@ class Environment:
 
       # Just for benching (really messy)
       # TODO(indutny): unmess it
-      self.last_reward = reward
+      self.last_reward = self_reward
     elif done:
       # Discourage absence of consensus
       reward = -1.0
