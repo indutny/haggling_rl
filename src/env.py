@@ -115,14 +115,23 @@ class Environment:
     # Timed out
     return False, 0.0
 
+  def get_offer(self, index):
+    return self.offers[index]
+
+  def find_offer(self, offer):
+    for i, existing in enumerate(self.offers):
+      if np.array_equal(offer, existing):
+        return i
+    raise Exception('Invalid offer')
+
   def _make_state(self):
     proposed_offer = self.proposed_offer
     if proposed_offer is None:
-      proposed_offer = np.zeros(MAX_TYPES, dtype='int32')
+      proposed_offer = 0
 
     return np.concatenate([
       self.offer_mask,
-      proposed_offer,
+      [ proposed_offer ],
       self.values[self.player],
       self.counts,
     ])
@@ -135,7 +144,7 @@ class Environment:
     if self.proposed_offer is None:
       accepted = False
     else:
-      accepted = np.array_equal(offer, self.proposed_offer)
+      accepted = np.array_equal(offer, self.offers[self.proposed_offer])
 
     self.steps += 1
     timed_out = self.steps == 2 * self.max_rounds
@@ -180,7 +189,7 @@ class Environment:
 
     # Switch player
     self.player = counter_player
-    self.proposed_offer = self.counts - offer
+    self.proposed_offer = self.find_offer(self.counts - offer)
 
     # NOTE: reward is actually for `self`, not `opponent`
     return reward, state, done

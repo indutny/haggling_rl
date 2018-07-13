@@ -54,11 +54,17 @@ class Model(Agent):
       self.zero_state = np.zeros(self.rnn_state.shape[1], dtype='float32')
 
       # Get offer mask
-      obs = tf.cast(self.input, dtype=tf.float32, name='float_input')
-      available_actions, offer, context = tf.split(obs, [
-        self.action_space, MAX_TYPES,
-        self.observation_space - self.action_space - MAX_TYPES,
+      available_actions, offer, context = tf.split(self.input, [
+        self.action_space, 1,
+        self.observation_space - self.action_space - 1,
       ], axis=1)
+
+      available_actions = tf.cast(available_actions, dtype=tf.float32)
+      context = tf.cast(context, dtype=tf.float32)
+
+      # Translate proposed offer to embedding
+      offer = tf.squeeze(offer, axis=-1, name='offer_index')
+      offer = tf.gather(self.embedding, offer, name='offer')
 
       context = tf.layers.dense(context, self.rnn_state.shape[1],
                                 name='context', activation=tf.nn.relu)

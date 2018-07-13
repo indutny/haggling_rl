@@ -126,8 +126,8 @@ class PolicyAgent(Agent):
     available_offers = obs[:self.env.action_space]
     obs = obs[len(available_offers):]
 
-    proposed_offer = obs[:MAX_TYPES]
-    obs = obs[len(proposed_offer):]
+    proposed_offer = self.env.get_offer(obs[0])
+    obs = obs[1:]
 
     values = obs[:MAX_TYPES]
     obs = obs[len(values):]
