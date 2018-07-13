@@ -73,12 +73,6 @@ class Environment:
     if self.done:
       raise Exception('Already done, can\'t go on')
 
-    if isinstance(offer, int):
-      if not self.offer_mask[offer]:
-        raise Exception('Not allowed offer')
-
-      offer = self.offers[offer]
-
     for val, max in zip(offer, self.counts):
       if val < 0 or val > max:
         raise Exception('Invalid offer')
@@ -111,7 +105,7 @@ class Environment:
 
   def bench_single(self, agent):
     state = self.reset()
-    agent_state = agent.build_initial_state(state.get_context('self'))
+    agent_state = agent.build_initial_state(self.get_context('self'))
 
     while True:
       action, agent_state = agent.step(state, agent_state)

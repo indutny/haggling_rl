@@ -139,6 +139,6 @@ class PolicyAgent(Agent):
 
     # Accept offer
     if accept:
-      return proposed_offer, self.initial_state
+      return proposed_offer, policy
 
     return target, policy

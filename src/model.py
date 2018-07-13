@@ -10,12 +10,13 @@ class Model(Agent):
       'pre': [],
       'lstm': 128,
       'value_scale': 0.5,
-      'max_steps': 50,
       'lr': 0.001,
       'grad_clip': 0.5,
       'ppo': 0.1,
       'ppo_epochs': 10,
     }
+
+    self.max_rounds = env.max_rounds
 
     self.config.update(config)
 
@@ -27,6 +28,8 @@ class Model(Agent):
     self.observation_space = env.observation_space
     self.action_space = env.action_space
     self.context_space = env.context_space
+
+    self.offers = env.offers
 
     self.scope = tf.VariableScope(reuse=False, name=name)
     self.sess = sess
@@ -140,7 +143,7 @@ class Model(Agent):
     self.entropy_coeff = tf.placeholder(tf.float32, shape=(),
         name='entropy_coeff')
 
-    input_shape = (None, self.env.max_rounds,)
+    input_shape = (None, self.max_rounds,)
     self.train_input = tf.placeholder(tf.int32,
         shape=input_shape + (self.observation_space,), name='train_input')
     self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
@@ -164,7 +167,7 @@ class Model(Agent):
     policy_loss = []
     values = []
 
-    for i in range(self.config['max_steps']):
+    for i in range(self.max_rounds):
       with tf.name_scope('train_step_{}'.format(i)):
         obs = self.train_input[:, i]
         true_value = self.true_value[:, i]
@@ -279,7 +282,7 @@ class Model(Agent):
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
-    return action[0], next_state[0]
+    return self.offers[action[0]], next_state[0]
 
   def multi_step(self, env_states, model_states):
     feed_dict = {
@@ -310,7 +313,7 @@ class Model(Agent):
     env_states = [ env.reset() for env in env_list ]
     env_contexts = [ env.get_context('self') for env in env_list ]
 
-    model_states = sess.run(self.build_context, feed_dict={
+    model_states = self.sess.run(self.build_context, feed_dict={
       self.context: env_contexts,
     })
 
@@ -328,7 +331,7 @@ class Model(Agent):
       statuses = []
       for env, env_state, action in zip(env_list, env_states, actions):
         if not env.done:
-          next_env_state, reward, done, _ = env.step(action)
+          next_env_state, reward, done, _ = env.step(self.offers[action])
         else:
           next_env_state, reward, done = env_state, 0.0, True
 
@@ -338,7 +341,7 @@ class Model(Agent):
         statuses.append(env.status)
 
       steps += 1
-      if steps >= self.config['max_steps']:
+      if steps >= self.max_rounds:
         width = len(env_list)
 
         rewards = [ -1.5 ] * width
@@ -369,7 +372,7 @@ class Model(Agent):
         # All completed
         break
 
-      if steps > self.config['max_steps']:
+      if steps > self.max_rounds:
         # All timed out
         break
 
@@ -407,7 +410,7 @@ class Model(Agent):
       raise Exception('Number of games is not divisible by concurrency')
 
     def pad(l, val):
-      to_pad = self.config['max_steps'] - len(l)
+      to_pad = self.max_rounds - len(l)
       if to_pad == 0:
         return l
       padding = [ val ] * to_pad
@@ -484,14 +487,11 @@ class Model(Agent):
       _, loss, entropy, value_loss, policy_loss, value, grad_norm = \
           self.sess.run(tensors, feed_dict=feed_dict)
 
-    end_rewards = []
+    rewards = []
     for rewards, masks in zip(games['rewards'], games['masks']):
-      last_reward = 0.0
       for reward, mask in zip(rewards, masks):
-        if not mask:
-          break
-        last_reward = reward
-      end_rewards.append(last_reward)
+        if mask:
+          rewards.append(reward)
 
     metrics = {
       'grad_norm': grad_norm,
@@ -502,7 +502,7 @@ class Model(Agent):
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
       'acceptance': games['acceptance'],
-      'reward': np.mean(end_rewards),
+      'reward': np.mean(rewards),
       'value': value,
     }
     self.log_summary(metrics)
