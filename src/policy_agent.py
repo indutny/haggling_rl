@@ -119,8 +119,11 @@ class PolicyAgent(Agent):
 
     self.name = 'agent_' + self.policy.__name__
 
-    self.initial_state = None
     self.target = None
+
+  def build_initial_state(self, context):
+    self.values = context[:MAX_TYPES]
+    self.counts = context[MAX_TYPES:]
 
   def step(self, obs, policy):
     available_offers = obs[:self.env.action_space]
@@ -129,14 +132,8 @@ class PolicyAgent(Agent):
     proposed_offer = self.env.get_offer(obs[0])
     obs = obs[1:]
 
-    values = obs[:MAX_TYPES]
-    obs = obs[len(values):]
-
-    counts = obs[:MAX_TYPES]
-    obs = obs[len(counts):]
-
     if policy is None:
-      policy = self.policy(values, counts)
+      policy = self.policy(self.values, self.counts)
 
     accept, target = policy.on_offer(proposed_offer)
 

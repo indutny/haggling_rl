@@ -52,7 +52,6 @@ def parse_args(kind=None):
     'ppo_epochs': args.ppo_epochs,
     'entropy': args.entropy,
     'gamma': args.gamma,
-    'value_width': args.value_width,
   }
 
   return run_name, config, args

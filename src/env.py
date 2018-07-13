@@ -22,13 +22,24 @@ class Environment:
     self.offers = self.generator.offers
     self.action_space = len(self.offers)
     self.observation_space = len(state)
+    self.context_space = len(self.get_context())
 
   def reset(self, force_self=False):
+    # Select configuration
+    objects = self.generator.get()
+    self.values = {
+      'self': objects['valuations'][0],
+      'opponent': objects['valuations'][1],
+    }
+    self.counts = objects['counts']
+    self.offer_mask = objects['offer_mask']
+
     if len(self.opponent_list) > 0:
       self.player = 'self' if force_self else \
           random.choice([ 'self', 'opponent' ])
       self.opponent = random.choice(self.opponent_list)
-      self.opponent_state = self.opponent.initial_state
+      self.opponent_state = self.opponent.build_initial_state(
+          self.get_context('opponent'))
     else:
       self.player = 'self'
       self.opponent = None
@@ -39,13 +50,6 @@ class Environment:
     self.status = 'active'
     self.last_reward = 0.0
 
-    objects = self.generator.get()
-    self.values = {
-      'self': objects['valuations'][0],
-      'opponent': objects['valuations'][1],
-    }
-    self.counts = objects['counts']
-    self.offer_mask = objects['offer_mask']
     self.proposed_offer = None
 
     self.ui.initial(self.opponent, self.counts, self.values['self'])
@@ -104,7 +108,7 @@ class Environment:
 
   def bench_single(self, agent):
     state = self.reset()
-    agent_state = agent.initial_state
+    agent_state = agent.build_initial_state(state.get_context('self'))
 
     while True:
       action, agent_state = agent.step(state, agent_state)
@@ -132,7 +136,11 @@ class Environment:
     return np.concatenate([
       self.offer_mask,
       [ proposed_offer ],
-      self.values[self.player],
+    ])
+
+  def get_context(self, player='self'):
+    return np.concatenate([
+      self.values[player],
       self.counts,
     ])
 
