@@ -487,11 +487,11 @@ class Model(Agent):
       _, loss, entropy, value_loss, policy_loss, value, grad_norm = \
           self.sess.run(tensors, feed_dict=feed_dict)
 
-    rewards = []
+    global_rewards = []
     for rewards, masks in zip(games['rewards'], games['masks']):
       for reward, mask in zip(rewards, masks):
         if mask:
-          rewards.append(reward)
+          global_rewards.append(reward)
 
     metrics = {
       'grad_norm': grad_norm,
