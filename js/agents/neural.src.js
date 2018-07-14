@@ -35,6 +35,25 @@ function genOffers(out, offer, minObj, maxObj, i) {
   }
 }
 
+function findOffer(offer) {
+  for (let i = 0; i < ACTION_SPACE.length; i++) {
+    const other = ACTION_SPACE[i];
+    let same = true;
+    for (let j = 0; j < other.length; j++) {
+      if (other[j] !== offer[j]) {
+        same = false;
+        break;
+      }
+    }
+
+    if (same) {
+      return i;
+    }
+  }
+
+  throw new Error('No matching offer found');
+}
+
 genOffers(ACTION_SPACE, new Array(MAX_TYPES).fill(0), MIN_OBJ, MAX_OBJ, 0);
 
 function matmul(vec, mat) {
@@ -190,15 +209,8 @@ class Model {
     this.lstm = new LSTM(weights['haggle/lstm/kernel:0'],
                          weights['haggle/lstm/bias:0']);
 
-    this.preValue = null;
-    if (weights.hasOwnProperty('haggle/pre_value/kernel:0')) {
-      this.preValue = new Dense(weights['haggle/pre_value/kernel:0'],
-                                weights['haggle/pre_value/bias:0']);
-    }
     this.value = new Dense(weights['haggle/value/kernel:0'],
                            weights['haggle/value/bias:0']);
-
-    this.initialState = undefined;
   }
 
   random(probs) {
@@ -226,21 +238,22 @@ class Model {
     return maxI;
   }
 
+  buildInitialState(context) {
+    const state = relu(this.context.call(context));
+    return {
+      c: state.slice(0, this.lstm.units),
+      h: state.slice(this.lstm.units),
+    };
+  }
+
   call(input, state) {
     const available = input.slice(0, ACTION_SPACE.length);
     input = input.slice(available.length);
 
-    const proposed = input.slice(0, MAX_TYPES);
-    const context = input.slice(proposed.length);
-    if (state === undefined) {
-      state = relu(this.context.call(context));
-      state = {
-        c: state.slice(0, this.lstm.units),
-        h: state.slice(this.lstm.units),
-      };
-    }
+    const proposed = input[0];
+    const embeddedProposal = this.embedding[proposed];
 
-    let pre = proposed;
+    let pre = embeddedProposal;
     for (const layer of this.pre) {
       pre = relu(layer.call(pre));
     }
@@ -260,11 +273,7 @@ class Model {
     const action = this.random(probs);
     // const action = this.max(probs);
 
-    let value = x;
-    if (this.preValue) {
-      value = relu(this.preValue.call(value));
-    }
-    value = this.value.call(value)[0];
+    const value = this.value.call(x);
 
     return { probs, action, value, state: newState };
   }
@@ -294,11 +303,11 @@ class Environment {
   }
 
   buildObservation() {
-    return [].concat(
-      this.available,
-      this.offer,
-      this.values,
-      this.counts);
+    return [].concat(this.available, findOffer(this.offer));
+  }
+
+  buildContext() {
+    return [].concat(this.values, this.counts);
   }
 
   setOffer(offer) {
@@ -314,7 +323,7 @@ module.exports = class Agent {
 
     this.env = new Environment(values, counts, maxRounds);
     this.log = log;
-    this.state = this.m.initialState;
+    this.state = this.m.buildInitialState(this.env.buildContext());
   }
 
   offer(o) {
@@ -335,7 +344,8 @@ module.exports = class Agent {
         this.env.buildObservation(),
         this.state);
 
-    this.log(`value=${value.toFixed(3)} action=${action} ` +
+    this.log(`svalue=${value[0].toFixed(3)} ovalue=${value[1].toFixed(3)} ` +
+        `action=${action} ` +
         `prob=${probs[action].toFixed(3)}`);
 
     this.state = newState;
