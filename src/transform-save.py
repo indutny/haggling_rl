@@ -16,7 +16,7 @@ import_path = args.source
 export_path = args.target
 
 with tf.Session() as sess:
-  model = Model(CONFIG, env, sess, None, name='haggle')
+  model = Model(CONFIG, env, sess, None, name='haggle', trainable=False)
   saver = tf.train.Saver()
   saver.restore(sess, import_path)
 
