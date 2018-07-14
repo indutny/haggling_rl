@@ -185,7 +185,7 @@ class Environment:
       self.last_reward = self_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0, -1.0 ]
+      reward = [ 0.0, -1.2 ]
       self.last_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
