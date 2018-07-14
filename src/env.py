@@ -155,7 +155,7 @@ class Environment:
     timed_out = self.steps == 2 * self.max_rounds
 
     done = accepted or timed_out
-    reward = 0.0
+    reward = [ 0.0, 0.0 ]
     if accepted:
       self_offer = offer
       opponent_offer = self.counts - offer
@@ -176,7 +176,7 @@ class Environment:
       opponent_reward_p *= 1.2
 
       # Stimulate bigger relative score
-      reward = self_reward_p - opponent_reward_p
+      reward = [ self_reward_p, -opponent_reward_p ]
 
       self.status = 'accepted'
 
@@ -185,7 +185,7 @@ class Environment:
       self.last_reward = self_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = -1.0
+      reward = [ 0.0, -1.0 ]
       self.last_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
