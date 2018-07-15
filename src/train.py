@@ -19,8 +19,8 @@ CONCURRENCY = 32
 SAVE_EVERY = 100
 BENCH_EVERY = 1
 
-MAX_ANTAGONISTS = 500
-NUM_ANTAGONISTS = 32
+MAX_ANTAGONISTS = 128
+NUM_ANTAGONISTS = 128
 ANTAGONIST_EPOCH = 1
 ANTAGONIST_UPDATE_EVERY = 1
 ANTAGONISTS = []
@@ -32,7 +32,7 @@ EPOCH = 0
 env_list = []
 bench_env = Environment()
 
-bench_env.add_opponent(PolicyAgent(bench_env, policy='downsize'))
+bench_env.add_opponent(PolicyAgent(bench_env, policy='half_or_all'))
 
 for i in range(CONCURRENCY):
   env = Environment()
@@ -117,9 +117,8 @@ with tf.Session() as sess:
       })
 
       # Equal spacing between everyone
-      if len(ANTAGONIST_WEIGHTS) >= 2 * MAX_ANTAGONISTS:
-        ANTAGONIST_WEIGHTS = ANTAGONIST_WEIGHTS[::2]
-        ANTAGONIST_UPDATE_EVERY *= 2
+      if len(ANTAGONIST_WEIGHTS) >= MAX_ANTAGONISTS:
+        ANTAGONIST_WEIGHTS = ANTAGONIST_WEIGHTS[1:]
 
     if len(ANTAGONIST_WEIGHTS) > 0:
       if len(ANTAGONIST_WEIGHTS) < NUM_ANTAGONISTS:

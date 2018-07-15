@@ -50,6 +50,7 @@ class Environment:
     self.done = False
     self.status = 'active'
     self.last_reward = 0.0
+    self.last_opponent_reward = 0.0
 
     self.proposed_offer = None
 
@@ -92,10 +93,12 @@ class Environment:
 
   def bench(self, agent, times=100):
     score = 0.0
+    op_score = 0.0
     accepted = 0
     for i in range(times):
-      is_accepted, delta = self.bench_single(agent)
-      score += delta
+      is_accepted, reward, op_reward = self.bench_single(agent)
+      score += reward
+      op_score += op_reward
 
       if is_accepted:
         accepted += 1
@@ -103,6 +106,8 @@ class Environment:
     return {
       'mean': score / float(times),
       'mean_accepted': score / float(accepted),
+      'op_mean': op_score / float(times),
+      'op_mean_accepted': op_score / float(accepted),
       'acceptance': float(accepted) / float(times),
     }
 
@@ -114,7 +119,8 @@ class Environment:
       action, agent_state = agent.step(state, agent_state)
       state, _, done, _ = self.step(action)
       if done:
-        return self.status == 'accepted', self.last_reward
+        accepted = self.status == 'accepted'
+        return accepted, self.last_reward, self.last_opponent_reward
 
     # Timed out
     return False, 0.0
@@ -192,23 +198,25 @@ class Environment:
 
       # Normalze rewards
       self_reward_p = self_reward / self.total
-      opponent_reward_p = opponent_reward / self.total
+      opponent_reward_p = 1.0 - (opponent_reward / self.total)
 
       # Opponent cheats a bit to prevent saddle-points
-      opponent_reward_p *= 1.2
+      opponent_reward_p *= 1.1
 
       # Stimulate bigger relative score
-      reward = [ self_reward_p, -opponent_reward_p ]
+      reward = [ self_reward_p, opponent_reward_p ]
 
       self.status = 'accepted'
 
       # Just for benching (really messy)
       # TODO(indutny): unmess it
       self.last_reward = self_reward
+      self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0, -1.2 ]
+      reward = [ -0.7, -0.7 ]
       self.last_reward = 0.0
+      self.last_opponent_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
