@@ -16,11 +16,12 @@ class Environment:
     self.max_rounds = max_rounds
     self.total = total
 
+    self.offers = self.generator.offers
+    self.action_space = 1 + len(self.offers)
+
     state = self.reset()
 
     # +- on each type, left/right, submit button
-    self.offers = self.generator.offers
-    self.action_space = len(self.offers)
     self.observation_space = len(state)
     self.context_space = len(self.get_context())
 
@@ -73,9 +74,11 @@ class Environment:
     if self.done:
       raise Exception('Already done, can\'t go on')
 
-    for val, max in zip(offer, self.counts):
-      if val < 0 or val > max:
-        raise Exception('Invalid offer')
+    if not offer is True:
+      for val, max in zip(offer, self.counts):
+        if val < 0 or val > max:
+          raise Exception('Invalid offer {}, counts are {}'.format(
+              offer, self.counts))
 
     done = False
 
@@ -117,21 +120,36 @@ class Environment:
     return False, 0.0
 
   def get_offer(self, index):
-    return self.offers[index]
+    if index == 0:
+      # Submit
+      return True
+    else:
+      return self.offers[index - 1]
 
   def find_offer(self, offer):
     for i, existing in enumerate(self.offers):
       if np.array_equal(offer, existing):
-        return i
+        return 1 + i
     raise Exception('Invalid offer')
 
   def _make_state(self):
     proposed_offer = self.proposed_offer
+
+    # Initial offer
     if proposed_offer is None:
       proposed_offer = 0
+      can_submit = 0
+    else:
+      if proposed_offer == 0:
+        raise Exception('Invalid non-initial offer')
+      can_submit = 1
+
+    available_actions = np.concatenate([ [ can_submit ], self.offer_mask ])
+    if len(available_actions) != self.action_space:
+      raise Exception('Invalid available_actions')
 
     return np.concatenate([
-      self.offer_mask,
+      available_actions,
       [ proposed_offer ],
     ])
 
@@ -146,10 +164,14 @@ class Environment:
     state = self._make_state()
     counter_player = 'opponent' if self.player is 'self' else 'self'
 
-    if self.proposed_offer is None:
-      accepted = False
+    if offer is True:
+      if self.proposed_offer is None:
+        raise Exception('Can\'t accept if starting the round')
+
+      offer = self.get_offer(self.proposed_offer)
+      accepted = True
     else:
-      accepted = np.array_equal(offer, self.offers[self.proposed_offer])
+      accepted = False
 
     self.steps += 1
     timed_out = self.steps == 2 * self.max_rounds

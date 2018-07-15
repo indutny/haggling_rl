@@ -129,7 +129,12 @@ class PolicyAgent(Agent):
     available_offers = obs[:self.env.action_space]
     obs = obs[len(available_offers):]
 
-    proposed_offer = self.env.get_offer(obs[0])
+    proposed_offer = self.env.get_offer(int(obs[0]))
+
+    # Initial offer
+    if proposed_offer is True:
+      proposed_offer = np.zeros(MAX_TYPES, dtype='int32')
+
     obs = obs[1:]
 
     if policy is None:
@@ -139,6 +144,6 @@ class PolicyAgent(Agent):
 
     # Accept offer
     if accept:
-      return proposed_offer, policy
+      return True, policy
 
     return target, policy

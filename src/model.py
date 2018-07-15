@@ -29,7 +29,8 @@ class Model(Agent):
     self.action_space = env.action_space
     self.context_space = env.context_space
 
-    self.offers = env.offers
+    # Used for getting offers by index
+    self.env = env
 
     self.scope = tf.VariableScope(reuse=False, name=name)
     self.sess = sess
@@ -280,7 +281,7 @@ class Model(Agent):
     tensors = [ self.action, self.new_state ]
 
     action, next_state = self.sess.run(tensors, feed_dict=feed_dict)
-    return self.offers[action[0]], next_state[0]
+    return self.env.get_offer(action[0]), next_state[0]
 
   def multi_step(self, env_states, model_states):
     feed_dict = {
@@ -329,7 +330,7 @@ class Model(Agent):
       statuses = []
       for env, env_state, action in zip(env_list, env_states, actions):
         if not env.done:
-          next_env_state, reward, done, _ = env.step(self.offers[action])
+          next_env_state, reward, done, _ = env.step(self.env.get_offer(action))
         else:
           next_env_state, reward, done = env_state, np.array([ 0.0, 0.0 ]), True
 
