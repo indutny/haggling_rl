@@ -116,8 +116,8 @@ function addContestant(name, A) {
 addContestant('neural', Neural);
 // addContestant('best', BestNeural);
 //
-addContestant('half-or-all', HalfOrAll);
-// addContestant('downsize', Downsize);
+// addContestant('half-or-all', HalfOrAll);
+addContestant('downsize', Downsize);
 
 const pairs = [];
 for (const a of contestants) {

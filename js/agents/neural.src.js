@@ -36,6 +36,11 @@ function genOffers(out, offer, minObj, maxObj, i) {
 }
 
 function findOffer(offer) {
+  // Initial observation
+  if (offer === null) {
+    return 0;
+  }
+
   for (let i = 0; i < ACTION_SPACE.length; i++) {
     const other = ACTION_SPACE[i];
     let same = true;
@@ -47,7 +52,7 @@ function findOffer(offer) {
     }
 
     if (same) {
-      return i;
+      return 1 + i;
     }
   }
 
@@ -247,7 +252,7 @@ class Model {
   }
 
   call(input, state) {
-    const available = input.slice(0, ACTION_SPACE.length);
+    const available = input.slice(0, 1 + ACTION_SPACE.length);
     input = input.slice(available.length);
 
     const proposed = input[0];
@@ -283,7 +288,7 @@ class Environment {
   constructor(values, counts, maxRounds, types = 3) {
     this.types = types;
 
-    this.offer = new Array(MAX_TYPES).fill(0);
+    this.offer = null;
     this.values = new Array(MAX_TYPES).fill(0);
     this.counts = new Array(MAX_TYPES).fill(0);
 
@@ -303,7 +308,8 @@ class Environment {
   }
 
   buildObservation() {
-    return [].concat(this.available, findOffer(this.offer));
+    const canSubmit = this.offer !== null;
+    return [].concat(canSubmit, this.available, findOffer(this.offer));
   }
 
   buildContext() {
@@ -311,9 +317,13 @@ class Environment {
   }
 
   setOffer(offer) {
-    assert(offer.length <= this.offer.length);
-    for (let i = 0; i < offer.length; i++)
+    assert(offer.length <= this.counts.length);
+    if (this.offer === null) {
+      this.offer = this.counts.slice();
+    }
+    for (let i = 0; i < offer.length; i++) {
       this.offer[i] = offer[i];
+    }
   }
 }
 
@@ -350,21 +360,12 @@ module.exports = class Agent {
 
     this.state = newState;
 
-    const offer = ACTION_SPACE[action];
-
-    // First offer
-    if (!o) {
-      return offer;
+    // Accept
+    if (action === 0) {
+      return undefined;
     }
 
-    // Success
-    let accept = true;
-    for (let i = 0; i < offer.length; i++) {
-      if (o[i] !== offer[i]) {
-        accept = false;
-      }
-    }
-
-    return accept ? undefined : offer;
+    const offer = ACTION_SPACE[action - 1];
+    return offer;
   }
 };
