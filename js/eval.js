@@ -9,7 +9,6 @@ const Neural = require('./agents/neural');
 const BestNeural = require('./agents/best');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
-const Accept = require('./agents/accept');
 
 const ENABLE_LOG = false;
 const TOTAL_MATCHES = 10000;
@@ -115,12 +114,10 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
-// addContestant('neural', Neural);
 // addContestant('best', BestNeural);
-
-addContestant('half-or-all', HalfOrAll);
-// addContestant('downsize', Downsize);
-// addContestant('accept', Accept);
+//
+// addContestant('half-or-all', HalfOrAll);
+addContestant('downsize', Downsize);
 
 const pairs = [];
 for (const a of contestants) {

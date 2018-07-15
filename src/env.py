@@ -4,8 +4,6 @@ import random
 from generator import Generator, MAX_TYPES
 from ui import UI
 
-MIN_OFFER_VALUE = 0.5
-
 class Environment:
   def __init__(self,
                types=3, max_rounds=5, min_obj=1, max_obj=6, total=10.0):
@@ -35,10 +33,7 @@ class Environment:
       'opponent': objects['valuations'][1],
     }
     self.counts = objects['counts']
-    self.offer_mask = {
-      'self': self.build_offer_mask(objects['offer_mask'], 'self'),
-      'opponent': self.build_offer_mask(objects['offer_mask'], 'opponent'),
-    }
+    self.offer_mask = objects['offer_mask']
 
     if len(self.opponent_list) > 0:
       self.player = 'self' if force_self else \
@@ -137,19 +132,6 @@ class Environment:
         return 1 + i
     raise Exception('Invalid offer')
 
-  def build_offer_mask(self, mask, player):
-    values = self.values[player]
-    res = mask[:]
-    for i in range(len(mask)):
-      if not mask[i]:
-        continue
-
-      value = np.sum(values * self.offers[i], dtype='float32')
-      value /= self.total
-      res[i] = 1 if value >= MIN_OFFER_VALUE else 0
-
-    return res
-
   def _make_state(self):
     proposed_offer = self.proposed_offer
 
@@ -160,16 +142,9 @@ class Environment:
     else:
       if proposed_offer == 0:
         raise Exception('Invalid non-initial offer')
+      can_submit = 1
 
-      value = np.sum(self.get_offer(proposed_offer) * self.values[self.player],
-          dtype='float32')
-      value /= self.total
-      can_submit = 1 if value >= MIN_OFFER_VALUE else 0
-
-    available_actions = np.concatenate([
-      [ can_submit ],
-      self.offer_mask[self.player]
-    ])
+    available_actions = np.concatenate([ [ can_submit ], self.offer_mask ])
     if len(available_actions) != self.action_space:
       raise Exception('Invalid available_actions')
 
