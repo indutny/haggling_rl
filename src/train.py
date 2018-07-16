@@ -51,6 +51,7 @@ with tf.Session() as sess:
   while True:
     if EPOCH % SWITCH_EVERY == 0:
       print('Switching agents')
+      parallel.writer_step = model.writer_step
       parallel, model = model, parallel
 
       for env in env_list:
