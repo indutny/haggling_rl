@@ -41,6 +41,7 @@ class Environment:
     self.done = False
     self.status = 'active'
     self.last_reward = 0.0
+    self.last_opponent_reward = 0.0
 
     objects = self.generator.get()
     self.values = {
@@ -104,10 +105,12 @@ class Environment:
 
   def bench(self, agent, times=100):
     score = 0.0
+    op_score = 0.0
     accepted = 0
     for i in range(times):
-      is_accepted, delta = self.bench_single(agent)
-      score += delta
+      is_accepted, reward, op_reward = self.bench_single(agent)
+      score += reward
+      op_score += op_reward
 
       if is_accepted:
         accepted += 1
@@ -115,6 +118,8 @@ class Environment:
     return {
       'mean': score / float(times),
       'mean_accepted': score / float(accepted),
+      'op_mean': op_score / float(times),
+      'op_mean_accepted': op_score / float(accepted),
       'acceptance': float(accepted) / float(times),
     }
 
@@ -126,7 +131,8 @@ class Environment:
       action, agent_state = agent.step(state, agent_state)
       state, _, done, _ = self.step(action)
       if done:
-        return self.status == 'accepted', self.last_reward
+        accepted = self.status == 'accepted'
+        return accepted, self.last_reward, self.last_opponent_reward
 
     # Timed out
     return False, 0.0
@@ -147,11 +153,15 @@ class Environment:
     if pos < self.types - 1:
       available_actions[3] = 1.0
 
+    # TODO(indutny): does it help?
+    offer_value = np.sum(self.offer * self.values[self.player], dtype='float32')
+
     return np.concatenate([
       available_actions,
       [
         float(self.steps) / (2 * self.max_rounds - 1),
         float(pos),
+        offer_value,
       ],
       self.offer,
       self.values[self.player],
@@ -172,14 +182,14 @@ class Environment:
 
     self.offer[index] = value
 
-    return 0.0, self._make_state()
+    return [ 0.0, 0.0 ], self._make_state()
 
   def _next(self):
     self.positions[self.player] += 1
     if self.positions[self.player] >= self.types:
       raise Exception('Invalid move')
 
-    return 0.0, self._make_state()
+    return [ 0.0, 0.0 ], self._make_state()
 
   def _submit(self):
     # No state change here
@@ -191,7 +201,7 @@ class Environment:
     self.steps += 1
 
     done = accepted or self.steps == 2 * self.max_rounds
-    reward = 0.0
+    reward = [ 0.0, 0.0 ]
     if accepted:
       self_offer = self.offer
       opponent_offer = self.counts - self_offer
@@ -204,22 +214,26 @@ class Environment:
           dtype='float32')
       self.ui.accept('opponent', opponent_reward)
 
+      self_reward_p = self_reward / self.total
+      opponent_reward_p = opponent_reward / self.total
+      opponent_reward_p = 1.0 - opponent_reward_p
+
       # Opponent is always cheating
-      opponent_reward *= 1.2
+      opponent_reward_p *= 1.2
 
       # Stimulate bigger relative score
-      reward = self_reward - opponent_reward
+      reward = [ self_reward_p,  opponent_reward_p ]
 
       # Normalze reward
-      reward = reward / self.total
       self.status = 'accepted'
 
       # Just for benching (really messy)
       # TODO(indutny): unmess it
       self.last_reward = self_reward
+      self.last_opponent_reward = opponent_reward
     elif done:
       # Discourage absence of consensus
-      reward = -1.0
+      reward = [ 0.0, 0.0 ]
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:

@@ -41,7 +41,7 @@ class Model(Agent):
       self.layers = {
         'pre': [],
         'action': tf.layers.Dense(self.action_space, name='action'),
-        'value': tf.layers.Dense(1, name='value'),
+        'value': tf.layers.Dense(2, name='value'),
         'lstm': tf.contrib.rnn.LSTMBlockCell(name='lstm',
                                              num_units=self.config['lstm']),
       }
@@ -102,7 +102,7 @@ class Model(Agent):
     raw_action += (1.0 - available_actions) * -1e23
 
     action_probs = tf.nn.softmax(raw_action, name='action_probs')
-    value = tf.squeeze(self.layers['value'](x), name='scalar_value')
+    value = self.layers['value'](x)
 
     if not sample:
       return state, action_probs, value
@@ -122,9 +122,9 @@ class Model(Agent):
     self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
         name='train_mask')
     self.true_value = tf.placeholder(tf.float32,
-        shape=input_shape, name='true_value')
+        shape=input_shape + (2,), name='true_value')
     self.past_value = tf.placeholder(tf.float32,
-        shape=input_shape, name='past_value')
+        shape=input_shape + (2,), name='past_value')
     self.past_prob = tf.placeholder(tf.float32,
         shape=input_shape, name='past_prob')
     self.selected_action = tf.placeholder(tf.int32,
@@ -154,7 +154,7 @@ class Model(Agent):
                            axis=-1)
 
         online_advantage = true_value - value
-        round_value_loss = online_advantage ** 2 / 2.0
+        round_value_loss = tf.reduce_sum(online_advantage ** 2 / 2.0, axis=-1)
 
         action_one_hot = tf.one_hot(selected_action,
             depth=action_probs.shape[-1],
@@ -170,7 +170,7 @@ class Model(Agent):
         clipped_ratio = tf.clip_by_value(prob_ratio, 1.0 - ppo_epsilon,
             1.0 + ppo_epsilon, name='clipped_ratio')
 
-        offline_advantage = true_value - past_value
+        offline_advantage = tf.reduce_sum(true_value - past_value, axis=-1)
         round_policy_loss = -tf.minimum(
             prob_ratio * offline_advantage,
             clipped_ratio * offline_advantage)
@@ -178,7 +178,7 @@ class Model(Agent):
         entropy.append(round_entropy)
         value_loss.append(round_value_loss)
         policy_loss.append(round_policy_loss)
-        values.append(value)
+        values.append(tf.reduce_sum(value, axis=-1))
 
     mask = tf.cast(self.train_mask, tf.float32, name='float_mask')
 
@@ -293,7 +293,7 @@ class Model(Agent):
         if not env.done:
           next_env_state, reward, done, _ = env.step(action)
         else:
-          next_env_state, reward, done = env_state, 0.0, True
+          next_env_state, reward, done = env_state, np.array([ 0.0, 0.0 ]), True
 
         next_env_states.append(next_env_state)
         rewards.append(reward)
@@ -395,8 +395,8 @@ class Model(Agent):
         res['env_states'].append(pad(entry['env_states'], empty_obs))
         res['actions'].append(pad(entry['actions'], 0))
         res['action_probs'].append(pad(entry['action_probs'], 0.0))
-        res['values'].append(pad(entry['values'], 0.0))
-        res['rewards'].append(pad(rewards, 0.0))
+        res['values'].append(pad(entry['values'], np.array([ 0.0, 0.0 ])))
+        res['rewards'].append(pad(rewards, np.array([ 0.0, 0.0 ])))
         res['masks'].append(pad([ True for e in entry['dones'] ], False))
 
         # Averaged stats
@@ -410,12 +410,12 @@ class Model(Agent):
     return res
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
-    estimates = np.zeros(len(rewards), dtype='float32')
-    future = 0.0
+    estimates = np.zeros((len(rewards), 2,), dtype='float32')
+    future = np.array([ 0.0, 0.0 ])
 
     for i, reward in reversed(list(enumerate(rewards))):
       if dones[i]:
-        future = 0.0
+        future *= 0.0
       future *= gamma
       estimates[i] = reward + future
       future += reward
@@ -443,14 +443,11 @@ class Model(Agent):
       _, loss, entropy, value_loss, policy_loss, value, grad_norm = \
           self.sess.run(tensors, feed_dict=feed_dict)
 
-    end_rewards = []
+    global_rewards = []
     for rewards, masks in zip(games['rewards'], games['masks']):
-      last_reward = 0.0
       for reward, mask in zip(rewards, masks):
-        if not mask:
-          break
-        last_reward = reward
-      end_rewards.append(last_reward)
+        if mask:
+          global_rewards.append(reward)
 
     metrics = {
       'grad_norm': grad_norm,
@@ -461,7 +458,7 @@ class Model(Agent):
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
       'acceptance': games['acceptance'],
-      'reward': np.mean(end_rewards),
+      'reward': np.mean(global_rewards),
       'value': value,
     }
     self.log_summary(metrics)

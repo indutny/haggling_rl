@@ -131,6 +131,9 @@ class PolicyAgent(Agent):
     pos = obs[0]
     obs = obs[1:]
 
+    offer_value = obs[0]
+    obs = obs[1:]
+
     offer = obs[:MAX_TYPES]
     obs = obs[MAX_TYPES:]
 
