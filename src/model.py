@@ -447,7 +447,7 @@ class Model(Agent):
     for rewards, masks in zip(games['rewards'], games['masks']):
       for reward, mask in zip(rewards, masks):
         if mask:
-          global_rewards.append(reward)
+          global_rewards.append(np.sum(reward))
 
     metrics = {
       'grad_norm': grad_norm,
