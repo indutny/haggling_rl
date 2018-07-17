@@ -217,7 +217,8 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0, 0.0 ]
+      # Assume opponent gets 6.8 (got this from the leaderboard)
+      reward = [ 0.0, (1.0 - 0.68) * 1.1 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()
