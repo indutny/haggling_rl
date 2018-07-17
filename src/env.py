@@ -91,7 +91,7 @@ class Environment:
     self.done = done
     return state, reward, done, { 'player': player }
 
-  def bench(self, agent, times=1000):
+  def bench(self, agent, times=100):
     score = 0.0
     op_score = 0.0
     delta = 0.0
