@@ -149,7 +149,7 @@ class EstimatorPolicy(BasePolicy):
         self.possible_values.append(np.copy(values))
       return
 
-    for j in range(max_value):
+    for j in range(max_value + 1):
       values[i] = j
       self.fill_values(values, i + 1, total + j * count)
 
@@ -182,7 +182,7 @@ class EstimatorPolicy(BasePolicy):
 
       return res
 
-    scores = map(score_each, self.cross_map)
+    scores = list(map(score_each, self.cross_map))
 
     max_score = float('-inf')
     max_i = None
@@ -199,7 +199,9 @@ class EstimatorPolicy(BasePolicy):
     result = self.possible_offers[max_i]
     value = self.offer_value(result, self.values)
     proposed_value = self.offer_value(offer, self.values)
-    if value == proposed_value:
+
+    # Accept
+    if value <= proposed_value:
       return True, None
 
     self.used[max_i] = True

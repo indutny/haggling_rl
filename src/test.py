@@ -1,11 +1,15 @@
+import numpy as np
+
 from env import Environment
 from policy_agent import PolicyAgent
 
 env = Environment()
 
-env.add_opponent(PolicyAgent(env, policy='estimator'))
+estimator = PolicyAgent(env, policy='estimator')
 
-print(env.bench(PolicyAgent(env, policy='downsize'), times=1000))
+env.add_opponent(estimator)
+
+print(env.bench(PolicyAgent(env, policy='downsize'), times=10000))
 
 env.reset()
 print(env._make_state())

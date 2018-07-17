@@ -136,7 +136,7 @@ module.exports = class Estimator {
     const proposedValue = this.offerValue(o, this.values);
 
     // Accept
-    if (value === proposedValue) {
+    if (value <= proposedValue) {
       return undefined;
     }
 
