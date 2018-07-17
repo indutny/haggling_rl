@@ -6,8 +6,10 @@ const random = new (require('random-js'))();
 const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
-const Estimator = require('./agents/estimator');
 const BestNeural = require('./agents/best');
+
+const Estimator = require('./agents/estimator');
+const Accept = require('./agents/accept');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
@@ -116,10 +118,11 @@ function addContestant(name, A) {
 
 addContestant('neural', Neural);
 // addContestant('best', BestNeural);
-//
-addContestant('half-or-all', HalfOrAll);
+
+// addContestant('half-or-all', HalfOrAll);
 // addContestant('downsize', Downsize);
-// addContestant('estimator', Estimator);
+// addContestant('accept', Accept);
+addContestant('estimator', Estimator);
 
 const pairs = [];
 for (const a of contestants) {

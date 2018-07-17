@@ -56,8 +56,7 @@ with tf.Session() as sess:
 
       for env in env_list:
         env.clear_opponents()
-        env.add_opponent(PolicyAgent(env, policy='half_or_all'))
-        env.add_opponent(PolicyAgent(env, policy='downsize'))
+        env.add_opponent(PolicyAgent(env, policy='estimator'))
         env.add_opponent(parallel)
 
     EPOCH += 1

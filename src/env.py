@@ -94,11 +94,13 @@ class Environment:
   def bench(self, agent, times=1000):
     score = 0.0
     op_score = 0.0
+    delta = 0.0
     accepted = 0
     for i in range(times):
       is_accepted, reward, op_reward = self.bench_single(agent)
       score += reward
       op_score += op_reward
+      delta += reward - op_reward
 
       if is_accepted:
         accepted += 1
@@ -108,6 +110,7 @@ class Environment:
       'mean_accepted': score / float(accepted),
       'op_mean': op_score / float(times),
       'op_mean_accepted': op_score / float(accepted),
+      'delta': delta / float(accepted),
       'acceptance': float(accepted) / float(times),
     }
 

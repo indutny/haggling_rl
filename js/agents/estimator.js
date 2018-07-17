@@ -3,35 +3,6 @@
 const random = new (require('random-js'))();
 
 const MIN_OFFER = 0.5;
-const SAMPLE = 1000;
-
-function softmax(x) {
-  const res = x.slice();
-  let sum = 0;
-  for (let i = 0; i < res.length; i++) {
-    const t = Math.exp(res[i]);
-    sum += t;
-    res[i] = t;
-  }
-
-  for (let i = 0; i < res.length; i++) {
-    res[i] /= sum;
-  }
-  return res;
-}
-
-function sampleRandom(probs) {
-  let roll = Math.random();
-  let res = 0;
-  for (;;) {
-    roll -= probs[res];
-    if (roll <= 0) {
-      break;
-    }
-    res++;
-  }
-  return res;
-}
 
 module.exports = class Estimator {
   constructor(me, counts, values, maxRounds, log){
@@ -50,7 +21,7 @@ module.exports = class Estimator {
     this.possibleOffers = [];
 
     this.fillValues(this.counts.slice().fill(0), 0, 0);
-    this.fillOffers(this.counts.slice().fill(0), 0, 0);
+    this.fillOffers(this.counts.slice().fill(0), 0);
 
     this.possibleValues = this.possibleValues.filter((v) => {
       return !v.every((cell, i) => {
@@ -61,17 +32,20 @@ module.exports = class Estimator {
       return this.offerValue(o, this.values) >= MIN_OFFER;
     });
 
-    this.crossMap = this.possibleValues.map((values) => {
-      return this.possibleOffers.map((offer) => {
-        return {
-          offer,
-          self: this.offerValue(offer, this.values),
-          opponent: this.offerValue(this.invertOffer(offer), values),
-        };
-      });
+    this.crossMap = this.possibleOffers.map((offer) => {
+      return {
+        offer,
+        values: this.possibleValues.map((values) => {
+          return {
+            self: this.offerValue(offer, this.values),
+            opponent: this.offerValue(this.invertOffer(offer), values),
+          };
+        }),
+      };
     });
 
     this.pastOffers = [];
+    this.used = this.possibleOffers.map(_ => false);
   }
 
   invertOffer(offer) {
@@ -125,35 +99,39 @@ module.exports = class Estimator {
     this.pastOffers.push(this.invertOffer(o));
     const estimates = this.estimate(this.pastOffers);
 
-    // Raise the diff between probabilities a bit
-    const probs = softmax(estimates.map(e => e * 2));
+    const scores = this.crossMap.map((entry) => {
+      return entry.values.reduce((acc, current, i) => {
+        const estimate = estimates[i];
 
-    // Get opponent values
-    const opponentI = sampleRandom(probs);
+        // Unlikely to be accepted
+        if (current.opponent < 0.5) {
+          return acc;
+        }
 
-    // Find optimal offer
-    const optimal = this.crossMap[opponentI].filter((entry) => {
-      return entry.self >= MIN_OFFER && entry.opponent >= MIN_OFFER;
-    }).map((entry) => {
-      return {
-        offer: entry.offer,
-        delta: entry.self,
-      };
+        const delta = current.self - current.opponent;
+
+        return acc + estimate * Math.max(delta + 0.1, 0);
+      }, 0);
     });
 
-    const offerProbs = softmax(optimal.map(e => e.delta));
-    const proposedI = sampleRandom(offerProbs);
+    let max = -Infinity;
+    let maxI = null;
 
-    const proposed = optimal[proposedI].offer;
-    this.pastOffers.push(this.invertOffer(proposed));
-
-    if (this.offerValue(proposed, this.values) ===
-        this.offerValue(o, this.values)) {
-      // Accept
-      return undefined;
+    for (let i = 0; i < scores.length; i++) {
+      if (!this.used[i] && scores[i] > max) {
+        max = scores[i];
+        maxI = i;
+      }
     }
 
-    return proposed;
+    // Can't find right offer
+    if (maxI === null) {
+      return this.counts;
+    }
+
+    this.used[maxI] = true;
+
+    return this.possibleOffers[maxI];
   }
 
   estimate(pastOffers) {
@@ -161,7 +139,7 @@ module.exports = class Estimator {
     for (const values of this.possibleValues) {
       let score = 0;
       for (const o of pastOffers) {
-        score += this.offerValue(o, values);
+        score += Math.max(0, this.offerValue(o, values) - 0.5);
       }
       scores.push(score);
     }
