@@ -173,11 +173,12 @@ class EstimatorPolicy(BasePolicy):
 
         # Unlikely to be accepted
         if value['opponent'] < 0.5:
+          res += 0.1
           continue
 
         delta = value['self'] - value['opponent']
 
-        res += estimate * max(delta + 0.1, 0.0)
+        res += estimate * delta
 
       return res
 
@@ -195,8 +196,14 @@ class EstimatorPolicy(BasePolicy):
     if max_i is None:
       return False, self.counts
 
+    result = self.possible_offers[max_i]
+    value = self.offer_value(result, self.values)
+    proposed_value = self.offer_value(offer, self.values)
+    if value == proposed_value:
+      return True, None
+
     self.used[max_i] = True
-    return False, self.possible_offers[max_i]
+    return False, result
 
   def estimate(self, past_offers):
     scores = []

@@ -20,6 +20,7 @@ SAVE_EVERY = 100
 BENCH_EVERY = 10
 
 SWITCH_EVERY = 100
+RUN_PARALLEL = False
 
 # Not really constants, but meh...
 EPOCH = 0
@@ -31,6 +32,9 @@ bench_env.add_opponent(PolicyAgent(bench_env, policy='half_or_all'))
 
 for i in range(CONCURRENCY):
   env = Environment()
+  env.add_opponent(PolicyAgent(env, policy='half_or_all'))
+  env.add_opponent(PolicyAgent(env, policy='downsize'))
+  env.add_opponent(PolicyAgent(env, policy='estimator'))
   env_list.append(env)
 
 writer = tf.summary.FileWriter(LOG_DIR)
@@ -42,20 +46,23 @@ with tf.Session() as sess:
   writer.add_graph(tf.get_default_graph())
   saver = tf.train.Saver(max_to_keep=100, name=RUN_NAME)
 
-  parallel = Model(CONFIG, env_list[0], sess, writer, name='haggle_parallel')
+  if RUN_PARALLEL:
+    parallel = Model(CONFIG, env_list[0], sess, writer, name='haggle_parallel')
 
   sess.run(tf.global_variables_initializer())
   sess.graph.finalize()
 
   game_off = 0
   while True:
-    if EPOCH % SWITCH_EVERY == 0:
+    if RUN_PARALLEL and EPOCH % SWITCH_EVERY == 0:
       print('Switching agents')
       parallel.writer_step = model.writer_step
       parallel, model = model, parallel
 
       for env in env_list:
         env.clear_opponents()
+        env.add_opponent(PolicyAgent(env, policy='half_or_all'))
+        env.add_opponent(PolicyAgent(env, policy='downsize'))
         env.add_opponent(PolicyAgent(env, policy='estimator'))
         env.add_opponent(parallel)
 

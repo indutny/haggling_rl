@@ -91,9 +91,9 @@ module.exports = class Estimator {
   offer(o) {
     this.round++;
 
-    // Ask everything
+    // Pretend that they ask for everything
     if (o === undefined) {
-      return this.counts;
+      o = this.counts.map(_ => 0);
     }
 
     this.pastOffers.push(this.invertOffer(o));
@@ -105,12 +105,12 @@ module.exports = class Estimator {
 
         // Unlikely to be accepted
         if (current.opponent < 0.5) {
-          return acc;
+          return acc + 0.1;
         }
 
         const delta = current.self - current.opponent;
 
-        return acc + estimate * Math.max(delta + 0.1, 0);
+        return acc + estimate * delta;
       }, 0);
     });
 
@@ -131,7 +131,16 @@ module.exports = class Estimator {
 
     this.used[maxI] = true;
 
-    return this.possibleOffers[maxI];
+    const result = this.possibleOffers[maxI];
+    const value = this.offerValue(result, this.values);
+    const proposedValue = this.offerValue(o, this.values);
+
+    // Accept
+    if (value === proposedValue) {
+      return undefined;
+    }
+
+    return result;
   }
 
   estimate(pastOffers) {
