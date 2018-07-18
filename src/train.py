@@ -30,9 +30,18 @@ ANTAGONIST_WEIGHTS = []
 EPOCH = 0
 
 env_list = []
-bench_env = Environment()
+bench_env = {
+  'half_or_all': Environment(),
+  'downsize': Environment(),
+  'estimator': Environment()
+}
 
-bench_env.add_opponent(PolicyAgent(bench_env, policy='half_or_all'))
+bench_env['half_or_all'].add_opponent( \
+    PolicyAgent(bench_env['half_or_all'], policy='half_or_all'))
+bench_env['downsize'].add_opponent( \
+    PolicyAgent(bench_env['downsize'], policy='downsize'))
+bench_env['estimator'].add_opponent( \
+    PolicyAgent(bench_env['estimator'], policy='estimator'))
 
 for i in range(CONCURRENCY):
   env = Environment()
@@ -93,13 +102,15 @@ with tf.Session() as sess:
 
     if EPOCH % BENCH_EVERY == 0:
       print('Running benchmark...')
-      bench = bench_env.bench(model)
+      for tag, env in bench_env.items():
+        bench = env.bench(model)
 
-      # TODO(indutny): move logging to model?
-      summary = tf.Summary()
-      for key, value in bench.items():
-        summary.value.add(tag='bench/{}'.format(key), simple_value=value)
-      writer.add_summary(summary, model.writer_step)
+        # TODO(indutny): move logging to model?
+        summary = tf.Summary()
+        for key, value in bench.items():
+          summary.value.add(tag='bench_{}/{}'.format(tag, key),
+              simple_value=value)
+        writer.add_summary(summary, model.writer_step)
 
     if EPOCH < ANTAGONIST_EPOCH:
       continue
