@@ -491,7 +491,7 @@ class Model(Agent):
       'policy_loss': policy_loss,
       'steps_per_game': games['steps_per_game'],
       'acceptance': games['acceptance'],
-      'reward': np.mean(global_rewards),
+      'reward': np.mean(np.sum(global_rewards, axis=-1)),
       'value': value,
     }
     self.log_summary(metrics)
