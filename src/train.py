@@ -19,6 +19,8 @@ CONCURRENCY = 128
 SAVE_EVERY = 100
 BENCH_EVERY = 10
 
+SINGLUAR = True
+
 MAX_ANTAGONISTS = 0
 NUM_ANTAGONISTS = 0
 ANTAGONIST_EPOCH = 1000000000
@@ -68,6 +70,10 @@ with tf.Session() as sess:
     antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i),
         trainable=False)
     ANTAGONISTS.append(antagonist)
+
+  if SINGULAR:
+    for env in env_list:
+      env.add_opponent(model)
 
   sess.run(tf.global_variables_initializer())
   sess.graph.finalize()
