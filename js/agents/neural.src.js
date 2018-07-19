@@ -275,8 +275,8 @@ class Model {
     }
     const probs = softmax(rawAction);
 
-    const action = this.random(probs);
-    // const action = this.max(probs);
+    // const action = this.random(probs);
+    const action = this.max(probs);
 
     const value = this.value.call(x);
 
