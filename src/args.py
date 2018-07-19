@@ -14,7 +14,9 @@ def parse_args(kind=None):
   parser.add_argument('--gamma', type=float, default=0.99)
   parser.add_argument('--tag')
 
-  if kind == 'transform-save':
+  if kind == 'train':
+    parser.add_argument('--restore')
+  elif kind == 'transform-save':
     parser.add_argument('source')
     parser.add_argument('target')
   elif kind == 'check-js':

@@ -8,7 +8,7 @@ from env import Environment
 from model import Model
 from args import parse_args
 
-RUN_NAME, CONFIG, _ = parse_args()
+RUN_NAME, CONFIG, args = parse_args(kind='train')
 print('Booting up {}'.format(RUN_NAME))
 print('config', CONFIG)
 
@@ -58,6 +58,10 @@ with tf.Session() as sess:
 
   writer.add_graph(tf.get_default_graph())
   saver = tf.train.Saver(max_to_keep=100, name=RUN_NAME)
+
+  if not args.restore is None:
+    print('Restoring from {}'.format(args.restore))
+    saver.restore(sess, args.restore)
 
   for i in range(NUM_ANTAGONISTS):
     print('Initializing antagonist {}'.format(i))
