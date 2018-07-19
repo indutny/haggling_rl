@@ -6,6 +6,7 @@ const random = new (require('random-js'))();
 const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
+const NeuralB = require('./agents/neural_b');
 const BestNeural = require('./agents/best');
 
 const Estimator = require('./agents/estimator');
@@ -117,6 +118,7 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
+// addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
 // addContestant('half-or-all', HalfOrAll);
