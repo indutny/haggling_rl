@@ -61,10 +61,6 @@ with tf.Session() as sess:
   writer.add_graph(tf.get_default_graph())
   saver = tf.train.Saver(max_to_keep=100, name=RUN_NAME)
 
-  if not args.restore is None:
-    print('Restoring from {}'.format(args.restore))
-    saver.restore(sess, args.restore)
-
   for i in range(NUM_ANTAGONISTS):
     print('Initializing antagonist {}'.format(i))
     antagonist = Model(CONFIG, env, sess, None, name='antagonist_{}'.format(i),
@@ -77,6 +73,10 @@ with tf.Session() as sess:
 
   sess.run(tf.global_variables_initializer())
   sess.graph.finalize()
+
+  if not args.restore is None:
+    print('Restoring from {}'.format(args.restore))
+    saver.restore(sess, args.restore)
 
   game_off = 0
   while True:
