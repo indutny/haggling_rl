@@ -14,8 +14,8 @@ const Accept = require('./agents/accept');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
-const ENABLE_LOG = false;
-const TOTAL_MATCHES = 10000;
+const ENABLE_LOG = true;
+const TOTAL_MATCHES = 1;
 
 function log(msg) {
   if (ENABLE_LOG) {
