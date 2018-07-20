@@ -97,6 +97,9 @@ Initial LSTM state is generated using game configuration vector (`values` +
 round to round, and the training works with BPTT of full length (5 rounds
 in default configuration).
 
+The loss is [A2C][2] with [PPO][3]. The training consisted of the cycles of
+exploration phases (with 1024 games) and reflection phases using collected data.
+
 #### LICENSE
 
 This software is licensed under the MIT License.
@@ -124,3 +127,5 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [0]: https://github.com/hola/challenge_haggling
 [1]: http://tensorflow.org/
+[2]: https://blog.openai.com/baselines-acktr-a2c/
+[3]: https://blog.openai.com/openai-baselines-ppo/
