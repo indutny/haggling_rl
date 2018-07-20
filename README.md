@@ -189,6 +189,11 @@ Copy of generator from the contest's repo.
 
 Boilerplate code.
 
+## Side notes
+
+Huge thanks to everyone who agreed to play with our agent on the
+[unofficial arena][5]!
+
 #### LICENSE
 
 This software is licensed under the MIT License.
@@ -219,3 +224,4 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 [2]: https://blog.openai.com/baselines-acktr-a2c/
 [3]: https://blog.openai.com/openai-baselines-ppo/
 [4]: https://github.com/openai/gym/blob/master/gym/core.py
+[5]: https://github.com/indutny/alt-haggle
