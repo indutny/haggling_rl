@@ -19,6 +19,8 @@ class Environment:
     self.offers = self.generator.offers
     self.action_space = 1 + len(self.offers)
 
+    self.no_consensus_score = 0.68
+
     state = self.reset()
 
     # +- on each type, left/right, submit button
@@ -217,8 +219,7 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      # Assume opponent gets 6.8 (got this from the leaderboard)
-      reward = [ 0.0, (1.0 - 0.68) * 1.1 ]
+      reward = [ 0.0, (1.0 - self.no_consensus_score) * 1.1 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()

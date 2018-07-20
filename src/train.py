@@ -18,6 +18,7 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 CONCURRENCY = 128
 SAVE_EVERY = 100
 BENCH_EVERY = 10
+NO_CONSENSUS_DISCOUNT = 4000 # number of epochs until discount disappears
 
 SINGULAR = CONFIG['singular']
 
@@ -103,6 +104,16 @@ with tf.Session() as sess:
       sess.run(ops, feed_dict=feed_dict)
 
       print('Time for real games!')
+
+    # Apply no consensus discount
+    no_consensus_score = 0.75 * min(1.0, float(EPOCH) / NO_CONSENSUS_DISCOUNT)
+    summary = tf.Summary()
+    summary.value.add(tag='train/no_cons_score', \
+        simple_value=no_consensus_score)
+    writer.add_summary(summary, model.writer_step)
+
+    for env in env_list:
+      env.no_consensus_score = no_consensus_score
 
     model.explore(env_list, game_count=1024, game_off=game_off)
     game_off += 1024
