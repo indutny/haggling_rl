@@ -5,7 +5,7 @@ from policy_agent import PolicyAgent
 from model import Model
 from args import parse_args
 
-RUN_NAME, CONFIG, args = parse_args('check-js')
+_, CONFIG, args = parse_args('check-js')
 
 env = Environment()
 
