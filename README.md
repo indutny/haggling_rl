@@ -1,0 +1,126 @@
+# Haggling RL
+
+A submission for [hola! JS Challenge Summer 2018: Haggling][0].
+
+## How this works
+
+The approach of this submission is to train an agent using Reinforcement
+Learning with policy gradients. At each round of the game the model is invoked
+with previous (or initial) state, current offer, and returns a vector with
+probabilities for each possible counter offer.
+
+Our agent can work either probabilistically (by sampling the counter offers
+using the generated probabilities) or deterministically (by choosing offer with
+maximum probability). At late stages of training probability for the preferred
+offer becomes very close to `1`, making deterministic selection a natural
+choice.
+
+## How to train the model
+
+The model is written using Python3 and [TensorFlow][1], and can be trained by
+executing following commands;
+
+```sh
+pip3 install tensorflow
+python3 src/train.py --pre=none --lstm=128 --ppo_epochs=1
+# Then, after rewards stabilize (around epoch 15000)
+python3 src/train.py --pre=none --lstm=128 --ppo_epochs=1 --singular \
+  --entropy=0.0 --gamma=0.999 \
+  --restore ./saves/run-name/last-checkpoint
+```
+
+First phase trains exclusively against hand-written agents. The second phase
+continuous to train against the same agents, but also add the current model
+itself to the training pool. Such self-play appears to help raise acceptance
+rates for previously unseen strategies.
+
+The `entropy` coefficient is set to zero at later stage to promote deterministic
+strategies. In our runs entropy value is around `1.2` for first stage, and drops
+lower than `0.4` for the second stage. `gamma` parameter was selected
+heuristically and may not be generally required for reproducing the results.
+Further experiments are needed to confirm optimality of the values of these
+parameters.
+
+_NOTE: Many different configurations were considered with various LSTM sizes,
+and different numbers of `pre` layers. LSTM with 128 units and no `pre` layer
+appears to work best for provided hand-written agents._
+
+_NOTE: While PPO epochs can take different values, apparently all of them but
+`1` reduces the maximum achieved reward for hand-written agents. Thus only
+`--ppo_epochs=` were used throughout the experiments._
+
+## How to build JS agent
+
+First, the weights of the trained model has to be exported:
+```sh
+python3 src/transform-save.py --pre=none --lstm=128 --ppo_epochs=1 \
+  ./saves/run-name/last-checkpoint \
+  export/weights.json
+```
+
+Next the JS agent has to be compiled with exported weights:
+```sh
+node js/build.js js/agents/neural.src.js export/weights.json > \
+  js/agents/neural.js
+```
+
+The resulting file size is around 3mb for LSTM with 128 units and no pre layers.
+Compression might have been used to reduce the file size, but it wasn't explored
+due to high file size limits in the contest rules.
+
+## Architecture
+
+Initially, the agent had 5 possible actions: prev/next type, increment/decrement
+count, submit. Despite acceptable results, the model took very long time to
+train due to the count of the neural network invocations (mean step count
+varied from 12 to 25 per game). The stability was poor too, because the model
+could enter increment/decrement (or prev/next) loop and time out on certain
+offers. While we admit that such solution was more general and could potentially
+apply to different configurations, for the final submission we decided to use
+different scheme.
+
+All possible offers are enumerated from 1 to N and are the new actions of the
+network. Action 0 accepts the offer. All actions end the turn. Since in general
+configurations there could be thousands of possible offers, each input/output
+offer is mapped to a compact 128-dimensional embedding. At the input this
+embedding is fed directly to the LSTM layer, the dot product of LSTM output and
+embedding produces probabilities of the desired actions (after softmax). Same
+embedding is used for input and output.
+
+An available action mask is applied to filter out impossible offers and speed up
+the training process. Disallowed actions are mapped to large negative number to
+make them zero after the softmax activation, allowed actions are left as they
+are.
+
+Initial LSTM state is generated using game configuration vector (`values` +
+`counts`) and dense layer with `relu` activation. The state is passed from
+round to round, and the training works with BPTT of full length (5 rounds
+in default configuration).
+
+#### LICENSE
+
+This software is licensed under the MIT License.
+
+Copyright Fedor Indutny, 2018.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the
+following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[0]: https://github.com/hola/challenge_haggling
+[1]: http://tensorflow.org/
