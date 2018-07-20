@@ -100,6 +100,12 @@ in default configuration).
 The loss is [A2C][2] with [PPO][3]. The training consisted of the cycles of
 exploration phases (with 1024 games) and reflection phases using collected data.
 
+The value function is two dimensional vector. First element is the self-reward
+(i.e. how much value the agent wins from the session), second element is a
+scaled opponent-reward (i.e. `(1.0 - opponent_value) * scale`). `scale` is
+heuristically chosen to be `1.1` to prevent saddle points during self-play.
+Further research might be needed to confirm or deny its importance.
+
 ## Source code
 
 There's no excuse for poorly written Python code. Please take in account that
@@ -189,7 +195,7 @@ Copy of generator from the contest's repo.
 
 Boilerplate code.
 
-## Side notes
+## Thank you
 
 Huge thanks to everyone who agreed to play with our agent on the
 [unofficial arena][5]!
