@@ -36,7 +36,7 @@ rates for previously unseen strategies.
 
 The `entropy` coefficient is set to zero at later stage to promote deterministic
 strategies. In our runs entropy value is around `1.2` for first stage, and drops
-lower than `0.4` for the second stage. `gamma` parameter was selected
+lower than `0.3` for the second stage. `gamma` parameter was selected
 heuristically and may not be generally required for reproducing the results.
 Further experiments are needed to confirm optimality of the values of these
 parameters.
