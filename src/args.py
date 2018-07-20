@@ -3,16 +3,17 @@ import os
 
 def parse_args(kind=None):
   parser = argparse.ArgumentParser()
-  parser.add_argument('--pre', default='64')
+  parser.add_argument('--pre', default='none')
   parser.add_argument('--lstm', type=int, default=128)
   parser.add_argument('--value_scale', type=float, default=0.5)
   parser.add_argument('--lr', type=float, default=0.001)
   parser.add_argument('--grad_clip', type=float, default=0.5)
   parser.add_argument('--ppo', type=float, default=0.1)
-  parser.add_argument('--ppo_epochs', type=int, default=10)
+  parser.add_argument('--ppo_epochs', type=int, default=1)
   parser.add_argument('--entropy', type=float, default=0.01)
   parser.add_argument('--gamma', type=float, default=0.99)
   parser.add_argument('--tag')
+  parser.add_argument('--singular', default=False, action="store_true")
 
   if kind == 'train':
     parser.add_argument('--restore')
@@ -36,6 +37,9 @@ def parse_args(kind=None):
         '-e' + str(args.entropy) + \
         '-g' + str(args.gamma)
 
+    if args.singular:
+      run_name += '-sing'
+
   if not args.tag is None:
     run_name = str(args.tag) + '-' + run_name
 
@@ -54,6 +58,7 @@ def parse_args(kind=None):
     'ppo_epochs': args.ppo_epochs,
     'entropy': args.entropy,
     'gamma': args.gamma,
+    'singular': args.singular,
   }
 
   return run_name, config, args
