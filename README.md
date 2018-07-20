@@ -100,6 +100,95 @@ in default configuration).
 The loss is [A2C][2] with [PPO][3]. The training consisted of the cycles of
 exploration phases (with 1024 games) and reflection phases using collected data.
 
+## Source code
+
+There's no excuse for poorly written Python code. Please take in account that
+the code base is a result of hundreds of different experiments. Many of them
+required rewriting or commenting out different parts of the code. Our Python
+skill are sub-par, and huge amount of rewrites didn't help to improve the
+quality of the source!
+
+Many files serve no purpose outside of the experiments they were used in, and
+are left in the source tree for posterity.
+
+Now with a disclaimer above, let's turn to the code:
+
+### `src/env.py`
+
+Environment implementation. See [OpenAI's gym][4] for description of public
+methods. Each environment has configurable pool of opponents, each opponent
+is pooled at random at the start of new game.
+
+### `src/policy_agent.py`
+
+Implementation of hand-written agents. The most important are:
+
+* `downsize`
+* `half_or_all` (`example.js` in the contest's repository)
+* `estimator`
+
+All three of them were used for training the model for the final submission.
+
+### `src/model.py`
+
+Neural Network agent. The messiest part of the project, but inarguably the most
+important part of it.
+
+### `src/train.py`
+
+A training loop, and few routines to periodically save model to disk.
+
+### `src/transform-save.py`
+
+A tool that exports TensorFlow model weights to JSON file.
+
+### `src/generator.py`
+
+Generator of possible configurations. A python port of the similar script from
+the contest's repository.
+
+### `src/agent.py`
+
+Base class for all agents (including hand-written ones). No methods there, but
+there could be some!
+
+### `src/check-js.py`
+
+An outdated script to verify that model output matches between Python and JS.
+
+### `src/test.py`
+
+Just a boilerplate for small experiments.
+
+### `src/ui.py`
+
+A console-based UI that could be used to display the played games in a way
+similar to the one in the contest's repo.
+
+### `js/agents/neural.js`
+
+The result of the training.
+
+### `js/remote.js`
+
+A tool to fetch score and current position from the leaderboard.
+
+### `js/eval.js`
+
+Fast local arena to evaluate the trained model against other JS agents.
+
+### `js/distributions.js`
+
+Junk.
+
+### `js/generate.js`
+
+Copy of generator from the contest's repo.
+
+### `js/test.js`
+
+Boilerplate code.
+
 #### LICENSE
 
 This software is licensed under the MIT License.
@@ -129,3 +218,4 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 [1]: http://tensorflow.org/
 [2]: https://blog.openai.com/baselines-acktr-a2c/
 [3]: https://blog.openai.com/openai-baselines-ppo/
+[4]: https://github.com/openai/gym/blob/master/gym/core.py
