@@ -6,6 +6,7 @@ const random = new (require('random-js'))();
 const Generator = require('./generate').Generator;
 
 const Neural = require('./agents/neural');
+const Neural07 = require('./agents/neural_07');
 const NeuralB = require('./agents/neural_b');
 const BestNeural = require('./agents/best');
 
@@ -14,8 +15,8 @@ const Accept = require('./agents/accept');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
 
-const ENABLE_LOG = true;
-const TOTAL_MATCHES = 1;
+const ENABLE_LOG = false;
+const TOTAL_MATCHES = 1000;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -118,13 +119,14 @@ function addContestant(name, A) {
 }
 
 addContestant('neural', Neural);
+addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
 // addContestant('half-or-all', HalfOrAll);
 // addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
-addContestant('estimator', Estimator);
+// addContestant('estimator', Estimator);
 
 const pairs = [];
 for (const a of contestants) {
