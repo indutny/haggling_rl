@@ -123,8 +123,8 @@ addContestant('neural', Neural);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
-// addContestant('half-or-all', HalfOrAll);
-addContestant('downsize', Downsize);
+addContestant('half-or-all', HalfOrAll);
+// addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
 // addContestant('estimator', Estimator);
 
