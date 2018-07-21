@@ -7,7 +7,9 @@ Possible directions of further research.
 Don't reward deals that bring less that half of the total reward. This seems to
 be promising, as it correctly trains on estimator to have lower acceptance rate
 than on other policy agents (around 60%). However, it looks like the acceptance
-rates are generally lower than in continuous reward
+rates are generally lower than in continuous reward. Perhaps, higher no
+consensus penalty would help? It might be a good idea to try changing the
+minimum deal value with time.
 
 ## Various no consensus penalties
 
