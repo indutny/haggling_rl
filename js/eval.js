@@ -118,7 +118,7 @@ function addContestant(name, A) {
   });
 }
 
-// addContestant('neural', Neural);
+addContestant('neural', Neural);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
@@ -126,7 +126,7 @@ function addContestant(name, A) {
 // addContestant('half-or-all', HalfOrAll);
 addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
-addContestant('estimator', Estimator);
+// addContestant('estimator', Estimator);
 
 const pairs = [];
 for (const a of contestants) {
