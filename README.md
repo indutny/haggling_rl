@@ -25,7 +25,7 @@ pip3 install tensorflow
 python3 src/train.py --pre=none --lstm=128 --ppo_epochs=1
 # Then, after rewards stabilize (around epoch 15000)
 python3 src/train.py --pre=none --lstm=128 --ppo_epochs=1 --singular \
-  --entropy=0.0 --gamma=0.999 \
+  --entropy=0.0 --gamma=0.999 --no_cons_score=0.71 \
   --restore ./saves/run-name/last-checkpoint
 ```
 
@@ -36,10 +36,10 @@ rates for previously unseen strategies.
 
 The `entropy` coefficient is set to zero at later stage to promote deterministic
 strategies. In our runs entropy value is around `1.2` for first stage, and drops
-lower than `0.3` for the second stage. `gamma` parameter was selected
-heuristically and may not be generally required for reproducing the results.
-Further experiments are needed to confirm optimality of the values of these
-parameters.
+lower than `0.3` for the second stage. `gamma` and `no_cons_score` parameters
+were selected heuristically and may not be generally required for reproducing
+the results. Further experiments are needed to confirm optimality of the values
+of these parameters.
 
 _NOTE: Many different configurations were considered with various LSTM sizes,
 and different numbers of `pre` layers. LSTM with 128 units and no `pre` layer
