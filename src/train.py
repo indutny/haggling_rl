@@ -18,7 +18,6 @@ SAVE_DIR = os.path.join('.', 'saves', RUN_NAME)
 CONCURRENCY = 128
 SAVE_EVERY = 100
 BENCH_EVERY = 50
-NO_CONSENSUS_DISCOUNT = 4000 # number of epochs until discount disappears
 
 SINGULAR = CONFIG['singular']
 
