@@ -2,6 +2,8 @@
 
 A submission for [hola! JS Challenge Summer 2018: Haggling][0].
 
+Check out [Github Repo][6] for the latest source code.
+
 ## How this works
 
 The approach of this submission is to train an agent using Reinforcement
@@ -231,3 +233,4 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 [3]: https://blog.openai.com/openai-baselines-ppo/
 [4]: https://github.com/openai/gym/blob/master/gym/core.py
 [5]: https://github.com/indutny/alt-haggle
+[6]: https://github.com/indutny/haggling_rl
