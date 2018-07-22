@@ -1,7 +1,5 @@
 'use strict'; /*jslint node:true*/
 
-const random = new (require('random-js'))();
-
 module.exports = class Accept {
   constructor(me, counts, values, max_rounds, log){
     this.counts = counts;
