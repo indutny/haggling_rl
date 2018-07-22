@@ -19,7 +19,7 @@ class Environment:
     self.offers = self.generator.offers
     self.action_space = 1 + len(self.offers)
 
-    self.consensus_reward = 0.7
+    self.consensus_reward = 0.68
 
     state = self.reset()
 
