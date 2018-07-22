@@ -1,7 +1,5 @@
 'use strict'; /*jslint node:true*/
 
-const random = new (require('random-js'))();
-
 const MIN_OFFER = 0.5;
 
 module.exports = class Estimator {
@@ -9,6 +7,7 @@ module.exports = class Estimator {
     this.counts = counts;
     this.values = values;
     this.maxRounds = maxRounds;
+    this.log = log;
 
     this.round = 0;
 
@@ -99,18 +98,22 @@ module.exports = class Estimator {
     this.pastOffers.push(this.invertOffer(o));
     const estimates = this.estimate(this.pastOffers);
 
+    for (let i = 0; i < this.possibleValues.length; i++) {
+      this.log('values=' + this.possibleValues[i] +
+               ' estimate=' + estimates[i].toFixed(3));
+    }
+
     const scores = this.crossMap.map((entry) => {
       return entry.values.reduce((acc, current, i) => {
         const estimate = estimates[i];
 
-        // Unlikely to be accepted
-        if (current.opponent < 0.5) {
-          return acc + 0.1;
+        let value = 0;
+        if (current.opponent >= 0.5) {
+          const delta = current.self - current.opponent;
+          value = delta;
         }
 
-        const delta = current.self - current.opponent;
-
-        return acc + estimate * delta;
+        return acc + estimate * value;
       }, 0);
     });
 
@@ -145,13 +148,15 @@ module.exports = class Estimator {
 
   estimate(pastOffers) {
     const scores = [];
+    let sum = 0;
     for (const values of this.possibleValues) {
       let score = 0;
       for (const o of pastOffers) {
-        score += Math.max(0, this.offerValue(o, values) - 0.5);
+        score += this.offerValue(o, values);
       }
+      sum += score;
       scores.push(score);
     }
-    return scores;
+    return scores.map((score) => score / sum);
   }
 };

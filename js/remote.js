@@ -8,7 +8,7 @@ const date = process.argv[3];
 let bestMean = 0;
 let best = null;
 
-fetch('https://hola.org/challenges/haggling/scores/standard').then((res) => {
+fetch('https://hola.org/challenges/haggling/scores/standard_1s').then((res) => {
   return res.json();
 }).then((json) => {
   let entries = [];

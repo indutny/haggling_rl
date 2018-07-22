@@ -1,7 +1,5 @@
 'use strict'; /*jslint node:true*/
 
-const random = new (require('random-js'))();
-
 module.exports = class Downsize {
   constructor(me, counts, values, max_rounds, log){
     this.counts = counts;
@@ -47,7 +45,7 @@ module.exports = class Downsize {
     }
 
     const minOffers = offers.filter((o) => o.value === minValue);
-    return random.pick(minOffers).offer;
+    return minOffers[(Math.random() * minOffers.length) | 0].offer;
   }
 
   findOffers(offers, offer, minimum, i, total) {
