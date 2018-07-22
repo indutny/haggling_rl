@@ -14,8 +14,8 @@ def parse_args(kind=None):
   parser.add_argument('--gamma', type=float, default=0.99)
   parser.add_argument('--tag')
   parser.add_argument('--singular', default=False, action="store_true")
-  parser.add_argument('--cons_reward', type=float, default=0.68)
-  parser.add_argument('--cons_sweep', type=int, default=1)
+  parser.add_argument('--no_cons_score', type=float, default=0.68)
+  parser.add_argument('--no_cons_sweep', type=int, default=1)
 
   if kind == 'train':
     parser.add_argument('--restore')
@@ -38,13 +38,13 @@ def parse_args(kind=None):
         '-pe' + str(args.ppo_epochs) + \
         '-e' + str(args.entropy) + \
         '-g' + str(args.gamma) + \
-        '-cr' + str(args.cons_reward)
+        '-nc' + str(args.no_cons_score)
 
     if args.singular:
       run_name += '-sing'
 
-    if args.cons_sweep > 1:
-      run_name += '-cs' + str(args.cons_sweep)
+    if args.no_cons_sweep > 1:
+      run_name += '-ncs' + str(args.no_cons_sweep)
 
   if not args.tag is None:
     run_name = str(args.tag) + '-' + run_name
@@ -65,7 +65,7 @@ def parse_args(kind=None):
     'entropy': args.entropy,
     'gamma': args.gamma,
     'singular': args.singular,
-    'cons_reward': args.cons_reward,
+    'no_cons_score': args.no_cons_score,
   }
 
   return run_name, config, args
