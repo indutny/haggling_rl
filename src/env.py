@@ -19,7 +19,7 @@ class Environment:
     self.offers = self.generator.offers
     self.action_space = 1 + len(self.offers)
 
-    self.no_consensus_score = 0.68
+    self.consensus_reward = 0.68
 
     state = self.reset()
 
@@ -188,7 +188,6 @@ class Environment:
     timed_out = self.steps == 2 * self.max_rounds
 
     done = accepted or timed_out
-    reward = [ 0.0, 0.0 ]
     if accepted:
       self_offer = offer
       opponent_offer = self.counts - offer
@@ -208,8 +207,10 @@ class Environment:
       # Opponent cheats a bit to prevent saddle-points
       opponent_reward_p *= 1.1
 
-      # Stimulate bigger relative score
-      reward = [ self_reward_p, opponent_reward_p ]
+      if self_reward_p < 0.5:
+        reward = [ 0.0, 0.0, self.consensus_reward / 2.0 ]
+      else:
+        reward = [ self_reward_p, opponent_reward_p, self.consensus_reward ]
 
       self.status = 'accepted'
 
@@ -219,12 +220,14 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0, (1.0 - self.no_consensus_score) * 1.1 ]
+      reward = [ 0.0, 0.0, 0.0 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
+      # Minor reward for making a step
+      reward = [ 0.0, 0.0, 0.1 ]
       self.ui.offer(offer, self.counts, self.player)
 
     # Switch player

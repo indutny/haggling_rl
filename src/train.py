@@ -105,10 +105,10 @@ with tf.Session() as sess:
       print('Time for real games!')
 
     # Apply no consensus discount
-    no_consensus_score = CONFIG['no_cons_score'] * \
-        min(1.0, float(EPOCH) / args.no_cons_sweep)
+    no_consensus_score = CONFIG['cons_reward'] * \
+        min(1.0, float(EPOCH) / args.cons_sweep)
     summary = tf.Summary()
-    summary.value.add(tag='train/no_cons_score', \
+    summary.value.add(tag='train/cons_reward', \
         simple_value=no_consensus_score)
     writer.add_summary(summary, model.writer_step)
 

@@ -51,7 +51,7 @@ class Model(Agent):
              shape=(self.action_space, self.config['lstm'])),
         'pre': [],
         'action': tf.layers.Dense(self.action_space, name='action'),
-        'value': tf.layers.Dense(2, name='value'),
+        'value': tf.layers.Dense(3, name='value'),
         'context': tf.layers.Dense(self.config['lstm'] * 2,
             activation=tf.nn.relu, name='context'),
         'lstm': tf.contrib.rnn.LSTMBlockCell(name='lstm',
@@ -148,9 +148,9 @@ class Model(Agent):
     self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
         name='train_mask')
     self.true_value = tf.placeholder(tf.float32,
-        shape=input_shape + (2,), name='true_value')
+        shape=input_shape + (3,), name='true_value')
     self.past_value = tf.placeholder(tf.float32,
-        shape=input_shape + (2,), name='past_value')
+        shape=input_shape + (3,), name='past_value')
     self.past_prob = tf.placeholder(tf.float32,
         shape=input_shape, name='past_prob')
     self.selected_action = tf.placeholder(tf.int32,
@@ -332,7 +332,8 @@ class Model(Agent):
         if not env.done:
           next_env_state, reward, done, _ = env.step(self.env.get_offer(action))
         else:
-          next_env_state, reward, done = env_state, np.array([ 0.0, 0.0 ]), True
+          next_env_state, reward, done = \
+              env_state, np.array([ 0.0, 0.0, 0.0 ]), True
 
         next_env_states.append(next_env_state)
         rewards.append(reward)
@@ -408,6 +409,8 @@ class Model(Agent):
 
     empty_obs = [ 0.0 ] * self.observation_space
 
+    zero_value = np.array([ 0.0, 0.0, 0.0 ])
+
     for game_index in range(count // len(env_list)):
       log = self.game(env_list)
 
@@ -425,8 +428,8 @@ class Model(Agent):
         res['env_states'].append(pad(entry['env_states'], empty_obs))
         res['actions'].append(pad(entry['actions'], 0))
         res['action_probs'].append(pad(entry['action_probs'], 0.0))
-        res['values'].append(pad(entry['values'], np.array([ 0.0, 0.0 ])))
-        res['rewards'].append(pad(rewards, np.array([ 0.0, 0.0 ])))
+        res['values'].append(pad(entry['values'], zero_value))
+        res['rewards'].append(pad(rewards, zero_value))
         res['masks'].append(pad([ True for e in entry['dones'] ], False))
 
         res['env_contexts'].append(entry['env_context'])
@@ -442,8 +445,8 @@ class Model(Agent):
     return res
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
-    estimates = np.zeros((len(rewards), 2,), dtype='float32')
-    future = np.array([ 0.0, 0.0 ])
+    estimates = np.zeros((len(rewards), 3,), dtype='float32')
+    future = np.array([ 0.0, 0.0, 0.0 ])
 
     for i, reward in reversed(list(enumerate(rewards))):
       if dones[i]:
