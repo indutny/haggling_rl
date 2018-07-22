@@ -206,7 +206,7 @@ class Environment:
       opponent_reward_p = opponent_reward / self.total
 
       # Encourage more rounds
-      bonus = float(self.steps) / self.max_rounds
+      bonus = 0.0
 
       # Encourage winning over opponent
       if opponent_reward_p <= self_reward_p:
