@@ -210,7 +210,7 @@ class Environment:
 
       # Encourage winning over opponent
       if opponent_reward_p <= self_reward_p:
-        bonus += 0.1
+        bonus = 0.1
 
       # Stimulate bigger relative score
       reward = [ self_reward_p, bonus ]
