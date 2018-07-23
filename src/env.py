@@ -203,17 +203,13 @@ class Environment:
 
       # Normalze rewards
       self_reward_p = self_reward / self.total
-      opponent_reward_p = opponent_reward / self.total
+      opponent_reward_p = 1.0 - (opponent_reward / self.total)
 
-      # Encourage more rounds
-      bonus = 0.0
-
-      # Encourage winning over opponent
-      if opponent_reward_p <= self_reward_p:
-        bonus = 0.1
+      # Opponent cheats a bit to prevent saddle-points
+      opponent_reward_p *= 1.1
 
       # Stimulate bigger relative score
-      reward = [ self_reward_p, bonus ]
+      reward = [ self_reward_p, opponent_reward_p ]
 
       self.status = 'accepted'
 
@@ -223,6 +219,7 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
+      reward = [ 0.0, (1.0 - self.no_consensus_score) * 1.1 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()
