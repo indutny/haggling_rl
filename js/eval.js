@@ -18,7 +18,7 @@ const Downsize = require('./agents/downsize');
 const Random = require('./agents/random');
 
 const ENABLE_LOG = false;
-const TOTAL_MATCHES = 10000;
+const TOTAL_MATCHES = 1000;
 
 function log(msg) {
   if (ENABLE_LOG) {
