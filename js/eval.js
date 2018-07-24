@@ -9,6 +9,7 @@ const Neural = require('./agents/neural');
 const Neural07 = require('./agents/neural_07');
 const NeuralB = require('./agents/neural_b');
 const BestNeural = require('./agents/best');
+const BetterNeural = require('./agents/neural_better');
 
 const Estimator = require('./agents/estimator');
 const Accept = require('./agents/accept');
@@ -119,17 +120,18 @@ function addContestant(name, A) {
   });
 }
 
-// addContestant('neural', Neural);
+addContestant('neural', Neural);
+addContestant('better', BetterNeural);
 // addContestant('neural', Neural);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
-addContestant('half-or-all', HalfOrAll);
+// addContestant('half-or-all', HalfOrAll);
 // addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
 // addContestant('random', Random);
-addContestant('estimator', Estimator);
+// addContestant('estimator', Estimator);
 
 const pairs = [];
 for (const a of contestants) {
