@@ -14,6 +14,7 @@ const Estimator = require('./agents/estimator');
 const Accept = require('./agents/accept');
 const HalfOrAll = require('./agents/half-or-all');
 const Downsize = require('./agents/downsize');
+const Random = require('./agents/random');
 
 const ENABLE_LOG = false;
 const TOTAL_MATCHES = 10000;
@@ -118,15 +119,16 @@ function addContestant(name, A) {
   });
 }
 
-addContestant('neural', Neural);
+// addContestant('neural', Neural);
 // addContestant('neural', Neural);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
-// addContestant('half-or-all', HalfOrAll);
+addContestant('half-or-all', HalfOrAll);
 // addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
+// addContestant('random', Random);
 addContestant('estimator', Estimator);
 
 const pairs = [];

@@ -7,6 +7,7 @@ module.exports = class Estimator {
     this.counts = counts;
     this.values = values;
     this.maxRounds = maxRounds;
+    this.log = log;
 
     this.round = 0;
 
@@ -30,20 +31,7 @@ module.exports = class Estimator {
       return this.offerValue(o, this.values) >= MIN_OFFER;
     });
 
-    this.crossMap = this.possibleOffers.map((offer) => {
-      return {
-        offer,
-        values: this.possibleValues.map((values) => {
-          return {
-            self: this.offerValue(offer, this.values),
-            opponent: this.offerValue(this.invertOffer(offer), values),
-          };
-        }),
-      };
-    });
-
     this.pastOffers = [];
-    this.used = this.possibleOffers.map(_ => false);
   }
 
   invertOffer(offer) {
@@ -94,50 +82,62 @@ module.exports = class Estimator {
       o = this.counts.map(_ => 0);
     }
 
-    this.pastOffers.push(this.invertOffer(o));
+    this.pastOffers.push({ type: 'wanted', offer: this.invertOffer(o) });
     const estimates = this.estimate(this.pastOffers);
+    const sortedValues = this.possibleValues.map((values, i) => {
+      return { values, estimate: estimates[i] };
+    }).sort((a, b) => b.estimate - a.estimate);
 
-    const scores = this.crossMap.map((entry) => {
-      return entry.values.reduce((acc, current, i) => {
-        const estimate = estimates[i];
+    const maxEstimate = sortedValues[0].estimate;
+    const minEstimate = sortedValues[0].estimate * 0.4;
 
-        // Unlikely to be accepted
-        if (current.opponent < 0.5) {
-          return acc + 0.1;
-        }
+    const estimatedValues = this.averageValues(sortedValues.filter((entry) => {
+      return entry.estimate >= minEstimate;
+    }).map((entry) => {
+      return entry.values;
+    }));
 
-        const delta = current.self - current.opponent;
+    this.log(`estimated values=[ ${estimatedValues.join(', ')} ]`);
+    this.log(`max=${maxEstimate} min=${minEstimate}`);
 
-        return acc + estimate * delta;
-      }, 0);
+    const threshold = 0.8 - 0.3 * (this.round / this.maxRounds) ** 1.0;
+
+    const scores = this.possibleOffers.map((offer) => {
+      const selfValue = this.offerValue(offer, this.values);
+      const opValue = this.offerValue(this.invertOffer(offer), estimatedValues);
+
+      if (selfValue < threshold) {
+        return -1e42;
+      }
+
+      return selfValue + opValue;
     });
 
-    let max = -Infinity;
-    let maxI = null;
+    let maxScore = -Infinity;
 
     for (let i = 0; i < scores.length; i++) {
-      if (!this.used[i] && scores[i] > max) {
-        max = scores[i];
-        maxI = i;
+      if (scores[i] > maxScore) {
+        maxScore = scores[i];
       }
     }
 
-    // Can't find right offer
-    if (maxI === null) {
-      return this.counts;
-    }
+    const offers = this.possibleOffers.filter((offer, i) => {
+      return scores[i] === maxScore;
+    });
 
-    this.used[maxI] = true;
-
-    const result = this.possibleOffers[maxI];
+    const result = offers[(offers.length * Math.random()) | 0];
     const value = this.offerValue(result, this.values);
+
     const proposedValue = this.offerValue(o, this.values);
+    this.log(`we want=${value} threshold=${threshold}`);
+    this.log(`score=${maxScore} choices=${offers.length}`);
 
     // Accept
-    if (value <= proposedValue) {
+    if (threshold <= proposedValue) {
       return undefined;
     }
 
+    this.pastOffers.push({ type: 'rejected', offer: this.invertOffer(result) });
     return result;
   }
 
@@ -146,10 +146,27 @@ module.exports = class Estimator {
     for (const values of this.possibleValues) {
       let score = 0;
       for (const o of pastOffers) {
-        score += Math.max(0, this.offerValue(o, values) - 0.5);
+        const value = this.offerValue(o.offer, values);
+        if (o.type === 'rejected') {
+          score -= value;
+        } else {
+          score += value;
+        }
       }
-      scores.push(score);
+      scores.push(score / pastOffers.length);
     }
     return scores;
+  }
+
+  averageValues(list) {
+    const res = this.counts.slice().fill(0);
+
+    for (const values of list) {
+      for (let i = 0; i < values.length; i++) {
+        res[i] += values[i] / list.length;
+      }
+    }
+
+    return res;
   }
 };
