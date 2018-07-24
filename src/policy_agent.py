@@ -100,14 +100,29 @@ class StubbornPolicy(BasePolicy):
     return False, counter_offer
 
 class EstimatorPolicy(BasePolicy):
+  cache = {}
+
   def __init__(self, *args, **kwargs):
     super(EstimatorPolicy, self).__init__(*args, **kwargs)
 
     self.possible_values = []
     self.possible_offers = []
+    self.round = 0
+    # TODO(indutny): don't hardcode this
+    self.max_rounds = 5
 
-    self.fill_values(np.zeros(self.max_types, dtype='int32'), 0, 0)
-    self.fill_offers(np.zeros(self.max_types, dtype='int32'), 0)
+    cache_key = str(self.counts)
+    if cache_key in EstimatorPolicy.cache:
+      entry = EstimatorPolicy.cache[cache_key]
+      self.possible_values = np.copy(entry['values'])
+      self.possible_offers = np.copy(entry['offers'])
+    else:
+      self.fill_values(np.zeros(self.max_types, dtype='int32'), 0, 0)
+      self.fill_offers(np.zeros(self.max_types, dtype='int32'), 0)
+      EstimatorPolicy.cache[cache_key] = {
+        'values': np.copy(self.possible_values),
+        'offers': np.copy(self.possible_offers),
+      }
 
     # Opponent can't have same values as ourselves
     self.possible_values = [
@@ -120,19 +135,7 @@ class EstimatorPolicy(BasePolicy):
       for o in self.possible_offers if self.offer_value(o, self.values) >= 0.5
     ]
 
-    self.cross_map = []
-    for o in self.possible_offers:
-      values = []
-      for v in self.possible_values:
-        values.append({
-          'self': self.offer_value(o, self.values),
-          'opponent': self.offer_value(self.invert_offer(o), v),
-        })
-      entry = { 'offer': o, 'values': values }
-      self.cross_map.append(entry)
-
     self.past_offers = []
-    self.used = [ False for _ in self.possible_offers ]
 
   def invert_offer(self, offer):
     return self.counts - offer
@@ -162,49 +165,54 @@ class EstimatorPolicy(BasePolicy):
       offer[i] = j
       self.fill_offers(offer, i + 1)
 
-  def on_offer(self, offer):
-    self.past_offers.append(self.invert_offer(offer))
+  def on_offer(self, proposed_offer):
+    self.round += 1
+
+    self.past_offers.append({
+      'type': 'wanted',
+      'offer': self.invert_offer(proposed_offer),
+    })
     estimates = self.estimate(self.past_offers)
+    max_estimate = np.max(estimates)
+    min_estimate = max_estimate * 0.4
 
-    def score_each(entry):
-      res = 0.0
-      for i, value in enumerate(entry['values']):
-        estimate = estimates[i]
+    estimated_values = self.average_values([
+      values
+      for estimate, values in zip(estimates, self.possible_values)
+      if estimate >= min_estimate
+    ])
 
-        # Unlikely to be accepted
-        if value['opponent'] < 0.5:
-          res += 0.1
-          continue
+    threshold = 0.8 - 0.3 * (float(self.round) / self.max_rounds) ** 1.0
 
-        delta = value['self'] - value['opponent']
+    def score_each(offer):
+      self_value = self.offer_value(offer, self.values)
+      op_value = self.offer_value(self.invert_offer(offer), estimated_values)
 
-        res += estimate * delta
+      if self_value < threshold:
+        return -1e42
 
-      return res
+      return self_value + op_value
 
-    scores = list(map(score_each, self.cross_map))
+    scores = list(map(score_each, self.possible_offers))
 
-    max_score = float('-inf')
-    max_i = None
+    max_score = np.max(scores)
+    offers = [
+      offer
+      for score, offer in zip(scores, self.possible_offers)
+      if score == max_score
+    ]
 
-    for i, score in enumerate(scores):
-      if not self.used[i] and score > max_score:
-        max_score = score
-        max_i = i
-
-    # Can't find right offer
-    if max_i is None:
-      return False, self.counts
-
-    result = self.possible_offers[max_i]
+    result = random.choice(offers)
     value = self.offer_value(result, self.values)
-    proposed_value = self.offer_value(offer, self.values)
 
-    # Accept
-    if value <= proposed_value:
+    proposed_value = self.offer_value(proposed_offer, self.values)
+    if threshold <= proposed_value:
       return True, None
 
-    self.used[max_i] = True
+    self.past_offers.append({
+      'type': 'rejected',
+      'offer': self.invert_offer(result),
+    })
     return False, result
 
   def estimate(self, past_offers):
@@ -212,9 +220,16 @@ class EstimatorPolicy(BasePolicy):
     for values in self.possible_values:
       score = 0.0
       for o in past_offers:
-        score += max(0.0, self.offer_value(o, values) - 0.5)
+        value = self.offer_value(o['offer'], values)
+        if o['type'] == 'rejected':
+          score -= value
+        else:
+          score += value
       scores.append(score)
     return scores
+
+  def average_values(self, list_of_values):
+    return np.mean(list_of_values, axis=0)
 
 class PolicyAgent(Agent):
   def __init__(self, env, policy):
