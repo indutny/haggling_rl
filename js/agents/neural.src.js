@@ -358,6 +358,10 @@ module.exports = class Agent {
         `action=${action} ` +
         `prob=${probs[action].toFixed(3)}`);
 
+    if (value.length >= 3) {
+      this.log(`bonus=${value[2]}`);
+    }
+
     this.state = newState;
 
     // Accept
