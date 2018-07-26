@@ -18,7 +18,7 @@ const Downsize = require('./agents/downsize');
 const Random = require('./agents/random');
 
 const ENABLE_LOG = false;
-const TOTAL_MATCHES = 1000;
+const TOTAL_MATCHES = 10000;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -120,7 +120,7 @@ function addContestant(name, A) {
   });
 }
 
-addContestant('neural', Neural);
+// addContestant('neural', Neural);
 addContestant('better', BetterNeural);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
@@ -130,7 +130,7 @@ addContestant('better', BetterNeural);
 // addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
 // addContestant('random', Random);
-// addContestant('estimator', Estimator);
+addContestant('estimator', Estimator);
 
 const pairs = [];
 for (const a of contestants) {
