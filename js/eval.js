@@ -10,6 +10,7 @@ const Neural07 = require('./agents/neural_07');
 const NeuralB = require('./agents/neural_b');
 const BestNeural = require('./agents/best');
 const BetterNeural = require('./agents/neural_better');
+const BetterNeuralNoEnt = require('./agents/neural_better_no_entropy');
 
 const Estimator = require('./agents/estimator');
 const Accept = require('./agents/accept');
@@ -18,7 +19,7 @@ const Downsize = require('./agents/downsize');
 const Random = require('./agents/random');
 
 const ENABLE_LOG = false;
-const TOTAL_MATCHES = 10000;
+const TOTAL_MATCHES = 400;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -121,7 +122,8 @@ function addContestant(name, A) {
 }
 
 // addContestant('neural', Neural);
-addContestant('better', BetterNeural);
+// addContestant('better', BetterNeural);
+addContestant('better_no_ent', BetterNeuralNoEnt);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
