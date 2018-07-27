@@ -19,7 +19,7 @@ const Downsize = require('./agents/downsize');
 const Random = require('./agents/random');
 
 const ENABLE_LOG = false;
-const TOTAL_MATCHES = 1000;
+const TOTAL_MATCHES = 2000;
 
 function log(msg) {
   if (ENABLE_LOG) {
@@ -117,19 +117,20 @@ function addContestant(name, A) {
     sessions: 0,
     agreements: 0,
     score: 0,
+    scoreSqr: 0,
     delta: 0,
   });
 }
 
 // addContestant('neural', Neural);
 addContestant('better', BetterNeural);
-addContestant('better_no_ent', BetterNeuralNoEnt);
+// addContestant('better_no_ent', BetterNeuralNoEnt);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
 // addContestant('half-or-all', HalfOrAll);
-// addContestant('downsize', Downsize);
+addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
 // addContestant('random', Random);
 // addContestant('estimator', Estimator);
@@ -163,14 +164,19 @@ for (let i = 0; i < TOTAL_MATCHES; i++) {
     pair.b.sessions++;
     pair.a.score += ab.a;
     pair.b.score += ab.b;
+    pair.a.scoreSqr += ab.a ** 2;
+    pair.b.scoreSqr += ab.b ** 2;
   }
 }
 
 console.log(contestants.map((c) => {
+  const mean = c.score / c.sessions;
+  const stddev = Math.sqrt((c.scoreSqr / c.sessions) - mean ** 2) / mean;
   return {
     name: c.name,
     rounds: (c.rounds / c.agreements).toFixed(4),
-    mean: (c.score / c.sessions).toFixed(4),
+    mean: mean.toFixed(4),
+    stddev: stddev.toFixed(4),
     meanAccepted: (c.score / c.agreements).toFixed(4),
     meanDelta: (c.delta / c.agreements).toFixed(4),
     acceptance: (c.agreements / c.sessions).toFixed(4),
