@@ -25,20 +25,7 @@ executing following commands;
 ```sh
 pip3 install tensorflow
 python3 src/train.py --singular
-# Then, after rewards stabilize (around epoch 40000)
-python3 src/train.py --singular \
-  --entropy=0.0 \
-  --restore ./saves/run-name/last-checkpoint
 ```
-
-First phase trains exclusively against hand-written agents. The second phase
-continuous to train against the same agents, but also add the current model
-itself to the training pool. Such self-play appears to help raise acceptance
-rates for previously unseen strategies.
-
-The `entropy` coefficient is set to zero at later stage to promote deterministic
-strategies. In our runs entropy value is around `1.2` for first stage, and drops
-lower than `0.3` for the second stage.
 
 _NOTE: Many different configurations were considered with various LSTM sizes,
 and different numbers of `pre` layers. LSTM with 128 units and no `pre` layer
@@ -46,7 +33,7 @@ appears to work best for provided hand-written agents._
 
 _NOTE: While PPO epochs can take different values, apparently all of them but
 `1` reduces the maximum achieved reward for hand-written agents. Thus only
-`--ppo_epochs=` were used throughout the experiments._
+`--ppo_epochs=1` were used throughout the experiments._
 
 ## How to build JS agent
 
@@ -99,18 +86,19 @@ in default configuration).
 The loss is [A2C][2] with [PPO][3]. The training consisted of the cycles of
 exploration phases (with 1024 games) and reflection phases using collected data.
 
-The value function is two dimensional vector. First element is the self-reward
-(i.e. how much value the agent wins from the session), second element is a
-scaled opponent-reward (i.e. `(1.0 - opponent_value) * scale`). `scale` is
-heuristically chosen to be `1.1` to prevent saddle points during self-play.
-Further research might be needed to confirm or deny its importance.
+The value function is a three dimensional vector. First element is the
+self-reward (i.e. how much value the agent wins from the session). Second
+element is a opponent reward. Third element is `1.0` if self-reward is bigger
+than opponent's reward, and `0.0` otherwise. This way the agent tries to
+maximize score of both opponent and itself, while keeping relative advantage
+(even if it is a small one).
 
 ## Source code
 
-There's no excuse for poorly written Python code. Please take in account that
-the code base is a result of hundreds of different experiments. Many of them
-required rewriting or commenting out different parts of the code. Our Python
-skill are sub-par, and huge amount of rewrites didn't help to improve the
+There's no excuse for poorly written Python code, but please take in account
+that the code base is a result of hundreds of different experiments. Many of
+them required rewriting or commenting out different parts of the code. Our
+Python skill are sub-par, and huge amount of rewrites didn't help to improve the
 quality of the source!
 
 Many files serve no purpose outside of the experiments they were used in, and
