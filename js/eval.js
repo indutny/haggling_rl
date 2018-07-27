@@ -124,13 +124,13 @@ function addContestant(name, A) {
 
 // addContestant('neural', Neural);
 addContestant('better', BetterNeural);
-// addContestant('better_no_ent', BetterNeuralNoEnt);
+addContestant('better_no_ent', BetterNeuralNoEnt);
 // addContestant('neural07', Neural07);
 // addContestant('neural_b', NeuralB);
 // addContestant('best', BestNeural);
 
 // addContestant('half-or-all', HalfOrAll);
-addContestant('downsize', Downsize);
+// addContestant('downsize', Downsize);
 // addContestant('accept', Accept);
 // addContestant('random', Random);
 // addContestant('estimator', Estimator);
