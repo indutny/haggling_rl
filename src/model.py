@@ -51,7 +51,7 @@ class Model(Agent):
              shape=(self.action_space, self.config['lstm'])),
         'pre': [],
         'action': tf.layers.Dense(self.action_space, name='action'),
-        'value': tf.layers.Dense(3, name='value'),
+        'value': tf.layers.Dense(2, name='value'),
         'context': tf.layers.Dense(self.config['lstm'] * 2,
             activation=tf.nn.relu, name='context'),
         'lstm': tf.contrib.rnn.LSTMBlockCell(name='lstm',
