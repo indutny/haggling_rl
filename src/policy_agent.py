@@ -24,7 +24,7 @@ class HalfOrAllPolicy(BasePolicy):
     # Generate target
     return False, np.where(self.values > 0.0, self.counts, 0)
 
-class HalfOrLastPolicy(BasePolicy):
+class MostOrLastPolicy(BasePolicy):
   def __init__(self, *args, **kwargs):
     super(HalfOrLastPolicy, self).__init__(*args, **kwargs)
 
@@ -35,7 +35,7 @@ class HalfOrLastPolicy(BasePolicy):
     offer_value = np.sum(offer * self.values)
 
     # Accept offer
-    if offer_value >= self.total / 2.0:
+    if offer_value / float(self.total) >= 0.7:
       return True, None
 
     # Accept any positive last offer
@@ -263,8 +263,8 @@ class PolicyAgent(Agent):
       self.policy = DownsizePolicy
     elif policy is 'half_or_all':
       self.policy = HalfOrAllPolicy
-    elif policy is 'half_or_last':
-      self.policy = HalfOrLastPolicy
+    elif policy is 'most_or_last':
+      self.policy = MostOrLastPolicy
     elif policy is 'altruist':
       self.policy = AltruistPolicy
     elif policy is 'greedy':

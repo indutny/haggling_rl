@@ -33,13 +33,16 @@ EPOCH = 0
 
 env_list = []
 bench_env = {
-  'half_or_last': Environment(),
+  'most_or_last': Environment(),
+  'half_or_all': Environment(),
   'downsize': Environment(),
   'estimator': Environment()
 }
 
-bench_env['half_or_last'].add_opponent( \
-    PolicyAgent(bench_env['half_or_last'], policy='half_or_last'))
+bench_env['most_or_last'].add_opponent( \
+    PolicyAgent(bench_env['most_or_last'], policy='most_or_last'))
+bench_env['half_or_all'].add_opponent( \
+    PolicyAgent(bench_env['half_or_all'], policy='half_or_all'))
 bench_env['downsize'].add_opponent( \
     PolicyAgent(bench_env['downsize'], policy='downsize'))
 bench_env['estimator'].add_opponent( \
@@ -47,7 +50,8 @@ bench_env['estimator'].add_opponent( \
 
 for i in range(CONCURRENCY):
   env = Environment()
-  env.add_opponent(PolicyAgent(env, policy='half_or_last'))
+  env.add_opponent(PolicyAgent(env, policy='most_or_last'))
+  env.add_opponent(PolicyAgent(env, policy='half_or_all'))
   env.add_opponent(PolicyAgent(env, policy='downsize'))
   env.add_opponent(PolicyAgent(env, policy='estimator'))
   env_list.append(env)
