@@ -26,7 +26,7 @@ class HalfOrAllPolicy(BasePolicy):
 
 class MostOrLastPolicy(BasePolicy):
   def __init__(self, *args, **kwargs):
-    super(HalfOrLastPolicy, self).__init__(*args, **kwargs)
+    super(MostOrLastPolicy, self).__init__(*args, **kwargs)
 
     self.round = 0
 
