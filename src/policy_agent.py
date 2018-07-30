@@ -4,6 +4,8 @@ import random
 from generator import MAX_TYPES
 from agent import Agent
 
+MAX_ROUNDS = 5
+
 class BasePolicy:
   def __init__(self, values, counts):
     self.values = values
@@ -22,6 +24,27 @@ class HalfOrAllPolicy(BasePolicy):
     # Generate target
     return False, np.where(self.values > 0.0, self.counts, 0)
 
+class HalfOrLastPolicy(BasePolicy):
+  def __init__(self, *args, **kwargs):
+    super(HalfOrLastPolicy, self).__init__(*args, **kwargs)
+
+    self.round = 0
+
+  def on_offer(self, offer):
+    self.round += 1
+    offer_value = np.sum(offer * self.values)
+
+    # Accept offer
+    if offer_value >= self.total / 2.0:
+      return True, None
+
+    # Accept any positive last offer
+    if self.round == MAX_ROUNDS and offer_value > 0:
+      return True, None
+
+    # Generate target
+    return False, np.where(self.values > 0.0, self.counts, 0)
+
 class DownsizePolicy(BasePolicy):
   def __init__(self, *args, **kwargs):
     super(DownsizePolicy, self).__init__(*args, **kwargs)
@@ -31,7 +54,7 @@ class DownsizePolicy(BasePolicy):
   def on_offer(self, offer):
     self.round += 1
 
-    alpha = 1 - min(5, self.round) / 5.0
+    alpha = 1 - min(MAX_ROUNDS, self.round) / float(MAX_ROUNDS)
     half = self.total / 2.0
     minimum = (self.total - half) * alpha + half
 
@@ -108,8 +131,7 @@ class EstimatorPolicy(BasePolicy):
     self.possible_values = []
     self.possible_offers = []
     self.round = 0
-    # TODO(indutny): don't hardcode this
-    self.max_rounds = 5
+    self.max_rounds = MAX_ROUNDS
 
     cache_key = str(self.counts)
     if cache_key in EstimatorPolicy.cache:
@@ -241,6 +263,8 @@ class PolicyAgent(Agent):
       self.policy = DownsizePolicy
     elif policy is 'half_or_all':
       self.policy = HalfOrAllPolicy
+    elif policy is 'half_or_last':
+      self.policy = HalfOrLastPolicy
     elif policy is 'altruist':
       self.policy = AltruistPolicy
     elif policy is 'greedy':
