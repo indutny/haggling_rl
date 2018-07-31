@@ -446,7 +446,7 @@ class Model(Agent):
     return res
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
-    estimates = np.zeros((len(rewards), 3,), dtype='float32')
+    estimates = np.zeros((len(rewards), self.reward_space,), dtype='float32')
     future = np.copy(self.empty_reward)
 
     for i, reward in reversed(list(enumerate(rewards))):
