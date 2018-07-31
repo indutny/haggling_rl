@@ -28,6 +28,9 @@ class Model(Agent):
     self.observation_space = env.observation_space
     self.action_space = env.action_space
     self.context_space = env.context_space
+    self.reward_space = env.reward_space
+
+    self.empty_reward = np.zeros(self.reward_space, dtype='float32')
 
     # Used for getting offers by index
     self.env = env
@@ -51,7 +54,7 @@ class Model(Agent):
              shape=(self.action_space, self.config['lstm'])),
         'pre': [],
         'action': tf.layers.Dense(self.action_space, name='action'),
-        'value': tf.layers.Dense(3, name='value'),
+        'value': tf.layers.Dense(self.reward_space, name='value'),
         'context': tf.layers.Dense(self.config['lstm'] * 2,
             activation=tf.nn.relu, name='context'),
         'lstm': tf.contrib.rnn.LSTMBlockCell(name='lstm',
@@ -332,7 +335,8 @@ class Model(Agent):
         if not env.done:
           next_env_state, reward, done, _ = env.step(self.env.get_offer(action))
         else:
-          next_env_state, reward, done = env_state, np.array([ 0.0, 0.0, 0.0 ]), True
+          next_env_state, reward, done = \
+              env_state, np.copy(self.empty_reward), True
 
         next_env_states.append(next_env_state)
         rewards.append(reward)
@@ -425,8 +429,8 @@ class Model(Agent):
         res['env_states'].append(pad(entry['env_states'], empty_obs))
         res['actions'].append(pad(entry['actions'], 0))
         res['action_probs'].append(pad(entry['action_probs'], 0.0))
-        res['values'].append(pad(entry['values'], np.array([ 0.0, 0.0, 0.0 ])))
-        res['rewards'].append(pad(rewards, np.array([ 0.0, 0.0, 0.0 ])))
+        res['values'].append(pad(entry['values'], np.copy(self.empty_reward)))
+        res['rewards'].append(pad(rewards, np.copy(self.empty_reward)))
         res['masks'].append(pad([ True for e in entry['dones'] ], False))
 
         res['env_contexts'].append(entry['env_context'])
@@ -443,7 +447,7 @@ class Model(Agent):
 
   def estimate_rewards(self, rewards, dones, gamma=0.99):
     estimates = np.zeros((len(rewards), 3,), dtype='float32')
-    future = np.array([ 0.0, 0.0, 0.0 ])
+    future = np.copy(self.empty_reward)
 
     for i, reward in reversed(list(enumerate(rewards))):
       if dones[i]:

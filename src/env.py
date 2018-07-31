@@ -18,6 +18,7 @@ class Environment:
 
     self.offers = self.generator.offers
     self.action_space = 1 + len(self.offers)
+    self.reward_space = 1
 
     self.no_consensus_score = 0.68
 
@@ -188,7 +189,6 @@ class Environment:
     timed_out = self.steps == 2 * self.max_rounds
 
     done = accepted or timed_out
-    reward = [ 0.0, 0.0, 0.0 ]
     if accepted:
       self_offer = offer
       opponent_offer = self.counts - offer
@@ -201,16 +201,17 @@ class Environment:
           dtype='float32')
       self.ui.accept('opponent', opponent_reward)
 
-      # Normalze rewards
+      # Normalize rewards
       self_reward_p = self_reward / self.total
       opponent_reward_p = opponent_reward / self.total
 
-      bonus = 0.0
-      if self_reward_p > opponent_reward_p:
-        bonus = 1.0
-
       # Stimulate bigger relative score
-      reward = [ self_reward_p, opponent_reward_p, bonus ]
+      bonus = 0.1 + max(0.0, min(0.2, self_reward_p - opponent_reward_p))
+
+      # Stimulate bigger absolute score
+      bonus *= (self_reward_p + opponent_reward_p)
+
+      reward = [ bonus ]
 
       self.status = 'accepted'
 
@@ -220,12 +221,13 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0, 0.0, 0.0 ]
+      reward = [ 0.0 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()
       self.status = 'no consensus'
     else:
+      reward = [ 0.0 ]
       self.ui.offer(offer, self.counts, self.player)
 
     # Switch player

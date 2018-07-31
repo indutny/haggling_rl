@@ -8,3 +8,8 @@ node_modules/
 profile.log
 prof.py
 *.swp
+bin
+lib/
+include/
+.Python
+pip-selfcheck.json
