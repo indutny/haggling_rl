@@ -354,9 +354,15 @@ module.exports = class Agent {
         this.env.buildObservation(),
         this.state);
 
-    this.log(`svalue=${value[0].toFixed(3)} ovalue=${value[1].toFixed(3)} ` +
-        `action=${action} ` +
-        `prob=${probs[action].toFixed(3)}`);
+    if (value.length === 1) {
+      this.log(`reward=${value[0].toFixed(3)} ` +
+          `action=${action} ` +
+          `prob=${probs[action].toFixed(3)}`);
+    } else {
+      this.log(`svalue=${value[0].toFixed(3)} ovalue=${value[1].toFixed(3)} ` +
+          `action=${action} ` +
+          `prob=${probs[action].toFixed(3)}`);
+    }
 
     if (value.length >= 3) {
       this.log(`bonus=${value[2]}`);
