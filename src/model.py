@@ -371,7 +371,7 @@ class Model(Agent):
 
     return log
 
-  def explore(self, env_list, game_count=1024, reflect_every=1024, game_off=0, \
+  def explore(self, env_list, game_count=1024, reflect_every=256, game_off=0, \
               entropy_schedule=None):
     finished_games = 0
     while finished_games < game_count:

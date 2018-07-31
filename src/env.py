@@ -206,7 +206,7 @@ class Environment:
       opponent_reward_p = opponent_reward / self.total
 
       # Stimulate bigger relative score
-      bonus = 0.1 + max(0.0, min(0.2, self_reward_p - opponent_reward_p))
+      bonus = 0.1 + max(0.0, min(0.2, self_reward_p - opponent_reward_p)) / 0.3
 
       # Stimulate bigger absolute score
       bonus *= (self_reward_p + opponent_reward_p)
@@ -221,7 +221,7 @@ class Environment:
       self.last_opponent_reward = opponent_reward
     elif timed_out:
       # Discourage absence of consensus
-      reward = [ 0.0 ]
+      reward = [ -1.0 ]
       self.last_reward = 0.0
       self.last_opponent_reward = 0.0
       self.ui.no_consensus()
