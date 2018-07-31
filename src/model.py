@@ -151,9 +151,9 @@ class Model(Agent):
     self.train_mask = tf.placeholder(tf.bool, shape=input_shape,
         name='train_mask')
     self.true_value = tf.placeholder(tf.float32,
-        shape=input_shape + (3,), name='true_value')
+        shape=input_shape + (self.reward_space,), name='true_value')
     self.past_value = tf.placeholder(tf.float32,
-        shape=input_shape + (3,), name='past_value')
+        shape=input_shape + (self.reward_space,), name='past_value')
     self.past_prob = tf.placeholder(tf.float32,
         shape=input_shape, name='past_prob')
     self.selected_action = tf.placeholder(tf.int32,
