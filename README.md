@@ -86,12 +86,23 @@ in default configuration).
 The loss is [A2C][2] with [PPO][3]. The training consisted of the cycles of
 exploration phases (with 1024 games) and reflection phases using collected data.
 
-The value function is a three dimensional vector. First element is the
-self-reward (i.e. how much value the agent wins from the session). Second
-element is a opponent reward. Third element is `1.0` if self-reward is bigger
-than opponent's reward, and `0.0` otherwise. This way the agent tries to
-maximize score of both opponent and itself, while keeping relative advantage
-(even if it is a small one).
+The value function is a single dimensional vector. The reward is computed using
+following formula:
+
+```js
+if (!gameEnd) {
+  reward = 0;
+} else if (accepted) {
+  // Stimulate bigger relative score
+  const scale = 0.1 + Math.max(0, Math.min(0.2, selfReward - opponentReward));
+
+  // Stimulate bigger absolute score sum
+  reward = (scale / 0.3) * (selfReward + opponentReward);
+} else {
+  // Stimulate more agreemenets
+  reward = -1;
+}
+```
 
 ## Source code
 
